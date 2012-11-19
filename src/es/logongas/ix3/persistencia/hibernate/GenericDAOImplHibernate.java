@@ -361,5 +361,10 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         return entityType;
     }
 
+    @Override
+    public Class<EntityType> getEntiyType() {
+        return entityType;
+    }
+
 
 }
