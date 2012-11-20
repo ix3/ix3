@@ -21,6 +21,9 @@ public class Criteria {
     static public Criteria equal(String propertyName,Object value) {
         return null;
     }
+    static public Criteria notEqual(String propertyName,Object value) {
+        return null;
+    }
     
     static public Criteria like(String propertyName,Object value) {
         return null;
@@ -40,6 +43,11 @@ public class Criteria {
         return null;
     }  
   
-    
+    static public Criteria isNull(String propertyName) {
+        return null;
+    }  
+    static public Criteria isNotNull(String propertyName) {
+        return null;
+    }        
     
 }
