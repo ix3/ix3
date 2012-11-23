@@ -18,6 +18,7 @@ package es.logongas.ix3.persistencia.hibernate;
 import es.logongas.ix3.persistencia.dao.BussinessException;
 import es.logongas.ix3.persistencia.dao.Criteria;
 import es.logongas.ix3.persistencia.dao.GenericDAO;
+import es.logongas.ix3.persistencia.dao.MetaData;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -33,23 +34,23 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Autowired
     SessionFactory sessionFactory;
     
-    Class<EntityType> entityType;
+    MetaData metaData;
     
     protected final Log log = LogFactory.getLog(getClass());
     
     public GenericDAOImplHibernate() {
-        this.entityType=(Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        metaData=new MetaDataImplHibernate((Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
     }
     
     public GenericDAOImplHibernate(Class<EntityType> entityType) {
-        this.entityType=entityType;
+        metaData=new MetaDataImplHibernate(entityType);
     }    
     
     
     @Override
     public EntityType create() throws BussinessException {
         try {
-            return getEntityClass().newInstance();
+            return (EntityType)getMetaData().getEntiyType().newInstance();
         } catch (InstantiationException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         } catch (RuntimeException ex) {
@@ -112,7 +113,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         try {
             session.beginTransaction();
             
-            EntityType entity2 = (EntityType) session.get(getEntityClass(), session.getIdentifier(entity));
+            EntityType entity2 = (EntityType) session.get(getMetaData().getEntiyType(), session.getIdentifier(entity));
             if (entity == null) {
                 session.getTransaction().commit();
                 return false;
@@ -166,7 +167,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            EntityType entity = (EntityType) session.get(getEntityClass(), id);           
+            EntityType entity = (EntityType) session.get(getMetaData().getEntiyType(), id);           
             session.getTransaction().commit();
 
             return entity;
@@ -214,7 +215,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            EntityType entity = (EntityType) session.get(getEntityClass(), id);
+            EntityType entity = (EntityType) session.get(getMetaData().getEntiyType(), id);
             if (entity == null) {
                 session.getTransaction().commit();
                 return false;
@@ -267,7 +268,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
 
-            Query query = session.createQuery("SELECT e FROM " + getEntityClass().getName() + " e");
+            Query query = session.createQuery("SELECT e FROM " + getMetaData().getEntiyType().getName() + " e");
             List<EntityType> entities = query.list();
 
             return entities;
@@ -314,7 +315,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     public EntityType readByNaturalKey(Object value) throws BussinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
-            EntityType entity=(EntityType)session.bySimpleNaturalId(entityType).load(value);
+            EntityType entity=(EntityType)session.bySimpleNaturalId(getMetaData().getEntiyType()).load(value);
 
             return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
@@ -357,13 +358,10 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     }    
     
-    private Class<EntityType> getEntityClass() {
-        return entityType;
-    }
 
     @Override
-    public Class<EntityType> getEntiyType() {
-        return entityType;
+    public MetaData getMetaData() {
+        return metaData;
     }
 
 

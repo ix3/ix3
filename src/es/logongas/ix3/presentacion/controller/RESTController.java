@@ -17,9 +17,13 @@ package es.logongas.ix3.presentacion.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.logongas.ix3.persistencia.dao.BussinessException;
+import es.logongas.ix3.persistencia.dao.Criteria;
 import es.logongas.ix3.persistencia.dao.DAOFactory;
 import es.logongas.ix3.persistencia.dao.GenericDAO;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +44,48 @@ public class RESTController {
     DAOFactory daoFactory;
     ObjectMapper objectMapper = new ObjectMapper();
 
+     @RequestMapping(value = {"/{entityName}/search"}, method = RequestMethod.GET, consumes = "application/json")
+    public void search(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
+
+        httpServletResponse.setContentType("application/json; charset=UTF-8");
+
+        try {
+            List<Criteria> criterias=new ArrayList<>();
+            
+            GenericDAO genericDAO = daoFactory.getDAO(entityName);
+
+            Enumeration<String> enumeration=httpRequest.getAttributeNames();
+            while (enumeration.hasMoreElements()) {
+                String propertyName=enumeration.nextElement();
+                
+                
+            }
+            
+            Object entity = genericDAO.search(criterias);
+
+            String msg = objectMapper.writeValueAsString(entity);
+            httpServletResponse.getWriter().println(msg);
+
+        } catch (BussinessException ex) {
+            try {
+                String msg = objectMapper.writeValueAsString(ex.getBussinessMessages());
+                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                httpServletResponse.getWriter().println(msg);
+            } catch (Exception ex2) {
+                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        } catch (Exception ex) {
+            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            try {
+                String msg = objectMapper.writeValueAsString(ex.getStackTrace());
+                httpServletResponse.getWriter().println(msg);
+            } catch (Exception ex2) {
+                
+            }
+        }
+    }   
+    
+    
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, consumes = "application/json")
     public void get(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
 
@@ -112,7 +158,7 @@ public class RESTController {
         try {
             GenericDAO genericDAO = daoFactory.getDAO(entityName);
 
-            Object entity = objectMapper.readValue(jsonEntity, genericDAO.getEntiyType());
+            Object entity = objectMapper.readValue(jsonEntity, genericDAO.getMetaData().getEntiyType());
 
             genericDAO.insert(entity);
             String msg = objectMapper.writeValueAsString(entity);
@@ -145,7 +191,7 @@ public class RESTController {
         try {
             GenericDAO genericDAO = daoFactory.getDAO(entityName);
 
-            Object entity = objectMapper.readValue(jsonEntity, genericDAO.getEntiyType());
+            Object entity = objectMapper.readValue(jsonEntity, genericDAO.getMetaData().getEntiyType());
 
             genericDAO.update(entity);
             String msg = objectMapper.writeValueAsString(entity);
