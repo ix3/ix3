@@ -29,6 +29,10 @@ public class HibernateUtil {
     public static void buildSessionFactory() {
         Configuration configuration = new Configuration();
         configuration.configure();
+        if ((configuration.getProperty("current_session_context_class")!=null) && (configuration.getProperty("current_session_context_class").equals("thread")==false)) {
+            throw new RuntimeException("Hibernate debe estar configurado en el fichero 'hibernate.cfg.xml' con la propiedad current_session_context_class=thread");
+        }
+        
         ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
         sessionFactory = configuration.buildSessionFactory(serviceRegistry); 
         
