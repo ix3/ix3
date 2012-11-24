@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.impl.hibernate.util;
+package es.logongas.ix3.persistencia.impl.hibernate.util.listener;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

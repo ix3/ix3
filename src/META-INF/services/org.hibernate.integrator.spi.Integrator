@@ -1,1 +1,1 @@
-es.logongas.ix3.persistencia.hibernate.GenericIntegratorImpl
+es.logongas.ix3.persistencia.impl.hibernate.util.listener.GenericIntegratorImpl

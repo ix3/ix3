@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.impl.hibernate.util;
+package es.logongas.ix3.persistencia.impl.hibernate.util.listener;
 
+import es.logongas.ix3.persistencia.impl.hibernate.util.HibernateUtil;
 import java.io.IOException;
 import javax.servlet.*;
 
