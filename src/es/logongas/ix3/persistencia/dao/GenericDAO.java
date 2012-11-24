@@ -32,5 +32,4 @@ public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable> {
     boolean delete(PrimaryKeyType primaryKey) throws BussinessException;
     EntityType readByNaturalKey(Object value) throws BussinessException;
     List<EntityType> search(List<Criteria> criterias) throws BussinessException;
-    MetaData getMetaData();
 }

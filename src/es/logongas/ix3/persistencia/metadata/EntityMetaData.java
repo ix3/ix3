@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.hibernate;
+package es.logongas.ix3.persistencia.metadata;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-
-
-class HibernateUtilInternalState {
-    SessionFactory sessionFactory;
-    ThreadLocal<Session> threadLocalSession = new ThreadLocal<>();
+/**
+ * Metadatos sobre la entidad
+ * @author Lorenzo Gonzalez
+ */
+public interface EntityMetaData {
+    Class getEntiyType();
 }

@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.hibernate;
+package es.logongas.ix3.persistencia.impl.hibernate.dao;
 
 import es.logongas.ix3.persistencia.dao.BussinessException;
 import es.logongas.ix3.persistencia.dao.Criteria;
 import es.logongas.ix3.persistencia.dao.GenericDAO;
-import es.logongas.ix3.persistencia.dao.MetaData;
+import es.logongas.ix3.persistencia.impl.hibernate.metadata.EntityMetaDataImplHibernate;
+import es.logongas.ix3.persistencia.metadata.EntityMetaData;
+import es.logongas.ix3.persistencia.metadata.EntityMetaDataFactory;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -34,23 +36,27 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Autowired
     SessionFactory sessionFactory;
     
-    MetaData metaData;
+    @Autowired
+    EntityMetaDataFactory  entityMetaDataFactory;    
+    
+    EntityMetaData entityMetaData;
     
     protected final Log log = LogFactory.getLog(getClass());
     
     public GenericDAOImplHibernate() {
-        metaData=new MetaDataImplHibernate((Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
+        Class entityType=(Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        entityMetaData= entityMetaDataFactory.getEntityMetaData(entityType);
     }
     
     public GenericDAOImplHibernate(Class<EntityType> entityType) {
-        metaData=new MetaDataImplHibernate(entityType);
+        entityMetaData= entityMetaDataFactory.getEntityMetaData(entityType);
     }    
     
     
     @Override
     public EntityType create() throws BussinessException {
         try {
-            return (EntityType)getMetaData().getEntiyType().newInstance();
+            return (EntityType)entityMetaData.getEntiyType().newInstance();
         } catch (InstantiationException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         } catch (RuntimeException ex) {
@@ -113,7 +119,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         try {
             session.beginTransaction();
             
-            EntityType entity2 = (EntityType) session.get(getMetaData().getEntiyType(), session.getIdentifier(entity));
+            EntityType entity2 = (EntityType) session.get(entityMetaData.getEntiyType(), session.getIdentifier(entity));
             if (entity == null) {
                 session.getTransaction().commit();
                 return false;
@@ -167,7 +173,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            EntityType entity = (EntityType) session.get(getMetaData().getEntiyType(), id);           
+            EntityType entity = (EntityType) session.get(entityMetaData.getEntiyType(), id);           
             session.getTransaction().commit();
 
             return entity;
@@ -215,7 +221,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            EntityType entity = (EntityType) session.get(getMetaData().getEntiyType(), id);
+            EntityType entity = (EntityType) session.get(entityMetaData.getEntiyType(), id);
             if (entity == null) {
                 session.getTransaction().commit();
                 return false;
@@ -268,7 +274,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
 
-            Query query = session.createQuery("SELECT e FROM " + getMetaData().getEntiyType().getName() + " e");
+            Query query = session.createQuery("SELECT e FROM " + entityMetaData.getEntiyType().getName() + " e");
             List<EntityType> entities = query.list();
 
             return entities;
@@ -315,7 +321,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     public EntityType readByNaturalKey(Object value) throws BussinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
-            EntityType entity=(EntityType)session.bySimpleNaturalId(getMetaData().getEntiyType()).load(value);
+            EntityType entity=(EntityType)session.bySimpleNaturalId(entityMetaData.getEntiyType()).load(value);
 
             return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
@@ -357,12 +363,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         }
 
     }    
-    
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
 
 
 }

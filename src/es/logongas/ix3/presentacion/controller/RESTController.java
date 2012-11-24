@@ -20,6 +20,8 @@ import es.logongas.ix3.persistencia.dao.BussinessException;
 import es.logongas.ix3.persistencia.dao.Criteria;
 import es.logongas.ix3.persistencia.dao.DAOFactory;
 import es.logongas.ix3.persistencia.dao.GenericDAO;
+import es.logongas.ix3.persistencia.metadata.EntityMetaData;
+import es.logongas.ix3.persistencia.metadata.EntityMetaDataFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -42,6 +44,10 @@ public class RESTController {
 
     @Autowired
     DAOFactory daoFactory;
+    
+    @Autowired
+    EntityMetaDataFactory entityMetaDataFactory;    
+    
     ObjectMapper objectMapper = new ObjectMapper();
 
      @RequestMapping(value = {"/{entityName}/search"}, method = RequestMethod.GET, consumes = "application/json")
@@ -157,8 +163,9 @@ public class RESTController {
 
         try {
             GenericDAO genericDAO = daoFactory.getDAO(entityName);
-
-            Object entity = objectMapper.readValue(jsonEntity, genericDAO.getMetaData().getEntiyType());
+            EntityMetaData entityMetaData=entityMetaDataFactory.getEntityMetaData(entityName);
+            
+            Object entity = objectMapper.readValue(jsonEntity, entityMetaData.getEntiyType());
 
             genericDAO.insert(entity);
             String msg = objectMapper.writeValueAsString(entity);
@@ -190,8 +197,9 @@ public class RESTController {
 
         try {
             GenericDAO genericDAO = daoFactory.getDAO(entityName);
-
-            Object entity = objectMapper.readValue(jsonEntity, genericDAO.getMetaData().getEntiyType());
+            EntityMetaData entityMetaData=entityMetaDataFactory.getEntityMetaData(entityName);
+            
+            Object entity = objectMapper.readValue(jsonEntity, entityMetaData.getEntiyType());
 
             genericDAO.update(entity);
             String msg = objectMapper.writeValueAsString(entity);

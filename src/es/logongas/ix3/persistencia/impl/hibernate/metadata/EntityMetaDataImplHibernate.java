@@ -13,12 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.dao;
+package es.logongas.ix3.persistencia.impl.hibernate.metadata;
+
+import es.logongas.ix3.persistencia.metadata.EntityMetaData;
 
 /**
- * Metadatos sobre la entidad
- * @author Lorenzo Gonzalez
+ *
+ * @author alumno
  */
-public interface MetaData {
-    Class getEntiyType();
+public class EntityMetaDataImplHibernate implements EntityMetaData {
+
+    Class entityType;
+    
+    protected EntityMetaDataImplHibernate(Class entityType) {
+        this.entityType=entityType;
+    }
+    
+    
+    @Override
+    public Class getEntiyType() {
+        return entityType;
+    }
+    
 }
