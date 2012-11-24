@@ -18,47 +18,40 @@ package es.logongas.ix3.persistencia.impl.hibernate.util;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
 public class HibernateUtil {
 
-    private static HibernateUtilInternalState state=new HibernateUtilInternalState();
+    private static SessionFactory sessionFactory;
 
     public static void buildSessionFactory() {
         Configuration configuration = new Configuration();
         configuration.configure();
         ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
-        state.sessionFactory = configuration.buildSessionFactory(serviceRegistry); 
+        sessionFactory = configuration.buildSessionFactory(serviceRegistry); 
         
     }
 
     public static void closeSessionFactory() {
-        state.sessionFactory.close();
+        sessionFactory.close();
     }
 
     public static void openSessionAndAttachToThread() {
-        Session session = state.sessionFactory.openSession();
-        state.threadLocalSession.set(session);
+        Session session = sessionFactory.openSession();
+        ThreadLocalSessionContext.bind(session);
     }
 
     public static SessionFactory getSessionFactory() {
-        return new SessionFactoryImplThreadLocal(state);
+        return sessionFactory;
     }
 
     public static void closeSessionAndDeattachFromThread() {
-        Session session = state.threadLocalSession.get();
-        if (session!=null) {
+        Session session = ThreadLocalSessionContext.unbind(sessionFactory);
+        if ((session!=null) && (session.isOpen())) {
             session.close();
         }
-        state.threadLocalSession.set(null);
     }
 
-    public static boolean isSessionAttachToThread() {
-        if (state.threadLocalSession.get() != null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 }
