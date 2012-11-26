@@ -15,8 +15,11 @@
  */
 package es.logongas.ix3.persistencia.impl.hibernate.metadata;
 
-import es.logongas.ix3.persistencia.metadata.EntityMetaData;
-import es.logongas.ix3.persistencia.metadata.EntityMetaDataFactory;
+import es.logongas.ix3.persistencia.services.metadata.MetaData;
+import es.logongas.ix3.persistencia.services.metadata.EntityMetaDataFactory;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -24,14 +27,17 @@ import es.logongas.ix3.persistencia.metadata.EntityMetaDataFactory;
  */
 public class EntityMetaDataFactoryImplHibernate implements EntityMetaDataFactory {
 
+    @Autowired
+    SessionFactory sessionFactory;
+    
     @Override
-    public EntityMetaData getEntityMetaData(Class EntityClass) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public MetaData getEntityMetaData(Class entityClass) {        
+        return new MetaDataImplHibernate(entityClass,sessionFactory);
     }
 
     @Override
-    public EntityMetaData getEntityMetaData(String EntityName) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public MetaData getEntityMetaData(String entityName) {
+        return new MetaDataImplHibernate(sessionFactory.getClassMetadata(entityName).getMappedClass(),sessionFactory);
     }
     
 }

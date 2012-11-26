@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 alumno.
+ * Copyright 2012 Lorenzo González.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.impl.hibernate.metadata;
-
-import es.logongas.ix3.persistencia.metadata.EntityMetaData;
+package es.logongas.ix3.persistencia.services.dao;
 
 /**
  *
- * @author alumno
+ * @author Lorenzo González
  */
-public class EntityMetaDataImplHibernate implements EntityMetaData {
-
-    Class entityType;
-    
-    protected EntityMetaDataImplHibernate(Class entityType) {
-        this.entityType=entityType;
-    }
-    
-    
-    @Override
-    public Class getEntiyType() {
-        return entityType;
-    }
-    
+public interface DAOFactory {
+    GenericDAO getDAO(Class EntityClass);
+    GenericDAO getDAO(String EntityName);
 }

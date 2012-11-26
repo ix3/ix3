@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.dao;
+package es.logongas.ix3.persistencia.services.dao;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Interfaz generico para todos los DAO
@@ -31,5 +32,5 @@ public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable> {
     boolean update(EntityType entity) throws BussinessException;
     boolean delete(PrimaryKeyType primaryKey) throws BussinessException;
     EntityType readByNaturalKey(Object value) throws BussinessException;
-    List<EntityType> search(List<Criteria> criterias) throws BussinessException;
+    List<EntityType> search(Map<String,Object> filter) throws BussinessException;
 }

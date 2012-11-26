@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.logongas.ix3.persistencia.dao;
+package es.logongas.ix3.persistencia.services.dao;
 
 public class BussinessMessage {
     private final String propertyName;

@@ -16,19 +16,18 @@
 package es.logongas.ix3.presentacion.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.logongas.ix3.persistencia.dao.BussinessException;
-import es.logongas.ix3.persistencia.dao.Criteria;
-import es.logongas.ix3.persistencia.dao.DAOFactory;
-import es.logongas.ix3.persistencia.dao.GenericDAO;
-import es.logongas.ix3.persistencia.metadata.EntityMetaData;
-import es.logongas.ix3.persistencia.metadata.EntityMetaDataFactory;
-import java.io.IOException;
-import java.util.ArrayList;
+import es.logongas.ix3.persistencia.services.dao.BussinessException;
+import es.logongas.ix3.persistencia.services.dao.DAOFactory;
+import es.logongas.ix3.persistencia.services.dao.GenericDAO;
+import es.logongas.ix3.persistencia.services.metadata.MetaData;
+import es.logongas.ix3.persistencia.services.metadata.EntityMetaDataFactory;
 import java.util.Enumeration;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,28 +45,35 @@ public class RESTController {
     DAOFactory daoFactory;
     
     @Autowired
-    EntityMetaDataFactory entityMetaDataFactory;    
+    EntityMetaDataFactory entityMetaDataFactory;
     
+    @Autowired
+    ConversionService conversionService;
+    
+    //JSON Service
     ObjectMapper objectMapper = new ObjectMapper();
 
-     @RequestMapping(value = {"/{entityName}/search"}, method = RequestMethod.GET, consumes = "application/json")
+    @RequestMapping(value = {"/{entityName}/search"}, method = RequestMethod.GET, consumes = "application/json")
     public void search(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
-            List<Criteria> criterias=new ArrayList<>();
-            
-            GenericDAO genericDAO = daoFactory.getDAO(entityName);
+            Map<String, Object> filter = new HashMap<>();
 
-            Enumeration<String> enumeration=httpRequest.getAttributeNames();
+            GenericDAO genericDAO = daoFactory.getDAO(entityName);
+            MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+
+            Enumeration<String> enumeration = httpRequest.getAttributeNames();
             while (enumeration.hasMoreElements()) {
-                String propertyName=enumeration.nextElement();
-                
-                
+                String propertyName = enumeration.nextElement();
+                Class propertyType = entityMetaData.getPropertiesMetaData().get(propertyName).getType();
+                Object value = conversionService.convert(httpRequest.getParameter(propertyName), propertyType);
+
+                filter.put(propertyName, value);
             }
-            
-            Object entity = genericDAO.search(criterias);
+
+            Object entity = genericDAO.search(filter);
 
             String msg = objectMapper.writeValueAsString(entity);
             httpServletResponse.getWriter().println(msg);
@@ -86,12 +92,10 @@ public class RESTController {
                 String msg = objectMapper.writeValueAsString(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
-                
             }
         }
-    }   
-    
-    
+    }
+
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, consumes = "application/json")
     public void get(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
 
@@ -119,7 +123,6 @@ public class RESTController {
                 String msg = objectMapper.writeValueAsString(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
-                
             }
         }
     }
@@ -150,7 +153,6 @@ public class RESTController {
                 String msg = objectMapper.writeValueAsString(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
-                
             }
         }
 
@@ -163,9 +165,9 @@ public class RESTController {
 
         try {
             GenericDAO genericDAO = daoFactory.getDAO(entityName);
-            EntityMetaData entityMetaData=entityMetaDataFactory.getEntityMetaData(entityName);
-            
-            Object entity = objectMapper.readValue(jsonEntity, entityMetaData.getEntiyType());
+            MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+
+            Object entity = objectMapper.readValue(jsonEntity, entityMetaData.getType());
 
             genericDAO.insert(entity);
             String msg = objectMapper.writeValueAsString(entity);
@@ -185,7 +187,6 @@ public class RESTController {
                 String msg = objectMapper.writeValueAsString(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
-                
             }
         }
     }
@@ -197,9 +198,9 @@ public class RESTController {
 
         try {
             GenericDAO genericDAO = daoFactory.getDAO(entityName);
-            EntityMetaData entityMetaData=entityMetaDataFactory.getEntityMetaData(entityName);
-            
-            Object entity = objectMapper.readValue(jsonEntity, entityMetaData.getEntiyType());
+            MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+
+            Object entity = objectMapper.readValue(jsonEntity, entityMetaData.getType());
 
             genericDAO.update(entity);
             String msg = objectMapper.writeValueAsString(entity);
@@ -219,7 +220,6 @@ public class RESTController {
                 String msg = objectMapper.writeValueAsString(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
-                
             }
         }
     }
@@ -251,7 +251,6 @@ public class RESTController {
                 String msg = objectMapper.writeValueAsString(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
-                
             }
         }
     }

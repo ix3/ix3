@@ -15,20 +15,21 @@
  */
 package es.logongas.ix3.persistencia.impl.hibernate.dao;
 
-import es.logongas.ix3.persistencia.dao.BussinessException;
-import es.logongas.ix3.persistencia.dao.Criteria;
-import es.logongas.ix3.persistencia.dao.GenericDAO;
-import es.logongas.ix3.persistencia.impl.hibernate.metadata.EntityMetaDataImplHibernate;
-import es.logongas.ix3.persistencia.metadata.EntityMetaData;
-import es.logongas.ix3.persistencia.metadata.EntityMetaDataFactory;
+import es.logongas.ix3.persistencia.services.dao.BussinessException;
+import es.logongas.ix3.persistencia.services.dao.GenericDAO;
+import es.logongas.ix3.persistencia.services.metadata.MetaData;
+import es.logongas.ix3.persistencia.services.metadata.EntityMetaDataFactory;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializable> implements GenericDAO<EntityType, PrimaryKeyType> {
@@ -39,7 +40,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Autowired
     EntityMetaDataFactory  entityMetaDataFactory;    
     
-    EntityMetaData entityMetaData;
+    MetaData entityMetaData;
     
     protected final Log log = LogFactory.getLog(getClass());
     
@@ -56,7 +57,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Override
     public EntityType create() throws BussinessException {
         try {
-            return (EntityType)entityMetaData.getEntiyType().newInstance();
+            return (EntityType)entityMetaData.getType().newInstance();
         } catch (InstantiationException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         } catch (RuntimeException ex) {
@@ -119,7 +120,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         try {
             session.beginTransaction();
             
-            EntityType entity2 = (EntityType) session.get(entityMetaData.getEntiyType(), session.getIdentifier(entity));
+            EntityType entity2 = (EntityType) session.get(entityMetaData.getType(), session.getIdentifier(entity));
             if (entity == null) {
                 session.getTransaction().commit();
                 return false;
@@ -173,7 +174,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            EntityType entity = (EntityType) session.get(entityMetaData.getEntiyType(), id);           
+            EntityType entity = (EntityType) session.get(entityMetaData.getType(), id);           
             session.getTransaction().commit();
 
             return entity;
@@ -221,7 +222,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            EntityType entity = (EntityType) session.get(entityMetaData.getEntiyType(), id);
+            EntityType entity = (EntityType) session.get(entityMetaData.getType(), id);
             if (entity == null) {
                 session.getTransaction().commit();
                 return false;
@@ -270,12 +271,22 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public List<EntityType> search(List<Criteria> criterias) throws BussinessException {
+    public List<EntityType> search(Map<String,Object> filter) throws BussinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
-
-            Query query = session.createQuery("SELECT e FROM " + entityMetaData.getEntiyType().getName() + " e");
-            List<EntityType> entities = query.list();
+                Criteria criteria=session.createCriteria(entityMetaData.getType());
+                if (filter!=null) {
+                    for(String propertyName:filter.keySet()) {
+                        Object value=filter.get(propertyName);
+                        if (entityMetaData.getPropertiesMetaData().get(propertyName).getType().isAssignableFrom(String.class) ) {
+                            criteria.add(Restrictions.like(propertyName, value));
+                        }else {
+                            criteria.add(Restrictions.eq(propertyName, value));
+                        }
+                    }
+                }
+            
+            List<EntityType> entities = criteria.list();
 
             return entities;
         } catch (javax.validation.ConstraintViolationException cve) {
@@ -321,7 +332,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     public EntityType readByNaturalKey(Object value) throws BussinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
-            EntityType entity=(EntityType)session.bySimpleNaturalId(entityMetaData.getEntiyType()).load(value);
+            EntityType entity=(EntityType)session.bySimpleNaturalId(entityMetaData.getType()).load(value);
 
             return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
