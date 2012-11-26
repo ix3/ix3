@@ -25,7 +25,8 @@ import org.hibernate.service.ServiceRegistryBuilder;
 public class HibernateUtil {
 
     private static SessionFactory sessionFactory;
-
+    private static SessionFactory sessionFactory2;
+    
     public static void buildSessionFactory() {
         Configuration configuration = new Configuration();
         configuration.configure();
@@ -35,26 +36,42 @@ public class HibernateUtil {
         
         ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
         sessionFactory = configuration.buildSessionFactory(serviceRegistry); 
+        
+        ServiceRegistry serviceRegistry2 = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
+        sessionFactory2 = configuration.buildSessionFactory(serviceRegistry2);         
+        
     }
 
     public static void closeSessionFactory() {
         sessionFactory.close();
+        sessionFactory2.close();
     }
 
     public static void openSessionAndAttachToThread() {
         Session session = sessionFactory.openSession();
         ThreadLocalSessionContext.bind(session);
+        Session session2 = sessionFactory2.openSession();
+        ThreadLocalSessionContext.bind(session2);        
     }
+    
 
     public static SessionFactory getSessionFactory() {
         return sessionFactory;
     }
+    public static SessionFactory getSessionFactory2() {
+        return sessionFactory2;
+    }    
 
     public static void closeSessionAndDeattachFromThread() {
         Session session = ThreadLocalSessionContext.unbind(sessionFactory);
         if (session!=null) {
             session.close();
         }
+        
+        Session session2 = ThreadLocalSessionContext.unbind(sessionFactory2);
+        if (session2!=null) {
+            session2.close();
+        }        
     }
 
 }
