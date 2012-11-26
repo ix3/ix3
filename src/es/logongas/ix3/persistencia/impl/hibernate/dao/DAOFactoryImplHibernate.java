@@ -15,8 +15,8 @@
  */
 package es.logongas.ix3.persistencia.impl.hibernate.dao;
 
-import es.logongas.ix3.persistencia.dao.DAOFactory;
-import es.logongas.ix3.persistencia.dao.GenericDAO;
+import es.logongas.ix3.persistencia.services.dao.DAOFactory;
+import es.logongas.ix3.persistencia.services.dao.GenericDAO;
 
 /**
  * Creación de DAOs basado en los metadatos que proporciona Hibernate 

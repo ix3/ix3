@@ -13,33 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.impl.hibernate.util.listener;
+package es.logongas.ix3.persistencia.impl.hibernate.util;
 
 import es.logongas.ix3.persistencia.impl.hibernate.util.HibernateUtil;
 import java.io.IOException;
 import javax.servlet.*;
 
-public class HibernateContextListenerAndFilter implements Filter,ServletContextListener {
-    
+public class HibernateContextListenerAndFilter implements Filter, ServletContextListener {
+
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         HibernateUtil.buildSessionFactory();
     }
-    
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-    } 
-    
+    }
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         try {
             HibernateUtil.openSessionAndAttachToThread();
-            filterChain.doFilter(servletRequest,servletResponse);
+            filterChain.doFilter(servletRequest, servletResponse);
         } finally {
-            if (HibernateUtil.isSessionAttachToThread()) {
-                HibernateUtil.closeSessionAndDeattachFromThread();
-            }
+            HibernateUtil.closeSessionAndDeattachFromThread();
+
         }
     }
 
@@ -51,5 +49,4 @@ public class HibernateContextListenerAndFilter implements Filter,ServletContextL
     public void contextDestroyed(ServletContextEvent sce) {
         HibernateUtil.closeSessionFactory();
     }
-
 }

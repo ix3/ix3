@@ -13,14 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.metadata;
+package es.logongas.ix3.persistencia.services.metadata;
 
+import java.util.List;
+import java.util.Map;
 
 /**
- *
- * @author Lorenzo González
+ * Metadatos sobre la entidad
+ * @author Lorenzo Gonzalez
  */
-public interface EntityMetaDataFactory {
-    EntityMetaData getEntityMetaData(Class EntityClass);
-    EntityMetaData getEntityMetaData(String EntityName);    
+public interface MetaData {
+    Class getType();
+    String getCaption();
+    Map<String,MetaData> getPropertiesMetaData();
+    boolean isComponent();
+    boolean isSimple();
+    String getPrimaryKeyPropertyName();
+    List<String> getNaturalKeyPropertiesName();
+    ClientValidations getClientValidations();
 }

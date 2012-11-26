@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.metadata;
+package es.logongas.ix3.persistencia.services.metadata;
+
 
 /**
- * Metadatos sobre la entidad
- * @author Lorenzo Gonzalez
+ *
+ * @author Lorenzo González
  */
-public interface EntityMetaData {
-    Class getEntiyType();
+public interface EntityMetaDataFactory {
+    MetaData getEntityMetaData(Class entityClass);
+    MetaData getEntityMetaData(String entityName);    
 }
