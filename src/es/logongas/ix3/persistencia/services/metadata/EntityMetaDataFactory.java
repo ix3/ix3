@@ -15,12 +15,14 @@
  */
 package es.logongas.ix3.persistencia.services.metadata;
 
+import es.logongas.ix3.persistencia.services.dao.BussinessException;
+
 
 /**
  *
  * @author Lorenzo González
  */
 public interface EntityMetaDataFactory {
-    MetaData getEntityMetaData(Class entityClass);
-    MetaData getEntityMetaData(String entityName);    
+    MetaData getEntityMetaData(Class entityClass) throws BussinessException;
+    MetaData getEntityMetaData(String entityName) throws BussinessException;    
 }
