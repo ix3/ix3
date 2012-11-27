@@ -43,8 +43,12 @@ public class HibernateUtil {
     }
 
     public static void closeSessionFactory() {
-        sessionFactory.close();
-        sessionFactory2.close();
+        if ((sessionFactory!=null) && (sessionFactory.isClosed()==false)) {
+            sessionFactory.close();
+        }
+        if ((sessionFactory2!=null) && (sessionFactory2.isClosed()==false)) {
+            sessionFactory2.close();
+        }
     }
 
     public static void openSessionAndAttachToThread() {
@@ -56,9 +60,15 @@ public class HibernateUtil {
     
 
     public static SessionFactory getSessionFactory() {
+        if ((sessionFactory==null) || (sessionFactory.isClosed()==true)) {
+            throw new RuntimeException("El objeto sessionFactory es null");
+        }        
         return sessionFactory;
     }
     public static SessionFactory getSessionFactory2() {
+        if ((sessionFactory2==null) || (sessionFactory2.isClosed()==true)) {
+            throw new RuntimeException("El objeto sessionFactory2 es null");
+        }        
         return sessionFactory2;
     }    
 
