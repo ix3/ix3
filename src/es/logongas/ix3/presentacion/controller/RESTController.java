@@ -53,6 +53,37 @@ public class RESTController {
     //JSON Service
     ObjectMapper objectMapper = new ObjectMapper();
 
+    @RequestMapping(value = {"/{entityName}/metadata"}, method = RequestMethod.GET, consumes = "application/json")
+    public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
+
+        httpServletResponse.setContentType("application/json; charset=UTF-8");
+
+        try {
+            MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+
+            String msg = objectMapper.writeValueAsString(entityMetaData);
+            httpServletResponse.getWriter().println(msg);
+
+        } catch (BussinessException ex) {
+            try {
+                String msg = objectMapper.writeValueAsString(ex.getBussinessMessages());
+                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                httpServletResponse.getWriter().println(msg);
+            } catch (Exception ex2) {
+                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        } catch (Exception ex) {
+            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            try {
+                String msg = objectMapper.writeValueAsString(ex.getStackTrace());
+                httpServletResponse.getWriter().println(msg);
+            } catch (Exception ex2) {
+            }
+        }
+    }
+    
+    
+    
     @RequestMapping(value = {"/{entityName}/search"}, method = RequestMethod.GET, consumes = "application/json")
     public void search(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
 
