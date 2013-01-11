@@ -17,6 +17,7 @@ package es.logongas.ix3.persistencia.impl.database.mysql;
 
 import es.logongas.ix3.persistencia.services.dao.database.ConstraintViolation;
 import es.logongas.ix3.persistencia.services.dao.database.ConstraintViolationTranslator;
+import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,7 +34,7 @@ public class ConstraintViolationTranslatorImplMySQL implements ConstraintViolati
 
             Matcher matcher = pattern.matcher(message);
             if (matcher.matches()) {
-                String value = matcher.group(1);
+                String value =decode(matcher.group(1));
                 String propertyName = matcher.group(2);
                                 
                 return new ConstraintViolation(propertyName, value,ConstraintViolation.Type.DuplicateEntry);
@@ -47,5 +48,15 @@ public class ConstraintViolationTranslatorImplMySQL implements ConstraintViolati
             return null;
         }
     }
+    
+    private String decode(String s) {
+        try { 
+            byte[] datos=s.getBytes("windows-1252");
+
+            return new String(datos,"UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            return s;
+        }
+    }    
     
 }
