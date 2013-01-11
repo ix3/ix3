@@ -17,8 +17,8 @@ package es.logongas.ix3.persistencia.impl.hibernate.dao;
 
 import es.logongas.ix3.persistencia.services.dao.BussinessException;
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
-import es.logongas.ix3.persistencia.services.metadata.MetaData;
 import es.logongas.ix3.persistencia.services.metadata.EntityMetaDataFactory;
+import es.logongas.ix3.persistencia.services.metadata.MetaData;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -26,7 +26,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
@@ -43,11 +42,19 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     public GenericDAOImplHibernate() {
         Class entityType = (Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        entityMetaData = entityMetaDataFactory.getEntityMetaData(entityType);
+        try {
+            entityMetaData = entityMetaDataFactory.getEntityMetaData(entityType);
+        } catch (BussinessException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public GenericDAOImplHibernate(Class<EntityType> entityType) {
-        entityMetaData = entityMetaDataFactory.getEntityMetaData(entityType);
+        try {
+            entityMetaData = entityMetaDataFactory.getEntityMetaData(entityType);
+        } catch (BussinessException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
