@@ -24,7 +24,7 @@ import java.util.Map;
  */
 public class ConstraintViolation {
     private String propertyName;
-    private String message=null;
+    private String message;
 
     public ConstraintViolation(String propertyName, String value, Type constraintViolationType) {
         this.propertyName = propertyName;
