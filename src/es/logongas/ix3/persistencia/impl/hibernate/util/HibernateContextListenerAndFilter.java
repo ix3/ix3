@@ -33,10 +33,10 @@ public class HibernateContextListenerAndFilter implements Filter, ServletContext
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         try {
-            HibernateUtil.openSessionAndAttachToThread();
+            HibernateUtil.openSessionAndBindToThread();
             filterChain.doFilter(servletRequest, servletResponse);
         } finally {
-            HibernateUtil.closeSessionAndDeattachFromThread();
+            HibernateUtil.closeSessionAndUnBindFromThread();
 
         }
     }
