@@ -15,6 +15,8 @@
  */
 package es.logongas.ix3.persistencia.services.dao;
 
+import es.logongas.ix3.persistencia.impl.database.mysql.ConstraintViolationTranslatorImplMySQL;
+import es.logongas.ix3.persistencia.services.dao.database.ConstraintViolationTranslator;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.ConstraintViolation;
@@ -49,7 +51,22 @@ public class BussinessException extends Exception {
     }
 
     public BussinessException(org.hibernate.exception.ConstraintViolationException cve) {
-        bussinessMessages.add(new BussinessMessage(null, cve.getLocalizedMessage()));
+        BussinessMessage bussinessMessage;
+
+        String message = cve.getMessage();
+        int errorCode = cve.getErrorCode();
+        String sqlState = cve.getSQLState();
+        
+        ConstraintViolationTranslator constraintViolationTranslator = new ConstraintViolationTranslatorImplMySQL();
+        es.logongas.ix3.persistencia.services.dao.database.ConstraintViolation constraintViolation = constraintViolationTranslator.translate(message, errorCode, sqlState);
+
+        if (constraintViolation == null) {
+            throw cve;
+        } else {
+            bussinessMessage = new BussinessMessage(constraintViolation.getPropertyName(), constraintViolation.getMessage());
+        }
+
+        bussinessMessages.add(bussinessMessage);
     }
 
     public List<BussinessMessage> getBussinessMessages() {
