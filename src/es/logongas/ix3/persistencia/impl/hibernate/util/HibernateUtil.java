@@ -76,7 +76,7 @@ public class HibernateUtil {
         return sessionFactory2;
     }    
 
-    public static void closeSessionAndUnBindFromThread() {
+    public static void closeSessionAndUnbindFromThread() {
         Session session = ThreadLocalSessionContext.unbind(sessionFactory);
         if (session!=null) {
             session.close();

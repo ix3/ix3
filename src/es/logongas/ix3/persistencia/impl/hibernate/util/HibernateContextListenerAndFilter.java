@@ -36,7 +36,7 @@ public class HibernateContextListenerAndFilter implements Filter, ServletContext
             HibernateUtil.openSessionAndBindToThread();
             filterChain.doFilter(servletRequest, servletResponse);
         } finally {
-            HibernateUtil.closeSessionAndUnBindFromThread();
+            HibernateUtil.closeSessionAndUnbindFromThread();
 
         }
     }
