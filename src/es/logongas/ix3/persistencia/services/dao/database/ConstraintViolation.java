@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
+ * Restriccion que se ha violado en la base de datos.
  * @author Lorenzo González
  */
 public class ConstraintViolation {

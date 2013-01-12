@@ -22,6 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Transforma ciertos errores de MySQL en mensajes para el usuario
  * ver http://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html
  * @author Lorenzo González
  */
