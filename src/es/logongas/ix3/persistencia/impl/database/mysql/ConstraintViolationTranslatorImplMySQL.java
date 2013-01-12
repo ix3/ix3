@@ -35,7 +35,7 @@ public class ConstraintViolationTranslatorImplMySQL implements ConstraintViolati
 
             Matcher matcher = pattern.matcher(message);
             if (matcher.matches()) {
-                String value =decode(matcher.group(1));
+                String value =matcher.group(1);
                 String propertyName = matcher.group(2);
                                 
                 return new ConstraintViolation(propertyName, value,ConstraintViolation.Type.DuplicateEntry);
@@ -48,16 +48,5 @@ public class ConstraintViolationTranslatorImplMySQL implements ConstraintViolati
             //No sabemos nada de ese error así que debe no retornamos nada
             return null;
         }
-    }
-    
-    private String decode(String s) {
-        try { 
-            byte[] datos=s.getBytes("windows-1252");
-
-            return new String(datos,"UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            return s;
-        }
-    }    
-    
+    } 
 }
