@@ -15,8 +15,6 @@
  */
 package es.logongas.ix3.persistencia.services.dao.database;
 
-import java.sql.SQLException;
-
 /**
  * Transforma ciertos errores de la base de datos en mensajes para el usuario
  * @author Lorenzo González
