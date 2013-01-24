@@ -26,5 +26,6 @@ limitations under the License.
         <bean name="sessionFactory2" class="es.logongas.ix3.persistencia.impl.hibernate.util.HibernateUtil" factory-method="getSessionFactory2"  /> 
         <bean class="es.logongas.ix3.persistencia.impl.hibernate.services.dao.DAOFactoryImplHibernate" />
         <bean class="es.logongas.ix3.persistencia.impl.hibernate.services.metadata.EntityMetaDataFactoryImplHibernate" />
+        <bean class="es.logongas.ix3.presentacion.json.impl.JsonTransformerFactoryImplJackson" />
         
 </beans>
