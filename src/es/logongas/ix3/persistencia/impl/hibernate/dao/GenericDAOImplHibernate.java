@@ -42,19 +42,12 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     public GenericDAOImplHibernate() {
         Class entityType = (Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        try {
-            entityMetaData = entityMetaDataFactory.getEntityMetaData(entityType);
-        } catch (BussinessException ex) {
-            throw new RuntimeException(ex);
-        }
+
+        entityMetaData = entityMetaDataFactory.getEntityMetaData(entityType);
     }
 
     public GenericDAOImplHibernate(Class<EntityType> entityType) {
-        try {
-            entityMetaData = entityMetaDataFactory.getEntityMetaData(entityType);
-        } catch (BussinessException ex) {
-            throw new RuntimeException(ex);
-        }
+        entityMetaData = entityMetaDataFactory.getEntityMetaData(entityType);
     }
 
     @Override

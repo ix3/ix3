@@ -21,6 +21,8 @@ import es.logongas.ix3.persistencia.services.dao.DAOFactory;
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
 import es.logongas.ix3.persistencia.services.metadata.MetaData;
 import es.logongas.ix3.persistencia.services.metadata.EntityMetaDataFactory;
+import es.logongas.ix3.presentacion.json.JsonTransformer;
+import es.logongas.ix3.presentacion.json.JsonTransformerFactory;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,57 +45,45 @@ public class RESTController {
 
     @Autowired
     DAOFactory daoFactory;
-    
     @Autowired
     EntityMetaDataFactory entityMetaDataFactory;
-    
     @Autowired
     ConversionService conversionService;
-    
-    //JSON Service
-    ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    JsonTransformerFactory jsonTransformerFactory;
 
     @RequestMapping(value = {"/{entityName}/metadata"}, method = RequestMethod.GET, consumes = "application/json")
     public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
 
+        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
+
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
-            MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
-
-            String msg = objectMapper.writeValueAsString(entityMetaData);
+            String msg = jsonTransformer.toJson(entityMetaData);
             httpServletResponse.getWriter().println(msg);
-
-        } catch (BussinessException ex) {
-            try {
-                String msg = objectMapper.writeValueAsString(ex.getBussinessMessages());
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpServletResponse.getWriter().println(msg);
-            } catch (Exception ex2) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             try {
-                String msg = objectMapper.writeValueAsString(ex.getStackTrace());
+                String msg = jsonTransformer.toJson(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
             }
         }
     }
-    
-    
-    
+
     @RequestMapping(value = {"/{entityName}/search"}, method = RequestMethod.GET, consumes = "application/json")
     public void search(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
+        GenericDAO genericDAO = daoFactory.getDAO(entityName);
+        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
             Map<String, Object> filter = new HashMap<>();
 
-            GenericDAO genericDAO = daoFactory.getDAO(entityName);
-            MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
 
             Enumeration<String> enumeration = httpRequest.getAttributeNames();
             while (enumeration.hasMoreElements()) {
@@ -106,12 +96,12 @@ public class RESTController {
 
             Object entity = genericDAO.search(filter);
 
-            String msg = objectMapper.writeValueAsString(entity);
+            String msg = jsonTransformer.toJson(entity);
             httpServletResponse.getWriter().println(msg);
 
         } catch (BussinessException ex) {
             try {
-                String msg = objectMapper.writeValueAsString(ex.getBussinessMessages());
+                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
@@ -120,7 +110,7 @@ public class RESTController {
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             try {
-                String msg = objectMapper.writeValueAsString(ex.getStackTrace());
+                String msg = jsonTransformer.toJson(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
             }
@@ -129,20 +119,22 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, consumes = "application/json")
     public void get(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
+        GenericDAO genericDAO = daoFactory.getDAO(entityName);
+        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
-            GenericDAO genericDAO = daoFactory.getDAO(entityName);
 
             Object entity = genericDAO.read(id);
 
-            String msg = objectMapper.writeValueAsString(entity);
+            String msg = jsonTransformer.toJson(entity);
             httpServletResponse.getWriter().println(msg);
 
         } catch (BussinessException ex) {
             try {
-                String msg = objectMapper.writeValueAsString(ex.getBussinessMessages());
+                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
@@ -151,7 +143,7 @@ public class RESTController {
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             try {
-                String msg = objectMapper.writeValueAsString(ex.getStackTrace());
+                String msg = jsonTransformer.toJson(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
             }
@@ -160,19 +152,21 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/"}, method = RequestMethod.GET, consumes = "application/json")
     public void create(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
+        GenericDAO genericDAO = daoFactory.getDAO(entityName);
+        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
-            GenericDAO genericDAO = daoFactory.getDAO(entityName);
 
             Object entity = genericDAO.create();
-            String msg = objectMapper.writeValueAsString(entity);
+            String msg = jsonTransformer.toJson(entity);
             httpServletResponse.getWriter().println(msg);
 
         } catch (BussinessException ex) {
             try {
-                String msg = objectMapper.writeValueAsString(ex.getBussinessMessages());
+                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
@@ -181,7 +175,7 @@ public class RESTController {
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             try {
-                String msg = objectMapper.writeValueAsString(ex.getStackTrace());
+                String msg = jsonTransformer.toJson(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
             }
@@ -191,22 +185,23 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/"}, method = RequestMethod.POST, consumes = "application/json")
     public void insert(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @RequestBody String jsonEntity) {
+        GenericDAO genericDAO = daoFactory.getDAO(entityName);
+        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
-            GenericDAO genericDAO = daoFactory.getDAO(entityName);
-            MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
 
-            Object entity = objectMapper.readValue(jsonEntity, entityMetaData.getType());
+            Object entity = jsonTransformer.fromJson(jsonEntity);
 
             genericDAO.insert(entity);
-            String msg = objectMapper.writeValueAsString(entity);
+            String msg = jsonTransformer.toJson(entity);
             httpServletResponse.getWriter().println(msg);
 
         } catch (BussinessException ex) {
             try {
-                String msg = objectMapper.writeValueAsString(ex.getBussinessMessages());
+                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
@@ -215,7 +210,7 @@ public class RESTController {
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             try {
-                String msg = objectMapper.writeValueAsString(ex.getStackTrace());
+                String msg = jsonTransformer.toJson(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
             }
@@ -224,32 +219,32 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json")
     public void update(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @RequestBody String jsonEntity) {
+        GenericDAO genericDAO = daoFactory.getDAO(entityName);
+        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
-            GenericDAO genericDAO = daoFactory.getDAO(entityName);
-            MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
 
-            Object entity = objectMapper.readValue(jsonEntity, entityMetaData.getType());
+            Object entity = jsonTransformer.fromJson(jsonEntity);
 
             genericDAO.update(entity);
-            String msg = objectMapper.writeValueAsString(entity);
+            String msg = jsonTransformer.toJson(entity);
             httpServletResponse.getWriter().println(msg);
 
         } catch (BussinessException ex) {
             try {
-                String msg = objectMapper.writeValueAsString(ex.getBussinessMessages());
+                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             try {
-                String msg = objectMapper.writeValueAsString(ex.getStackTrace());
-                httpServletResponse.getWriter().println(msg);
+                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                String msg = jsonTransformer.toJson(ex.getStackTrace());
             } catch (Exception ex2) {
             }
         }
@@ -257,20 +252,20 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE, consumes = "application/json")
     public void delete(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
+        GenericDAO genericDAO = daoFactory.getDAO(entityName);
+        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
 
         try {
-            GenericDAO genericDAO = daoFactory.getDAO(entityName);
-
             genericDAO.delete(id);
-            String msg = objectMapper.writeValueAsString(null);
+            String msg = jsonTransformer.toJson(null);
             httpServletResponse.getWriter().println(msg);
-
         } catch (BussinessException ex) {
             try {
-                String msg = objectMapper.writeValueAsString(ex.getBussinessMessages());
+                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
@@ -279,7 +274,7 @@ public class RESTController {
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             try {
-                String msg = objectMapper.writeValueAsString(ex.getStackTrace());
+                String msg = jsonTransformer.toJson(ex.getStackTrace());
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
             }
