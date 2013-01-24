@@ -30,11 +30,6 @@ public class DAOFactoryImplHibernate implements DAOFactory {
     public GenericDAO getDAO(Class EntityClass) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
-    @Override
-    public GenericDAO getDAO(String EntityName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
     
     /**
      * Establece el nombre del paquete Java donde están los DAO

@@ -21,5 +21,4 @@ package es.logongas.ix3.persistencia.services.dao;
  */
 public interface DAOFactory {
     GenericDAO getDAO(Class EntityClass);
-    GenericDAO getDAO(String EntityName);
 }

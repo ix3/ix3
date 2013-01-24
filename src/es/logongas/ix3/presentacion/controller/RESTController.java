@@ -75,8 +75,8 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/search"}, method = RequestMethod.GET, consumes = "application/json")
     public void search(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
-        GenericDAO genericDAO = daoFactory.getDAO(entityName);
         MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
         JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -119,8 +119,8 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, consumes = "application/json")
     public void get(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
-        GenericDAO genericDAO = daoFactory.getDAO(entityName);
         MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
         JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -152,8 +152,8 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/"}, method = RequestMethod.GET, consumes = "application/json")
     public void create(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
-        GenericDAO genericDAO = daoFactory.getDAO(entityName);
         MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
         JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -185,8 +185,8 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/"}, method = RequestMethod.POST, consumes = "application/json")
     public void insert(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @RequestBody String jsonEntity) {
-        GenericDAO genericDAO = daoFactory.getDAO(entityName);
         MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
         JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -219,8 +219,8 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json")
     public void update(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @RequestBody String jsonEntity) {
-        GenericDAO genericDAO = daoFactory.getDAO(entityName);
         MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
         JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -252,8 +252,8 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE, consumes = "application/json")
     public void delete(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
-        GenericDAO genericDAO = daoFactory.getDAO(entityName);
         MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
         JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
