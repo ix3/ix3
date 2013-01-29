@@ -28,5 +28,5 @@ limitations under the License.
         <bean class="es.logongas.ix3.persistencia.impl.hibernate.dao.DAOFactoryImplHibernate" />
         <bean class="es.logongas.ix3.persistencia.impl.hibernate.metadata.EntityMetaDataFactoryImplHibernate" />
         <bean class="es.logongas.ix3.presentacion.json.impl.JsonTransformerFactoryImplJackson" />
-        
+        <bean class="org.springframework.core.convert.support.DefaultConversionService" />
 </beans>
