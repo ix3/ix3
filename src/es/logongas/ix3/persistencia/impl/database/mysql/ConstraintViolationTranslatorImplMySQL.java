@@ -17,7 +17,6 @@ package es.logongas.ix3.persistencia.impl.database.mysql;
 
 import es.logongas.ix3.persistencia.services.dao.database.ConstraintViolation;
 import es.logongas.ix3.persistencia.services.dao.database.ConstraintViolationTranslator;
-import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
