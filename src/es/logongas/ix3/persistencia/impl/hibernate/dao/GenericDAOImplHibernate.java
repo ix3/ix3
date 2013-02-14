@@ -37,23 +37,23 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     SessionFactory sessionFactory;
     @Autowired
     EntityMetaDataFactory entityMetaDataFactory;
-    MetaData entityMetaData;
+    
+    Class entityType;
+    
     protected final Log log = LogFactory.getLog(getClass());
 
     public GenericDAOImplHibernate() {
-        Class entityType = (Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-
-        entityMetaData = entityMetaDataFactory.getEntityMetaData(entityType);
+        entityType = (Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
     }
 
     public GenericDAOImplHibernate(Class<EntityType> entityType) {
-        entityMetaData = entityMetaDataFactory.getEntityMetaData(entityType);
+        this.entityType=entityType;
     }
 
     @Override
     public EntityType create() throws BussinessException {
         try {
-            return (EntityType) entityMetaData.getType().newInstance();
+            return (EntityType) getEntityMetaData().getType().newInstance();
         } catch (InstantiationException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         } catch (RuntimeException ex) {
@@ -115,7 +115,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         try {
             session.beginTransaction();
 
-            EntityType entity2 = (EntityType) session.get(entityMetaData.getType(), session.getIdentifier(entity));
+            EntityType entity2 = (EntityType) session.get(getEntityMetaData().getType(), session.getIdentifier(entity));
             if (entity == null) {
                 session.getTransaction().commit();
                 return false;
@@ -169,7 +169,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            EntityType entity = (EntityType) session.get(entityMetaData.getType(), id);
+            EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
             session.getTransaction().commit();
 
             return entity;
@@ -217,7 +217,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
-            EntityType entity = (EntityType) session.get(entityMetaData.getType(), id);
+            EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
             if (entity == null) {
                 session.getTransaction().commit();
                 return false;
@@ -269,12 +269,12 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     public List<EntityType> search(Map<String, Object> filter) throws BussinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
-            Criteria criteria = session.createCriteria(entityMetaData.getType());
+            Criteria criteria = session.createCriteria(getEntityMetaData().getType());
             if (filter != null) {
                 for (String propertyName : filter.keySet()) {
                     Object value = filter.get(propertyName);
 
-                    if (entityMetaData.getPropertiesMetaData().get(propertyName).getType().isAssignableFrom(String.class)) {
+                    if (getEntityMetaData().getPropertiesMetaData().get(propertyName).getType().isAssignableFrom(String.class)) {
                         if ((value != null) && (((String) value).trim().equals("") == false)) {
                             criteria.add(Restrictions.like(propertyName, value));
                         }
@@ -332,7 +332,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     public EntityType readByNaturalKey(Object value) throws BussinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
-            EntityType entity = (EntityType) session.bySimpleNaturalId(entityMetaData.getType()).load(value);
+            EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(value);
 
             return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
@@ -373,5 +373,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new RuntimeException(ex);
         }
 
+    }
+    
+    public MetaData getEntityMetaData() {
+        return entityMetaDataFactory.getEntityMetaData(entityType);
     }
 }
