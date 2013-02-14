@@ -15,12 +15,11 @@
  */
 package es.logongas.ix3.presentacion.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import es.logongas.ix3.persistencia.services.dao.BussinessException;
 import es.logongas.ix3.persistencia.services.dao.DAOFactory;
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
-import es.logongas.ix3.persistencia.services.metadata.MetaData;
 import es.logongas.ix3.persistencia.services.metadata.EntityMetaDataFactory;
+import es.logongas.ix3.persistencia.services.metadata.MetaData;
 import es.logongas.ix3.presentacion.json.JsonTransformer;
 import es.logongas.ix3.presentacion.json.JsonTransformerFactory;
 import java.util.Enumeration;
@@ -28,6 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Controller;
@@ -51,6 +52,8 @@ public class RESTController {
     ConversionService conversionService;
     @Autowired
     JsonTransformerFactory jsonTransformerFactory;
+    
+    private static Log log = LogFactory.getLog(RESTController.class);
 
     @RequestMapping(value = {"/{entityName}/metadata"}, method = RequestMethod.GET, consumes = "application/json")
     public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
@@ -61,14 +64,18 @@ public class RESTController {
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
+
             String msg = jsonTransformer.toJson(entityMetaData);
+            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+            httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(msg);
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            httpServletResponse.setContentType("text/plain");
             try {
-                String msg = jsonTransformer.toJson(ex.getStackTrace());
-                httpServletResponse.getWriter().println(msg);
+                ex.printStackTrace(httpServletResponse.getWriter());
             } catch (Exception ex2) {
+                log.error("Falló al imprimir la traza", ex2);
             }
         }
     }
@@ -103,16 +110,24 @@ public class RESTController {
             try {
                 String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                httpServletResponse.setContentType("text/plain");
+                try {
+                    ex.printStackTrace(httpServletResponse.getWriter());
+                } catch (Exception ex3) {
+                    log.error("Falló al imprimir la traza", ex3);
+                }
             }
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            httpServletResponse.setContentType("text/plain");
             try {
-                String msg = jsonTransformer.toJson(ex.getStackTrace());
-                httpServletResponse.getWriter().println(msg);
+                ex.printStackTrace(httpServletResponse.getWriter());
             } catch (Exception ex2) {
+                log.error("Falló al imprimir la traza", ex2);
             }
         }
     }
@@ -136,16 +151,24 @@ public class RESTController {
             try {
                 String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                httpServletResponse.setContentType("text/plain");
+                try {
+                    ex.printStackTrace(httpServletResponse.getWriter());
+                } catch (Exception ex3) {
+                    log.error("Falló al imprimir la traza", ex3);
+                }
             }
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            httpServletResponse.setContentType("text/plain");
             try {
-                String msg = jsonTransformer.toJson(ex.getStackTrace());
-                httpServletResponse.getWriter().println(msg);
+                ex.printStackTrace(httpServletResponse.getWriter());
             } catch (Exception ex2) {
+                log.error("Falló al imprimir la traza", ex2);
             }
         }
     }
@@ -168,16 +191,24 @@ public class RESTController {
             try {
                 String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                httpServletResponse.setContentType("text/plain");
+                try {
+                    ex.printStackTrace(httpServletResponse.getWriter());
+                } catch (Exception ex3) {
+                    log.error("Falló al imprimir la traza", ex3);
+                }
             }
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            httpServletResponse.setContentType("text/plain");
             try {
-                String msg = jsonTransformer.toJson(ex.getStackTrace());
-                httpServletResponse.getWriter().println(msg);
+                ex.printStackTrace(httpServletResponse.getWriter());
             } catch (Exception ex2) {
+                log.error("Falló al imprimir la traza", ex2);
             }
         }
 
@@ -203,16 +234,24 @@ public class RESTController {
             try {
                 String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                httpServletResponse.setContentType("text/plain");
+                try {
+                    ex.printStackTrace(httpServletResponse.getWriter());
+                } catch (Exception ex3) {
+                    log.error("Falló al imprimir la traza", ex3);
+                }
             }
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            httpServletResponse.setContentType("text/plain");
             try {
-                String msg = jsonTransformer.toJson(ex.getStackTrace());
-                httpServletResponse.getWriter().println(msg);
+                ex.printStackTrace(httpServletResponse.getWriter());
             } catch (Exception ex2) {
+                log.error("Falló al imprimir la traza", ex2);
             }
         }
     }
@@ -237,15 +276,24 @@ public class RESTController {
             try {
                 String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                httpServletResponse.setContentType("text/plain");
+                try {
+                    ex.printStackTrace(httpServletResponse.getWriter());
+                } catch (Exception ex3) {
+                    log.error("Falló al imprimir la traza", ex3);
+                }
             }
         } catch (Exception ex) {
+            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            httpServletResponse.setContentType("text/plain");
             try {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                String msg = jsonTransformer.toJson(ex.getStackTrace());
+                ex.printStackTrace(httpServletResponse.getWriter());
             } catch (Exception ex2) {
+                log.error("Falló al imprimir la traza", ex2);
             }
         }
     }
@@ -267,16 +315,24 @@ public class RESTController {
             try {
                 String msg = jsonTransformer.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
             } catch (Exception ex2) {
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                httpServletResponse.setContentType("text/plain");
+                try {
+                    ex.printStackTrace(httpServletResponse.getWriter());
+                } catch (Exception ex3) {
+                    log.error("Falló al imprimir la traza", ex3);
+                }
             }
         } catch (Exception ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            httpServletResponse.setContentType("text/plain");
             try {
-                String msg = jsonTransformer.toJson(ex.getStackTrace());
-                httpServletResponse.getWriter().println(msg);
+                ex.printStackTrace(httpServletResponse.getWriter());
             } catch (Exception ex2) {
+                log.error("Falló al imprimir la traza", ex2);
             }
         }
     }
