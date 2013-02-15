@@ -15,12 +15,10 @@
  */
 package es.logongas.ix3.persistencia.impl.hibernate.metadata;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import es.logongas.ix3.persistencia.services.metadata.MetaData;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,14 +34,14 @@ import org.hibernate.type.Type;
  */
 public class MetaDataImplHibernate implements MetaData {
 
+    private static Map<Type, MetaData> cache = new ConcurrentHashMap<>();
+    private SessionFactory sessionFactory;
     private Class entityType = null;
     private Type type = null;
     
-    private SessionFactory sessionFactory;
+    //No usar directamente esta propiedad sino usar el método getPropertiesMetaData()
+    private Map<String, MetaData> metaDatas = null;
 
-    private static Map<Type,MetaData> cache=new ConcurrentHashMap<>();
-    
-    
     protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
         this.entityType = entityType;
@@ -79,22 +77,25 @@ public class MetaDataImplHibernate implements MetaData {
     @Override
     @JsonManagedReference
     public Map<String, MetaData> getPropertiesMetaData() {
-        Map<String, MetaData> metaDatas = new HashMap<>();        
-        
-        ClassMetadata classMetadata = getClassMetadata();
 
-        if (classMetadata != null) {
-            String[] propertyNames = classMetadata.getPropertyNames();
-            for (String propertyName : propertyNames) {
-                Type propertyType = classMetadata.getPropertyType(propertyName);
+        if (metaDatas == null) {
+            metaDatas = new LinkedHashMap<>();
 
-                MetaData metaData =cache.get(propertyType);
-                if (cache.get(propertyType)==null) {
-                    metaData = new MetaDataImplHibernate(propertyType, sessionFactory);
-                    cache.put(propertyType, metaData);
+            ClassMetadata classMetadata = getClassMetadata();
+
+            if (classMetadata != null) {
+                String[] propertyNames = classMetadata.getPropertyNames();
+                for (String propertyName : propertyNames) {
+                    Type propertyType = classMetadata.getPropertyType(propertyName);
+
+                    MetaData metaData = cache.get(propertyType);
+                    if (cache.get(propertyType) == null) {
+                        metaData = new MetaDataImplHibernate(propertyType, sessionFactory);
+                        cache.put(propertyType, metaData);
+                    }
+
+                    metaDatas.put(propertyName, metaData);
                 }
-                
-                metaDatas.put(propertyName, metaData);
             }
         }
         
@@ -106,11 +107,11 @@ public class MetaDataImplHibernate implements MetaData {
 
         List<String> naturalKeyPropertiesName = new ArrayList<>();
 
-        ClassMetadata classMetadata=getClassMetadata();
+        ClassMetadata classMetadata = getClassMetadata();
         if (classMetadata == null) {
             return null;
         }
-        
+
         if (classMetadata.hasNaturalIdentifier()) {
 
             int[] positions = classMetadata.getNaturalIdentifierProperties();
@@ -135,11 +136,11 @@ public class MetaDataImplHibernate implements MetaData {
 
     @Override
     public String getPrimaryKeyPropertyName() {
-        ClassMetadata classMetadata=getClassMetadata();
+        ClassMetadata classMetadata = getClassMetadata();
         if (classMetadata == null) {
             return null;
         }
-        
+
         if (classMetadata.hasIdentifierProperty() == true) {
             return classMetadata.getIdentifierPropertyName();
         } else {
