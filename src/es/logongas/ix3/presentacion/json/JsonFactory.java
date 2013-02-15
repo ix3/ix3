@@ -16,9 +16,27 @@
 package es.logongas.ix3.presentacion.json;
 
 /**
- * Factoría de objetos JsonTransformer en función de la clase a gestionar
+ * Factoria de objetos JsonReader y JsonWriter
  * @author Lorenzo González
  */
-public interface JsonTransformerFactory {
-    <T> JsonTransformer<T> getJsonTransformer(Class<T> clazz);
+public interface JsonFactory {
+    /**
+     * Obtiene un JsonReader
+     * @param clazz La clase java que se obtendrá al leer en String JSON.
+     * @return 
+     */
+    JsonReader getJsonReader(Class clazz);
+    /**
+     * Obtiene un JsonWriter
+     * @param clazz La clase Java del objeto que se transformará en JSON. 
+     * @return 
+     */
+    JsonWriter getJsonWriter(Class clazz);
+    /**
+     * Obtiene un JsonWriter
+     * @param clazz La clase Java del objeto que se transformará en JSON. 
+     * @return 
+     */
+    JsonWriter getJsonWriter();    
+    
 }

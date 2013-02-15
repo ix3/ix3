@@ -15,37 +15,30 @@
  */
 package es.logongas.ix3.presentacion.json.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.logongas.ix3.presentacion.json.JsonTransformer;
+import es.logongas.ix3.presentacion.json.JsonReader;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Lorenzo González
  */
-public class JsonTransformerImplJackson<T> implements JsonTransformer<T> {
-
-    Class<T> clazz;
-    ObjectMapper objectMapper = new ObjectMapper();
+public class JsonReaderImplJackson implements JsonReader {
+    private Class clazz;
+    private ObjectMapper objectMapper = new ObjectMapper();
     
-    public JsonTransformerImplJackson(Class<T> clazz) {
-        this.clazz=clazz;
-    }
-
-    
-    @Override
-    public String toJson(T data) {
-        try {
-            return objectMapper.writeValueAsString(data);
-        } catch (JsonProcessingException ex) {
-            throw new RuntimeException(ex);
-        }
+    public JsonReaderImplJackson(Class clazz) {
+        this.clazz = clazz;
     }
 
     @Override
-    public T fromJson(String data) {
+    public Object fromJson(String json) {
         try {
-            return (T)objectMapper.readValue(data, clazz);
+            return objectMapper.readValue(json, clazz);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

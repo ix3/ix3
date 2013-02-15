@@ -18,10 +18,11 @@ package es.logongas.ix3.presentacion.controller;
 import es.logongas.ix3.persistencia.services.dao.BussinessException;
 import es.logongas.ix3.persistencia.services.dao.DAOFactory;
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
-import es.logongas.ix3.persistencia.services.metadata.MetaDataFactory;
 import es.logongas.ix3.persistencia.services.metadata.MetaData;
-import es.logongas.ix3.presentacion.json.JsonTransformer;
-import es.logongas.ix3.presentacion.json.JsonTransformerFactory;
+import es.logongas.ix3.persistencia.services.metadata.MetaDataFactory;
+import es.logongas.ix3.presentacion.json.JsonFactory;
+import es.logongas.ix3.presentacion.json.JsonReader;
+import es.logongas.ix3.presentacion.json.JsonWriter;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class RESTController {
     @Autowired
     ConversionService conversionService;
     @Autowired
-    JsonTransformerFactory jsonTransformerFactory;
+    JsonFactory jsonFactory;
     
     private static Log log = LogFactory.getLog(RESTController.class);
 
@@ -59,13 +60,13 @@ public class RESTController {
     public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
 
         MetaData metaData = metaDataFactory.getMetaData(entityName);
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(MetaData.class);
+        JsonWriter jsonWriter = jsonFactory.getJsonWriter(MetaData.class);
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
 
-            String msg = jsonTransformer.toJson(metaData);
+            String msg = jsonWriter.toJson(metaData);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(msg);
@@ -84,8 +85,8 @@ public class RESTController {
     public void search(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         MetaData metaData = metaDataFactory.getMetaData(entityName);
         GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
-
+        JsonWriter jsonWriter = jsonFactory.getJsonWriter();
+        
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
@@ -103,12 +104,12 @@ public class RESTController {
 
             Object entity = genericDAO.search(filter);
 
-            String msg = jsonTransformer.toJson(entity);
+            String msg = jsonWriter.toJson(entity);
             httpServletResponse.getWriter().println(msg);
 
         } catch (BussinessException ex) {
             try {
-                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
+                String msg = jsonWriter.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
@@ -136,20 +137,20 @@ public class RESTController {
     public void get(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
         MetaData metaData = metaDataFactory.getMetaData(entityName);
         GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
-
+        JsonWriter jsonWriter = jsonFactory.getJsonWriter();
+        
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
 
             Object entity = genericDAO.read(id);
 
-            String msg = jsonTransformer.toJson(entity);
+            String msg = jsonWriter.toJson(entity);
             httpServletResponse.getWriter().println(msg);
 
         } catch (BussinessException ex) {
             try {
-                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
+                String msg = jsonWriter.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
@@ -177,19 +178,19 @@ public class RESTController {
     public void create(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         MetaData metaData = metaDataFactory.getMetaData(entityName);
         GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
+        JsonWriter jsonWriter = jsonFactory.getJsonWriter();
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
 
             Object entity = genericDAO.create();
-            String msg = jsonTransformer.toJson(entity);
+            String msg = jsonWriter.toJson(entity);
             httpServletResponse.getWriter().println(msg);
 
         } catch (BussinessException ex) {
             try {
-                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
+                String msg = jsonWriter.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
@@ -218,21 +219,22 @@ public class RESTController {
     public void insert(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @RequestBody String jsonEntity) {
         MetaData metaData = metaDataFactory.getMetaData(entityName);
         GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
-
+        JsonWriter jsonWriter = jsonFactory.getJsonWriter();
+        JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
+        
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
 
-            Object entity = jsonTransformer.fromJson(jsonEntity);
+            Object entity = jsonReader.fromJson(jsonEntity);
 
             genericDAO.insert(entity);
-            String msg = jsonTransformer.toJson(entity);
+            String msg = jsonWriter.toJson(entity);
             httpServletResponse.getWriter().println(msg);
 
         } catch (BussinessException ex) {
             try {
-                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
+                String msg = jsonWriter.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
@@ -260,21 +262,22 @@ public class RESTController {
     public void update(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @RequestBody String jsonEntity) {
         MetaData metaData = metaDataFactory.getMetaData(entityName);
         GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
-
+        JsonWriter jsonWriter = jsonFactory.getJsonWriter();
+        JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
+        
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
 
-            Object entity = jsonTransformer.fromJson(jsonEntity);
+            Object entity = jsonReader.fromJson(jsonEntity);
 
             genericDAO.update(entity);
-            String msg = jsonTransformer.toJson(entity);
+            String msg = jsonWriter.toJson(entity);
             httpServletResponse.getWriter().println(msg);
 
         } catch (BussinessException ex) {
             try {
-                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
+                String msg = jsonWriter.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);
@@ -302,18 +305,18 @@ public class RESTController {
     public void delete(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
         MetaData metaData = metaDataFactory.getMetaData(entityName);
         GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
+        JsonWriter jsonWriter = jsonFactory.getJsonWriter();
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
 
         try {
             genericDAO.delete(id);
-            String msg = jsonTransformer.toJson(null);
+            String msg = jsonWriter.toJson(null);
             httpServletResponse.getWriter().println(msg);
         } catch (BussinessException ex) {
             try {
-                String msg = jsonTransformer.toJson(ex.getBussinessMessages());
+                String msg = jsonWriter.toJson(ex.getBussinessMessages());
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(msg);

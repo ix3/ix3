@@ -15,18 +15,30 @@
  */
 package es.logongas.ix3.presentacion.json.impl;
 
-import es.logongas.ix3.presentacion.json.JsonTransformer;
-import es.logongas.ix3.presentacion.json.JsonTransformerFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import es.logongas.ix3.presentacion.json.JsonWriter;
 
 /**
  *
  * @author Lorenzo González
  */
-public class JsonTransformerFactoryImplJackson implements JsonTransformerFactory {
+public class JsonWriterImplJackson implements JsonWriter {
 
+    private Class clazz;
+    private ObjectMapper objectMapper = new ObjectMapper();
+    
+    public JsonWriterImplJackson(Class clazz) {
+        this.clazz = clazz;
+    }
+    
     @Override
-    public <T> JsonTransformer<T> getJsonTransformer(Class<T> clazz) {
-        return new JsonTransformerImplJackson(clazz);
+    public String toJson(Object obj) {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException ex) {
+            throw new RuntimeException(ex);
+        }
     }
     
 }
