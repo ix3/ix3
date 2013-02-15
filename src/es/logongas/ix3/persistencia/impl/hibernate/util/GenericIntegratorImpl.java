@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.impl.hibernate.util.listener;
+package es.logongas.ix3.persistencia.impl.hibernate.util;
 
+import es.logongas.ix3.persistencia.impl.hibernate.util.GenericEventListenerImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;

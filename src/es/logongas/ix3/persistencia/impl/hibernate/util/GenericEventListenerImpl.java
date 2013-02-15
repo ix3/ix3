@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistencia.impl.hibernate.util.listener;
+package es.logongas.ix3.persistencia.impl.hibernate.util;
 
 import org.hibernate.event.spi.*;
 
