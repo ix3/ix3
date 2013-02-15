@@ -9,8 +9,6 @@
         <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
         <property name="hibernate.hbm2ddl.auto">create-drop</property>
 
-        <mapping resource="ejemplo01/Profesor.hbm.xml"/>
-        <mapping class="ejemplo01.Profesor"/>
 
     </session-factory>
 </hibernate-configuration>
