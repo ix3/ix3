@@ -15,17 +15,20 @@
  */
 package es.logongas.ix3.persistencia.impl.hibernate.metadata;
 
-import es.logongas.ix3.persistencia.services.metadata.ClientValidations;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import es.logongas.ix3.persistencia.services.metadata.MetaData;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.Type;
 
 /**
  *
@@ -33,93 +36,118 @@ import org.hibernate.metadata.ClassMetadata;
  */
 public class MetaDataImplHibernate implements MetaData {
 
-    Class entityType;
-    Map<String,MetaData> metaDatas;
-    ClientValidations clientValidations=new ClientValidations();
-    ClassMetadata classMetadata;
+    private Class entityType = null;
+    private Type type = null;
     
-    protected MetaDataImplHibernate(Class entityType,SessionFactory sessionFactory) {
-        
-        try {
-            this.entityType=entityType;
-            classMetadata=sessionFactory.getClassMetadata(entityType);
-            
-            PropertyDescriptor[] arrayPopertyDescriptors=Introspector.getBeanInfo(entityType).getPropertyDescriptors();
-            metaDatas=new HashMap<>();
-            for (PropertyDescriptor propertyDescriptor:arrayPopertyDescriptors) {
-                MetaData metaData=new MetaDataImplHibernate(propertyDescriptor.getClass(),sessionFactory);
-                metaDatas.put(propertyDescriptor.getName(),metaData);
-            }           
-        } catch (IntrospectionException ex) {
-            throw new RuntimeException(ex);
-        }
+    private SessionFactory sessionFactory;
+
+    private static Map<Type,MetaData> cache=new ConcurrentHashMap<>();
+    
+    
+    protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+        this.entityType = entityType;
     }
-    
-    
-    @Override
-    public Class getType() {
-        return entityType;
+
+    protected MetaDataImplHibernate(Type type, SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+        this.type = type;
     }
 
     @Override
-    public Map<String,MetaData> getPropertiesMetaData() {
+    public Class getType() {
+        if (isCollection()) {
+            return ((CollectionType) type).getElementType((SessionFactoryImplementor) this.sessionFactory).getReturnedClass();
+        } else if (entityType != null) {
+            return entityType;
+        } else if (type != null) {
+            return type.getReturnedClass();
+        } else {
+            throw new RuntimeException("No existe el tipo");
+        }
+    }
+
+    @Override
+    public boolean isCollection() {
+        if (type != null) {
+            return type.isCollectionType();
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    @JsonManagedReference
+    public Map<String, MetaData> getPropertiesMetaData() {
+        Map<String, MetaData> metaDatas = new HashMap<>();        
+        
+        ClassMetadata classMetadata = getClassMetadata();
+
+        if (classMetadata != null) {
+            String[] propertyNames = classMetadata.getPropertyNames();
+            for (String propertyName : propertyNames) {
+                Type propertyType = classMetadata.getPropertyType(propertyName);
+
+                MetaData metaData =cache.get(propertyType);
+                if (cache.get(propertyType)==null) {
+                    metaData = new MetaDataImplHibernate(propertyType, sessionFactory);
+                    cache.put(propertyType, metaData);
+                }
+                
+                metaDatas.put(propertyName, metaData);
+            }
+        }
+        
         return metaDatas;
     }
 
     @Override
-    public String getCaption() {
-        return entityType.getName();
-    }
-
-    @Override
-    public boolean isComponent() {
-        return false;
-    }
-
-    @Override
-    public boolean isSimple() {
-        return false;
-    }
-
-    @Override
     public List<String> getNaturalKeyPropertiesName() {
-        List<String> naturalKeyPropertiesName=new ArrayList<>();
+
+        List<String> naturalKeyPropertiesName = new ArrayList<>();
+
+        ClassMetadata classMetadata=getClassMetadata();
+        if (classMetadata == null) {
+            return null;
+        }
         
         if (classMetadata.hasNaturalIdentifier()) {
-            
-            int[] positions=classMetadata.getNaturalIdentifierProperties();
-            String[] propertyNames=classMetadata.getPropertyNames();
-            
-            for(int i=0;i<positions.length;i++) {
-                int position=positions[i];
-                String naturalKeyPropertyName=propertyNames[position];
-                
+
+            int[] positions = classMetadata.getNaturalIdentifierProperties();
+            String[] propertyNames = classMetadata.getPropertyNames();
+
+            for (int i = 0; i < positions.length; i++) {
+                int position = positions[i];
+                String naturalKeyPropertyName = propertyNames[position];
+
                 naturalKeyPropertiesName.add(naturalKeyPropertyName);
             }
-            
-            
+
+
         } else {
             //Si no hay clave natural, usamos la clave primaria como clave natural
             naturalKeyPropertiesName.add(getPrimaryKeyPropertyName());
         }
-        
+
+
         return naturalKeyPropertiesName;
     }
 
     @Override
-    public ClientValidations getClientValidations() {
-        return clientValidations;
-    }
-
-    @Override
     public String getPrimaryKeyPropertyName() {
-        if (classMetadata.hasIdentifierProperty()==true) {
+        ClassMetadata classMetadata=getClassMetadata();
+        if (classMetadata == null) {
+            return null;
+        }
+        
+        if (classMetadata.hasIdentifierProperty() == true) {
             return classMetadata.getIdentifierPropertyName();
         } else {
             return null;
         }
     }
 
-
-    
+    private ClassMetadata getClassMetadata() {
+        return sessionFactory.getClassMetadata(this.getType());
+    }
 }

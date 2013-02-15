@@ -24,11 +24,8 @@ import java.util.Map;
  */
 public interface MetaData {
     Class getType();
-    String getCaption();
     Map<String,MetaData> getPropertiesMetaData();
-    boolean isComponent();
-    boolean isSimple();
     String getPrimaryKeyPropertyName();
     List<String> getNaturalKeyPropertiesName();
-    ClientValidations getClientValidations();
+    boolean isCollection();
 }
