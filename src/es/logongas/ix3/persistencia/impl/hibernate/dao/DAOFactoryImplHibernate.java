@@ -83,7 +83,6 @@ public class DAOFactoryImplHibernate implements DAOFactory {
         }
 
         context.getAutowireCapableBeanFactory().autowireBean(genericDAO);
-        //genericDAO = (GenericDAO) context.getAutowireCapableBeanFactory().initializeBean(genericDAO, "genericDAO");
 
         return genericDAO;
     }
