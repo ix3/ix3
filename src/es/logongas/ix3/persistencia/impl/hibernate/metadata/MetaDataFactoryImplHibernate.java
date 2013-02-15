@@ -33,12 +33,31 @@ public class MetaDataFactoryImplHibernate implements MetaDataFactory {
     SessionFactory sessionFactory;
     
     @Override
-    public MetaData getMetaData(Class entityClass) {        
-        return new MetaDataImplHibernate(entityClass,sessionFactory);
+    public MetaData getMetaData(Class entityClass) { 
+        ClassMetadata classMetadata=getClassMetadata(entityClass);
+        if (classMetadata==null) {
+            return null;
+        } else {
+            return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory);
+        }
     }
 
     @Override
     public MetaData getMetaData(String entityName) {
+        ClassMetadata classMetadata=getClassMetadata(entityName);
+        if (classMetadata==null) {
+            return null;
+        } else {
+            return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory);
+        }
+    }
+    
+    
+    private ClassMetadata getClassMetadata(Class entityClass) {
+        return sessionFactory.getClassMetadata(entityClass);
+    }    
+    
+    private ClassMetadata getClassMetadata(String entityName) {
         Map<String,ClassMetadata> classMetadatas=sessionFactory.getAllClassMetadata();
         ClassMetadata classMetadata=null;
         
@@ -54,10 +73,7 @@ public class MetaDataFactoryImplHibernate implements MetaDataFactory {
             }
         }
         
-        if (classMetadata==null) {
-            throw new RuntimeException("La entidad '" + entityName + "' no está mapeada.");
-        }
-        return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory);
+        return classMetadata;
     }
     
 }

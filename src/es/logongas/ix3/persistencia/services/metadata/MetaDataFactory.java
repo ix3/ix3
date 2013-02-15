@@ -21,6 +21,16 @@ package es.logongas.ix3.persistencia.services.metadata;
  * @author Lorenzo González
  */
 public interface MetaDataFactory {
+    /**
+     * Obtiene los metadatos de una clase de negocio
+     * @param entityClass La clase de negocio.
+     * @return Retorna los metadatos o null si la clase que se ha pasado no es una clase de negocio
+     */
     MetaData getMetaData(Class entityClass);
-    MetaData getMetaData(String entityName);  
+    /**
+     * Obtiene los metadatos de una clase de negocio
+     * @param entityName El nombre de la clase de negocio. No se debe incluir el paquete Java
+     * @return Retorna los metadatos o null si la clase que se ha pasado no es una clase de negocio
+     */
+    MetaData getMetaData(String entityName);
 }
