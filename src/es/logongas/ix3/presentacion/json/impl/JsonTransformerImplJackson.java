@@ -23,19 +23,18 @@ import es.logongas.ix3.presentacion.json.JsonTransformer;
  *
  * @author Lorenzo González
  */
-public class JsonTransformerImplJackson implements JsonTransformer {
+public class JsonTransformerImplJackson<T> implements JsonTransformer<T> {
 
-    Class clazz;
+    Class<T> clazz;
     ObjectMapper objectMapper = new ObjectMapper();
     
-    public JsonTransformerImplJackson(Class clazz) {
+    public JsonTransformerImplJackson(Class<T> clazz) {
         this.clazz=clazz;
     }
 
     
-    
     @Override
-    public String toJson(Object data) {
+    public String toJson(T data) {
         try {
             return objectMapper.writeValueAsString(data);
         } catch (JsonProcessingException ex) {
@@ -44,9 +43,9 @@ public class JsonTransformerImplJackson implements JsonTransformer {
     }
 
     @Override
-    public Object fromJson(String data) {
+    public T fromJson(String data) {
         try {
-            return objectMapper.readValue(data, clazz);
+            return (T)objectMapper.readValue(data, clazz);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

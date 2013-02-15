@@ -25,7 +25,7 @@ import es.logongas.ix3.presentacion.json.JsonTransformerFactory;
 public class JsonTransformerFactoryImplJackson implements JsonTransformerFactory {
 
     @Override
-    public JsonTransformer getJsonTransformer(Class clazz) {
+    public <T> JsonTransformer<T> getJsonTransformer(Class<T> clazz) {
         return new JsonTransformerImplJackson(clazz);
     }
     

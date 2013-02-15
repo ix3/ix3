@@ -20,5 +20,5 @@ package es.logongas.ix3.presentacion.json;
  * @author Lorenzo González
  */
 public interface JsonTransformerFactory {
-    JsonTransformer getJsonTransformer(Class clazz);
+    <T> JsonTransformer<T> getJsonTransformer(Class<T> clazz);
 }

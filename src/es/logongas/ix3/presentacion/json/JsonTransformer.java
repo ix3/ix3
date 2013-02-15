@@ -19,7 +19,7 @@ package es.logongas.ix3.presentacion.json;
  * Interface que transforma de JSON a objetos Java y viceversa
  * @author Lorenzo González
  */
-public interface JsonTransformer {
-    String toJson(Object data);
-    Object fromJson(String data);
+public interface JsonTransformer<T> {
+    String toJson(T data);
+    T fromJson(String data);
 }
