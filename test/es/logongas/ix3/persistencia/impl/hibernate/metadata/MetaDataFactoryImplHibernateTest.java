@@ -32,12 +32,12 @@ import static org.junit.Assert.*;
  *
  * @author alumno
  */
-public class EntityMetaDataFactoryImplHibernateTest {
+public class MetaDataFactoryImplHibernateTest {
     
     SessionFactory sessionFactory;
     Session session;
     
-    public EntityMetaDataFactoryImplHibernateTest() {
+    public MetaDataFactoryImplHibernateTest() {
     }
     
     @BeforeClass
@@ -78,9 +78,9 @@ public class EntityMetaDataFactoryImplHibernateTest {
     public void testGetEntityMetaData_Class() {
         System.out.println("getEntityMetaData");
         Class entityClass = null;
-        EntityMetaDataFactoryImplHibernate instance = new EntityMetaDataFactoryImplHibernate();
+        MetaDataFactoryImplHibernate instance = new MetaDataFactoryImplHibernate();
         MetaData expResult = null;
-        MetaData result = instance.getEntityMetaData(entityClass);
+        MetaData result = instance.getMetaData(entityClass);
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
@@ -93,9 +93,9 @@ public class EntityMetaDataFactoryImplHibernateTest {
     public void testGetEntityMetaData_String() {
         System.out.println("getEntityMetaData");
         String entityName = "";
-        EntityMetaDataFactoryImplHibernate instance = new EntityMetaDataFactoryImplHibernate();
+        MetaDataFactoryImplHibernate instance = new MetaDataFactoryImplHibernate();
         MetaData expResult = null;
-        MetaData result = instance.getEntityMetaData(entityName);
+        MetaData result = instance.getMetaData(entityName);
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
