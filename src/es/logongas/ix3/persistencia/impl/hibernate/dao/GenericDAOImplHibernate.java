@@ -17,8 +17,8 @@ package es.logongas.ix3.persistencia.impl.hibernate.dao;
 
 import es.logongas.ix3.persistencia.services.dao.BussinessException;
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
-import es.logongas.ix3.persistencia.services.metadata.EntityMetaDataFactory;
 import es.logongas.ix3.persistencia.services.metadata.MetaData;
+import es.logongas.ix3.persistencia.services.metadata.MetaDataFactory;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -36,7 +36,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Autowired
     SessionFactory sessionFactory;
     @Autowired
-    EntityMetaDataFactory entityMetaDataFactory;
+    MetaDataFactory metaDataFactory;
     
     Class entityType;
     
@@ -376,6 +376,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
     
     public MetaData getEntityMetaData() {
-        return entityMetaDataFactory.getEntityMetaData(entityType);
+        return metaDataFactory.getMetaData(entityType);
     }
 }
