@@ -18,7 +18,7 @@ package es.logongas.ix3.presentacion.controller;
 import es.logongas.ix3.persistencia.services.dao.BussinessException;
 import es.logongas.ix3.persistencia.services.dao.DAOFactory;
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
-import es.logongas.ix3.persistencia.services.metadata.EntityMetaDataFactory;
+import es.logongas.ix3.persistencia.services.metadata.MetaDataFactory;
 import es.logongas.ix3.persistencia.services.metadata.MetaData;
 import es.logongas.ix3.presentacion.json.JsonTransformer;
 import es.logongas.ix3.presentacion.json.JsonTransformerFactory;
@@ -47,7 +47,7 @@ public class RESTController {
     @Autowired
     DAOFactory daoFactory;
     @Autowired
-    EntityMetaDataFactory entityMetaDataFactory;
+    MetaDataFactory metaDataFactory;
     @Autowired
     ConversionService conversionService;
     @Autowired
@@ -58,14 +58,14 @@ public class RESTController {
     @RequestMapping(value = {"/{entityName}/metadata"}, method = RequestMethod.GET, consumes = "application/json")
     public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
 
-        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(MetaData.class);
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
         try {
 
-            String msg = jsonTransformer.toJson(entityMetaData);
+            String msg = jsonTransformer.toJson(metaData);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(msg);
@@ -82,9 +82,9 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/search"}, method = RequestMethod.GET, consumes = "application/json")
     public void search(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
-        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
-        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
@@ -95,7 +95,7 @@ public class RESTController {
             Enumeration<String> enumeration = httpRequest.getAttributeNames();
             while (enumeration.hasMoreElements()) {
                 String propertyName = enumeration.nextElement();
-                Class propertyType = entityMetaData.getPropertiesMetaData().get(propertyName).getType();
+                Class propertyType = metaData.getPropertiesMetaData().get(propertyName).getType();
                 Object value = conversionService.convert(httpRequest.getParameter(propertyName), propertyType);
 
                 filter.put(propertyName, value);
@@ -134,9 +134,9 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, consumes = "application/json")
     public void get(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
-        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
-        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
@@ -175,9 +175,9 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/"}, method = RequestMethod.GET, consumes = "application/json")
     public void create(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
-        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
-        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
@@ -216,9 +216,9 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/"}, method = RequestMethod.POST, consumes = "application/json")
     public void insert(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @RequestBody String jsonEntity) {
-        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
-        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
@@ -258,9 +258,9 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json")
     public void update(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @RequestBody String jsonEntity) {
-        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
-        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
@@ -300,9 +300,9 @@ public class RESTController {
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE, consumes = "application/json")
     public void delete(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
-        MetaData entityMetaData = entityMetaDataFactory.getEntityMetaData(entityName);
-        GenericDAO genericDAO = daoFactory.getDAO(entityMetaData.getType());
-        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(entityMetaData.getType());
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+        JsonTransformer jsonTransformer = jsonTransformerFactory.getJsonTransformer(metaData.getType());
 
         httpServletResponse.setContentType("application/json; charset=UTF-8");
 
