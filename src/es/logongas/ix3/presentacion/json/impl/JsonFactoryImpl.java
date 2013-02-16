@@ -15,6 +15,8 @@
  */
 package es.logongas.ix3.presentacion.json.impl;
 
+import es.logongas.ix3.persistencia.services.metadata.MetaData;
+import es.logongas.ix3.persistencia.services.metadata.MetaDataFactory;
 import es.logongas.ix3.presentacion.json.JsonFactory;
 import es.logongas.ix3.presentacion.json.JsonReader;
 import es.logongas.ix3.presentacion.json.JsonWriter;
@@ -29,6 +31,9 @@ public class JsonFactoryImpl implements JsonFactory {
     @Autowired
     private ApplicationContext context;
     
+    @Autowired
+    private MetaDataFactory metaDataFactory;
+    
     @Override
     public JsonReader getJsonReader(Class clazz) {
         JsonReader jsonReader=new JsonReaderImplJackson(clazz);
@@ -40,7 +45,14 @@ public class JsonFactoryImpl implements JsonFactory {
 
     @Override
     public JsonWriter getJsonWriter(Class clazz) {
-        JsonWriter jsonWriter=new JsonWriterImplJackson(clazz);
+        MetaData metaData=metaDataFactory.getMetaData(clazz);
+        JsonWriter jsonWriter;
+        
+        if (metaData!=null) {
+            jsonWriter=new JsonWriterImplEntityJackson();
+        } else {
+            jsonWriter=new JsonWriterImplJackson(clazz);
+        }
         
         context.getAutowireCapableBeanFactory().autowireBean(jsonWriter);
         
