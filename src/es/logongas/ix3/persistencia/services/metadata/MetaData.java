@@ -23,9 +23,29 @@ import java.util.Map;
  * @author Lorenzo Gonzalez
  */
 public interface MetaData {
+    /**
+     * La clase Java correspondiente a esta entidad
+     * @return La clase Java
+     */
     Class getType();
+    /**
+     * La Metadatas de todas las propiedades de esta entidad
+     * @return Map con el nombre de cada propiedad y sis metadatos
+     */
     Map<String,MetaData> getPropertiesMetaData();
+    /**
+     * El nombre de la clave primaria de la entidad
+     * @return Nombre de la clave primaria de la entidad o null si no tiene clave primaria esta entidad
+     */
     String getPrimaryKeyPropertyName();
+    /**
+     * Lista de claves naturales de una entidad
+     * @return Claves naturales de una entidad. Si no tiene ninguna se retornará la columna de la clave primaria.
+     */
     List<String> getNaturalKeyPropertiesName();
+    /**
+     * Si esta propiedad es una colección
+     * @return <code>true</code> si es una colección
+     */
     boolean isCollection();
 }
