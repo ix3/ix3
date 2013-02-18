@@ -126,8 +126,7 @@ public class MetaDataImplHibernate implements MetaData {
 
 
         } else {
-            //Si no hay clave natural, usamos la clave primaria como clave natural
-            naturalKeyPropertiesName.add(getPrimaryKeyPropertyName());
+            //Si no hay clave natural, la lista no tendrá ningún elemento
         }
 
 

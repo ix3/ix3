@@ -40,7 +40,7 @@ public interface MetaData {
     String getPrimaryKeyPropertyName();
     /**
      * Lista de claves naturales de una entidad
-     * @return Claves naturales de una entidad. Si no tiene ninguna se retornará la columna de la clave primaria.
+     * @return Claves naturales de una entidad. Si no tiene ninguna se retornará una lista vacia
      */
     List<String> getNaturalKeyPropertiesName();
     /**
