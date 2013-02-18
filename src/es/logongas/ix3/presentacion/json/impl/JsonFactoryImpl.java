@@ -36,7 +36,14 @@ public class JsonFactoryImpl implements JsonFactory {
     
     @Override
     public JsonReader getJsonReader(Class clazz) {
-        JsonReader jsonReader=new JsonReaderImplJackson(clazz);
+        MetaData metaData=metaDataFactory.getMetaData(clazz);        
+        JsonReader jsonReader;
+        
+        if (metaData!=null) {
+            jsonReader=new JsonReaderImplEntityJackson(clazz);
+        } else {
+            jsonReader=new JsonReaderImplJackson(clazz);
+        }        
         
         context.getAutowireCapableBeanFactory().autowireBean(jsonReader);
         
