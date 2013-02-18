@@ -117,6 +117,6 @@ public class DAOFactoryImplHibernate implements DAOFactory {
     }
 
     protected String getDAOClassName(Class entityClass) {
-        return "DAO" + entityClass.getSimpleName() + "ImplHibernate";
+        return entityClass.getSimpleName() + "DAOImplHibernate";
     }
 }

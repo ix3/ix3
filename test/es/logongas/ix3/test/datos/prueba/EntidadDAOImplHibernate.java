@@ -24,9 +24,9 @@ import org.springframework.stereotype.Component;
  *
  * @author Lorenzo González
  */
-public class DAOEntidadImplHibernate extends GenericDAOImplHibernate<Entidad, Serializable> {
+public class EntidadDAOImplHibernate extends GenericDAOImplHibernate<Entidad, Serializable> {
 
-    public DAOEntidadImplHibernate() {
+    public EntidadDAOImplHibernate() {
     }
     
 }

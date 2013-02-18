@@ -16,7 +16,7 @@
 package es.logongas.ix3.persistencia.impl.hibernate.dao;
 
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
-import es.logongas.ix3.test.datos.prueba.DAOEntidadImplHibernate;
+import es.logongas.ix3.test.datos.prueba.EntidadDAOImplHibernate;
 import es.logongas.ix3.test.negocio.prueba.Entidad;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -45,7 +45,7 @@ public class DAOFactoryImplHibernateTest {
         instance.setDaoBasePackageName(daoBasePackageName);
         
         Class entityClass = Entidad.class;
-        Class expResult = DAOEntidadImplHibernate.class;
+        Class expResult = EntidadDAOImplHibernate.class;
         GenericDAO result = instance.getDAO(entityClass);
         assertEquals(expResult, result.getClass());
         
