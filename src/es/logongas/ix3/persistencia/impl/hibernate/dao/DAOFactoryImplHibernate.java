@@ -27,9 +27,8 @@ import org.springframework.context.ApplicationContext;
  */
 public class DAOFactoryImplHibernate implements DAOFactory {
 
-    private String domainBasePackageName;
-    private String daoBasePackageName;
-
+    private String domainBasePackageName = null;
+    private String daoBasePackageName = null;
     @Autowired
     private ApplicationContext context;
 
@@ -66,20 +65,16 @@ public class DAOFactoryImplHibernate implements DAOFactory {
             daoClass = Class.forName(fqcn);
             genericDAO = (GenericDAO) daoClass.newInstance();
 
-        } catch (ClassNotFoundException ex) {
+        } catch (Exception ex) {
             //Si no existe probamos con la siguiente
             try {
                 fqcn = getFQCNSamePackageDAO(entityClass, daoBasePackageName);
                 daoClass = Class.forName(fqcn);
                 genericDAO = (GenericDAO) daoClass.newInstance();
-            } catch (ClassNotFoundException ex1) {
+            } catch (Exception ex1) {
                 //Si no existe probamos con la siguiente
                 genericDAO = new GenericDAOImplHibernate(entityClass);
-            } catch (Exception ex2) {
-                throw new RuntimeException(ex);
             }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
         }
 
         context.getAutowireCapableBeanFactory().autowireBean(genericDAO);
@@ -107,13 +102,21 @@ public class DAOFactoryImplHibernate implements DAOFactory {
     }
 
     protected String getFQCNSamePackageDAO(Class entityClass, String daoBasePackageName) {
-        return daoBasePackageName + "." + getDAOClassName(entityClass);
+        if (daoBasePackageName != null) {
+            return daoBasePackageName + "." + getDAOClassName(entityClass);
+        } else {
+            return null;
+        }
     }
 
     protected String getFQCNSpecificPackageDAO(Class entityClass, String domainBasePackageName, String daoBasePackageName) {
-        String packageName = entityClass.getPackage().getName().replace(domainBasePackageName, daoBasePackageName);
+        if ((domainBasePackageName != null) && (daoBasePackageName != null)) {
+            String packageName = entityClass.getPackage().getName().replace(domainBasePackageName, daoBasePackageName);
+            return packageName + "." + getDAOClassName(entityClass);
+        } else {
+            return null;
+        }
 
-        return packageName + "." + getDAOClassName(entityClass);
     }
 
     protected String getDAOClassName(Class entityClass) {
