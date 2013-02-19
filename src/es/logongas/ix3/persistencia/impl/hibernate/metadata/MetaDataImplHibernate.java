@@ -25,7 +25,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ListType;
+import org.hibernate.type.MapType;
+import org.hibernate.type.SetType;
 import org.hibernate.type.Type;
 
 /**
@@ -38,17 +42,20 @@ public class MetaDataImplHibernate implements MetaData {
     private SessionFactory sessionFactory;
     private Class entityType = null;
     private Type type = null;
-    
+
     //No usar directamente esta propiedad sino usar el método getPropertiesMetaData()
     private Map<String, MetaData> metaDatas = null;
 
     protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
         this.entityType = entityType;
+        this.type = null;
+
     }
 
     protected MetaDataImplHibernate(Type type, SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
+        this.entityType = null;
         this.type = type;
     }
 
@@ -75,6 +82,42 @@ public class MetaDataImplHibernate implements MetaData {
     }
 
     @Override
+    public boolean isCollectionLazy() {
+        if (isCollection() == false) {
+            throw new RuntimeException("No se puede llamar a este método si la propiedad no es una colección");
+        }
+        
+        CollectionType collectionType = (CollectionType) type;
+        String role=collectionType.getRole();
+        CollectionMetadata collectionMetadata=sessionFactory.getCollectionMetadata(role);       
+        
+        return collectionMetadata.isLazy();
+    }
+
+    @Override
+    public es.logongas.ix3.persistencia.services.metadata.CollectionType getCollectionType() {
+        if (isCollection() == false) {
+            throw new RuntimeException("No se puede llamar a este método si la propiedad no es una colección");
+        }
+
+        ClassMetadata classMetadata = getClassMetadata();
+        if (classMetadata == null) {
+            throw new RuntimeException("No existen los metadatos");
+        }
+
+        if (type instanceof SetType) {
+            return es.logongas.ix3.persistencia.services.metadata.CollectionType.Set;
+        } else if (type instanceof ListType) {
+            return es.logongas.ix3.persistencia.services.metadata.CollectionType.List;
+        } else if (type instanceof MapType) {
+            return es.logongas.ix3.persistencia.services.metadata.CollectionType.Map;
+        } else {
+            throw new RuntimeException("El tipo de la colección no está soportado:" + type.getName());
+        }
+
+    }
+
+    @Override
     @JsonManagedReference
     public Map<String, MetaData> getPropertiesMetaData() {
 
@@ -84,6 +127,17 @@ public class MetaDataImplHibernate implements MetaData {
             ClassMetadata classMetadata = getClassMetadata();
 
             if (classMetadata != null) {
+                //Añadimos la clave primaria al Map
+                if (classMetadata.hasIdentifierProperty() == true) {
+                    Type propertyType = classMetadata.getIdentifierType();
+                    MetaData metaData = cache.get(propertyType);
+                    if (cache.get(propertyType) == null) {
+                        metaData = new MetaDataImplHibernate(propertyType, sessionFactory);
+                        cache.put(propertyType, metaData);
+                    }
+                    metaDatas.put(classMetadata.getIdentifierPropertyName(), metaData);
+                }
+
                 String[] propertyNames = classMetadata.getPropertyNames();
                 for (String propertyName : propertyNames) {
                     Type propertyType = classMetadata.getPropertyType(propertyName);
@@ -93,12 +147,11 @@ public class MetaDataImplHibernate implements MetaData {
                         metaData = new MetaDataImplHibernate(propertyType, sessionFactory);
                         cache.put(propertyType, metaData);
                     }
-
                     metaDatas.put(propertyName, metaData);
                 }
             }
         }
-        
+
         return metaDatas;
     }
 
@@ -109,7 +162,7 @@ public class MetaDataImplHibernate implements MetaData {
 
         ClassMetadata classMetadata = getClassMetadata();
         if (classMetadata == null) {
-            return null;
+            return naturalKeyPropertiesName;
         }
 
         if (classMetadata.hasNaturalIdentifier()) {

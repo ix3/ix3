@@ -48,4 +48,16 @@ public interface MetaData {
      * @return <code>true</code> si es una colección
      */
     boolean isCollection();
+    
+    /**
+     * Si la carga de la colección es perezosa
+     * @return Retorna <code>true</code> si la carga de la colección es perezosa
+     */
+    boolean isCollectionLazy();
+    
+    /**
+     * Tipo de la colección
+     * @return Tipo de la colección
+     */
+    CollectionType getCollectionType();
 }
