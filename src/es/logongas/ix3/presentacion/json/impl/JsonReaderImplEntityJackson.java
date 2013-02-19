@@ -27,8 +27,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -83,7 +82,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
-
+            
             if (propertyMetaData.isCollection() == false) {
                 //No es una colección
 
@@ -94,40 +93,8 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                     //Debemos leer la referencia de la base de datos
                     Object rawValue = getValue(jsonObj, propertyName);
 
-                    Set entities = new TreeSet();
-
-                    GenericDAO genericDAO = daoFactory.getDAO(propertyMetaData.getType());
-
-                    String primaryKeyPropertyName=propertyMetaData.getPrimaryKeyPropertyName();
-                    Object primaryKey = getValue(rawValue,primaryKeyPropertyName);
-                    if (primaryKey!=null) {
-                        entities.add(genericDAO.read((Serializable) primaryKey));
-                    }
-                    
-                    for (String naturalKeyPropertyName : propertyMetaData.getNaturalKeyPropertiesName()) {
-                        Object naturalKey = getValue(rawValue, naturalKeyPropertyName);
-                        if (naturalKey!=null) {
-                            entities.add(genericDAO.readByNaturalKey((Serializable) naturalKey));
-                        }
-                    }
-
-                    if (entities.size()>0) {
-                        StringBuilder sb=new StringBuilder();
-                        sb.append(propertyMetaData.getPrimaryKeyPropertyName());
-                        sb.append(":");
-                        sb.append(getValue(rawValue,propertyMetaData.getPrimaryKeyPropertyName()));
-                        sb.append(",");
-
-
-                        for (String naturalKeyPropertyName : propertyMetaData.getNaturalKeyPropertiesName()) {
-                            sb.append(naturalKeyPropertyName);
-                            sb.append(":");
-                            sb.append(getValue(rawValue, naturalKeyPropertyName));
-                            sb.append(",");
-                        }
-                        
-                        throw new RuntimeException("El objeto JSON tiene clave primarias y claves naturales que referencian distintos objetos:");
-                    }
+                    Object value = readEntity(rawValue, propertyMetaData);
+                    setValue(entity, value, propertyName);
                 } else {
                     //Es una referencia a algo que no es otra entidad ni un valor escalar
                     //Será un componente, así que hacemos la llamada recursiva
@@ -135,10 +102,123 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                     populateEntity(entity, rawValue, propertyMetaData);
                 }
             } else {
-                //En las colecciones no hacemos nada pq no deberían venir desde JSON
+                //Es una colección
+
+                if (propertyMetaData.isCollectionLazy() == false) {
+                    //Como es una colección "NO" perezona, los datos vendrán con el JSON
+                    switch (propertyMetaData.getCollectionType()) {
+                        case List:
+                        case Set:
+                            Collection rawCollection = (Collection) getValue(jsonObj, propertyName);
+                            Collection currentCollection = (Collection) getValue(entity, propertyName);
+
+                            //Borramos todos los elementos para añadir despues los que vienen desde JSON
+                            currentCollection.clear();
+
+                            //Añadimos los elementos que vienen desde JSON
+                            for (Object rawValue : rawCollection) {
+                                Object value = readEntity(rawValue, propertyMetaData);
+                                currentCollection.add(value);
+                            }
+
+                            break;
+                        case Map:
+                            Map rawMap = (Map) getValue(jsonObj, propertyName);
+                            Map currentMap = (Map) getValue(entity, propertyName);
+
+                            //Borramos todos los elementos para añadir despues los que vienen desde JSON
+                            currentMap.clear();
+
+                            //Añadimos los elementos que vienen desde JSON
+                            for (Object key : rawMap.keySet()) {
+                                Object rawValue = rawMap.get(key);
+                                Object value = readEntity(rawValue, propertyMetaData);
+                                currentMap.put(key, value);
+                            }
+
+                            break;
+                        default:
+                            throw new RuntimeException("El tipo de la colección no es válida:" + propertyMetaData.getCollectionType());
+                    }
+                } else {
+                    //Si es un colección perezosa no la cargamos pq no estará en el texto JSON
+                }
             }
         }
 
+    }
+
+    /**
+     * Lee una entidad de la base de datos en función de su clave primaria o de alguna de sus claves naturales
+     * @param propertyValue
+     * @param propertyMetaData
+     * @return 
+     */
+    private Object readEntity(Object propertyValue, MetaData propertyMetaData) {
+        try {
+            if (propertyValue==null) {
+                return null;
+            }
+            
+            //Usamos un Set para guardar todas las entidades
+            //Al ser un Set si son la misma se quedará solo una.
+            Set entities = new TreeSet();
+
+            GenericDAO genericDAO = daoFactory.getDAO(propertyMetaData.getType());
+
+            //Leer la entidad en función de su clave primaria
+            String primaryKeyPropertyName = propertyMetaData.getPrimaryKeyPropertyName();
+            Object primaryKey = getValue(propertyValue, primaryKeyPropertyName);
+            if (primaryKey != null) {
+                Object entity = genericDAO.read((Serializable) primaryKey);
+                if (entity != null) {
+                    entities.add(entity);
+                }
+            }
+
+            //Leer la entidad en función de cada una de sus claves primarias
+            for (String naturalKeyPropertyName : propertyMetaData.getNaturalKeyPropertiesName()) {
+                Object naturalKey = getValue(propertyValue, naturalKeyPropertyName);
+                if (naturalKey != null) {
+                    Object entity = genericDAO.readByNaturalKey((Serializable) naturalKey);
+                    if (entity != null) {
+                        entities.add(entity);
+                    }
+                }
+            }
+
+            //Si hay más de un elemento es que hay conflictos entre 
+            //la clave primaria y las claves naturales pq identifican entidades distintas
+            if (entities.size() > 1) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(propertyMetaData.getPrimaryKeyPropertyName());
+                sb.append(":");
+                sb.append(getValue(propertyValue, propertyMetaData.getPrimaryKeyPropertyName()));
+                sb.append(",");
+
+
+                for (String naturalKeyPropertyName : propertyMetaData.getNaturalKeyPropertiesName()) {
+                    sb.append(naturalKeyPropertyName);
+                    sb.append(":");
+                    sb.append(getValue(propertyValue, naturalKeyPropertyName));
+                    sb.append(",");
+                }
+
+                throw new RuntimeException("El objeto JSON tiene clave primarias y claves naturales que referencian distintos objetos:");
+            }
+
+            if (entities.size() == 1) {
+                //Retornamos el única elemento que se ha leido de la base de datos
+                return entities.iterator().next();
+            } else {
+                //Si no hay nada retornamos null
+                return null;
+            }
+
+
+        } catch (BussinessException be) {
+            throw new RuntimeException(be);
+        }
     }
 
     private boolean emptyKey(Object primaryKey) {
