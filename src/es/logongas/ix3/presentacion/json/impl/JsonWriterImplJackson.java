@@ -24,13 +24,8 @@ import es.logongas.ix3.presentacion.json.JsonWriter;
  * @author Lorenzo González
  */
 public class JsonWriterImplJackson implements JsonWriter {
-
-    private Class clazz;
     private ObjectMapper objectMapper = new ObjectMapper();
     
-    public JsonWriterImplJackson(Class clazz) {
-        this.clazz = clazz;
-    }
     
     @Override
     public String toJson(Object obj) {
