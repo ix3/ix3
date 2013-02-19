@@ -25,7 +25,9 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -42,23 +44,52 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
     @Override
     public String toJson(Object obj) {
         try {
-            if (obj != null) {
-                MetaData metaData = metaDataFactory.getMetaData(obj.getClass());
-
-                if (metaData == null) {
-                    throw new RuntimeException("El objeto debe ser una clase de negocio:" + obj.getClass().getName());
-                }
-
-                Map<String, Object> values = getMapFromEntity(obj, metaData);
-
-                return objectMapper.writeValueAsString(values);
-            } else {
-                return objectMapper.writeValueAsString(null);
-            }
+            Object jsonValue=getJsonObjectFromObject(obj);
+            return objectMapper.writeValueAsString(jsonValue);
         } catch (JsonProcessingException ex) {
             throw new RuntimeException(ex);
         }
 
+    }
+
+    private Object getJsonObjectFromObject(Object obj) {
+        if (obj == null) {
+            return null;
+        } else if (obj instanceof Collection) {
+            Collection collection = (Collection) obj;
+            List jsonList = new ArrayList();
+            for (Object element : collection) {
+                jsonList.add(getJsonObjectFromObject(element));
+            }
+
+            return jsonList;
+        } else if (obj instanceof Map) {
+            Map map = (Map) obj;
+            Map jsonMap = new LinkedHashMap();
+            for (Object key : map.keySet()) {
+                Object value = map.get(key);
+
+                jsonMap.put(key, getJsonObjectFromObject(value));
+            }
+
+            return jsonMap;
+        } else {
+            //Es simplemente un objeto "simple"
+            MetaData metaData = metaDataFactory.getMetaData(obj.getClass());
+
+            if (metaData != null) {
+                Map<String, Object> jsonMap = getMapFromEntity(obj, metaData);
+                
+                return jsonMap;
+            } else {
+                //Como no es un objeto de negocio, retornamos el mismo objeto 
+                //y que se apache Jackson.
+                //Lo normal es que sea un String, Integer, etc.
+                Object jsonValue=obj;
+                
+                return jsonValue;
+            }
+        }
     }
 
     private Map<String, Object> getMapFromEntity(Object obj, MetaData metaData) {
@@ -97,8 +128,37 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         value = null;
                     }
                 }
+            } else if (propertyMetaData.isCollectionLazy()==false) {
+                //Es una colección y no es Lazy así que la tenemos que escribir
+                Object rawValue = getValue(obj, propertyName);
+                
+                switch (propertyMetaData.getCollectionType()) {
+                    case Set:
+                    case List:
+                        Collection collection = (Collection) rawValue;
+                        List list = new ArrayList();
+                        for (Object element : collection) {
+                            list.add(getMapFromForeingEntity(element,propertyMetaData));
+                        }
+                       
+                        value=list;
+                        break;
+                    case Map:
+                        Map map = (Map) rawValue;
+                        Map jsonMap = new LinkedHashMap();
+                        for (Object key : map.keySet()) {
+                            Object valueMap = map.get(key);
+
+                            jsonMap.put(key, getMapFromForeingEntity(valueMap,propertyMetaData));
+                        }
+                        
+                        value=jsonMap;
+                        break;
+                    default:
+                        throw new RuntimeException("Tipo desconocido:"+propertyMetaData.getCollectionType());
+                }
             } else {
-                //En las colecciones se añade el array vacio.
+                //Es una colección y Lazy así que añadimos un array vacio
                 value = new ArrayList();
             }
 
