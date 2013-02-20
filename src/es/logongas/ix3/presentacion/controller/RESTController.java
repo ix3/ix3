@@ -95,10 +95,14 @@ public class RESTController {
             Enumeration<String> enumeration = httpRequest.getAttributeNames();
             while (enumeration.hasMoreElements()) {
                 String propertyName = enumeration.nextElement();
-                Class propertyType = metaData.getPropertiesMetaData().get(propertyName).getType();
-                Object value = conversionService.convert(httpRequest.getParameter(propertyName), propertyType);
-
-                filter.put(propertyName, value);
+                MetaData propertyMetaData=metaData.getPropertiesMetaData().get(propertyName);
+                if (propertyMetaData!=null) {
+                    Class propertyType = metaData.getPropertiesMetaData().get(propertyName).getType();
+                    Object value = conversionService.convert(httpRequest.getParameter(propertyName), propertyType);
+                    if (value!=null) {
+                        filter.put(propertyName, value);
+                    }
+                }
             }
             Object entity = genericDAO.search(filter);
             String jsonOut = jsonWriter.toJson(entity);
