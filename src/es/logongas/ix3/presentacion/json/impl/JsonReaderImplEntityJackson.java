@@ -42,14 +42,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class JsonReaderImplEntityJackson implements JsonReader {
 
     private Class clazz;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;
     @Autowired
-    DAOFactory daoFactory;
+    private DAOFactory daoFactory;
     @Autowired
     private MetaDataFactory metaDataFactory;
 
     public JsonReaderImplEntityJackson(Class clazz) {
         this.clazz = clazz;
+        objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);        
     }
 
     @Override
