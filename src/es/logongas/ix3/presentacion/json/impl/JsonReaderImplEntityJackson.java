@@ -15,6 +15,7 @@
  */
 package es.logongas.ix3.presentacion.json.impl;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.logongas.ix3.persistencia.services.dao.BussinessException;
 import es.logongas.ix3.persistencia.services.dao.DAOFactory;
@@ -28,9 +29,9 @@ import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -162,7 +163,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
             
             //Usamos un Set para guardar todas las entidades
             //Al ser un Set si son la misma se quedará solo una.
-            Set entities = new TreeSet();
+            Set entities = new HashSet();
 
             GenericDAO genericDAO = daoFactory.getDAO(propertyMetaData.getType());
 
