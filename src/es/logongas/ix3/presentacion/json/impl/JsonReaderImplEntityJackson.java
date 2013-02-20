@@ -68,9 +68,9 @@ public class JsonReaderImplEntityJackson implements JsonReader {
             if (emptyKey(getValue(jsonObj, metaData.getPrimaryKeyPropertyName())) == false) {
                 //Si hay clave primaria es que hay que leerla entidad pq ya existe
                 entity = genericDAO.read((Serializable) getValue(jsonObj, metaData.getPrimaryKeyPropertyName()));
-                System.out.println("Leyendo entidad:"+getValue(jsonObj, metaData.getPrimaryKeyPropertyName()));
             } else {
                 //No hay clave primaria , así que creamos una nueva fila
+
                 entity = genericDAO.create();
             }
 
@@ -84,11 +84,6 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
     private void populateEntity(Object entity, Object jsonObj, MetaData metaData) throws BussinessException {
 
-        //No hay que hacer nada si no hay objeto
-        if (entity==null) {
-            return;
-        }
-        
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
             
@@ -127,9 +122,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                             //Añadimos los elementos que vienen desde JSON
                             for (Object rawValue : rawCollection) {
                                 Object value = readEntity(rawValue, propertyMetaData);
-                                if (value!=null) {
-                                    currentCollection.add(value);
-                                }
+                                currentCollection.add(value);
                             }
 
                             break;
@@ -144,9 +137,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                             for (Object key : rawMap.keySet()) {
                                 Object rawValue = rawMap.get(key);
                                 Object value = readEntity(rawValue, propertyMetaData);
-                                if (value!=null) {
-                                    currentMap.put(key, value);
-                                }
+                                currentMap.put(key, value);
                             }
 
                             break;
@@ -182,7 +173,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
             //Leer la entidad en función de su clave primaria
             String primaryKeyPropertyName = propertyMetaData.getPrimaryKeyPropertyName();
             Object primaryKey = getValue(propertyValue, primaryKeyPropertyName);
-            if (emptyKey(primaryKey )==false) {
+            if (primaryKey != null) {
                 Object entity = genericDAO.read((Serializable) primaryKey);
                 if (entity != null) {
                     entities.add(entity);
@@ -192,7 +183,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
             //Leer la entidad en función de cada una de sus claves primarias
             for (String naturalKeyPropertyName : propertyMetaData.getNaturalKeyPropertiesName()) {
                 Object naturalKey = getValue(propertyValue, naturalKeyPropertyName);
-                if (emptyKey(naturalKey)==false) {
+                if (naturalKey != null) {
                     Object entity = genericDAO.readByNaturalKey((Serializable) naturalKey);
                     if (entity != null) {
                         entities.add(entity);
