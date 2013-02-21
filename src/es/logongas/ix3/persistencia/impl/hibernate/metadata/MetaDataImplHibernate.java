@@ -84,7 +84,7 @@ public class MetaDataImplHibernate implements MetaData {
     @Override
     public boolean isCollectionLazy() {
         if (isCollection() == false) {
-            throw new RuntimeException("No se puede llamar a este método si la propiedad no es una colección");
+            return false;
         }
         
         CollectionType collectionType = (CollectionType) type;
@@ -97,7 +97,7 @@ public class MetaDataImplHibernate implements MetaData {
     @Override
     public es.logongas.ix3.persistencia.services.metadata.CollectionType getCollectionType() {
         if (isCollection() == false) {
-            throw new RuntimeException("No se puede llamar a este método si la propiedad no es una colección");
+            return null;
         }
 
         ClassMetadata classMetadata = getClassMetadata();
