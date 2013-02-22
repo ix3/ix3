@@ -15,8 +15,8 @@
  */
 package es.logongas.ix3.persistencia.impl.hibernate.metadata;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import es.logongas.ix3.persistencia.services.metadata.MetaData;
+import es.logongas.ix3.persistencia.services.metadata.MetaType;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -86,39 +86,46 @@ public class MetaDataImplHibernate implements MetaData {
         if (isCollection() == false) {
             return false;
         }
-        
+
         CollectionType collectionType = (CollectionType) type;
         String role=collectionType.getRole();
         CollectionMetadata collectionMetadata=sessionFactory.getCollectionMetadata(role);       
-        
+
         return collectionMetadata.isLazy();
     }
 
     @Override
-    public es.logongas.ix3.persistencia.services.metadata.CollectionType getCollectionType() {
+    public MetaType getMetaType() {
         if (isCollection() == false) {
-            return null;
-        }
-
-        ClassMetadata classMetadata = getClassMetadata();
-        if (classMetadata == null) {
-            throw new RuntimeException("No existen los metadatos");
-        }
-
-        if (type instanceof SetType) {
-            return es.logongas.ix3.persistencia.services.metadata.CollectionType.Set;
-        } else if (type instanceof ListType) {
-            return es.logongas.ix3.persistencia.services.metadata.CollectionType.List;
-        } else if (type instanceof MapType) {
-            return es.logongas.ix3.persistencia.services.metadata.CollectionType.Map;
+            if ((getPropertiesMetaData() == null) || (getPropertiesMetaData().size() == 0)) {
+                return MetaType.Scalar;
+            } else if (this.getPrimaryKeyPropertyName() != null) {
+                return MetaType.Entity;
+            } else {
+                return MetaType.Component;
+            }
         } else {
-            throw new RuntimeException("El tipo de la colección no está soportado:" + type.getName());
+            ClassMetadata classMetadata = getClassMetadata();
+            if (classMetadata == null) {
+                throw new RuntimeException("No existen los metadatos");
+            }
+
+            if (type instanceof SetType) {
+                return MetaType.Set;
+            } else if (type instanceof ListType) {
+                return MetaType.List;
+            } else if (type instanceof MapType) {
+                return MetaType.Map;
+            } else {
+                throw new RuntimeException("El tipo de la colección no está soportado:" + type.getName());
+            }
         }
+
+
 
     }
 
     @Override
-    @JsonManagedReference
     public Map<String, MetaData> getPropertiesMetaData() {
 
         if (metaDatas == null) {

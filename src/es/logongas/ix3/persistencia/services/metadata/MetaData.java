@@ -29,6 +29,10 @@ public interface MetaData {
      */
     Class getType();
     /**
+     * El MetaTypo de esta entidad.
+     * @return Map con el nombre de cada propiedad y sis metadatos
+     */
+    MetaType getMetaType();    /**
      * La Metadatas de todas las propiedades de esta entidad
      * @return Map con el nombre de cada propiedad y sis metadatos
      */
@@ -54,10 +58,4 @@ public interface MetaData {
      * @return Retorna <code>true</code> si la carga de la colección es perezosa
      */
     boolean isCollectionLazy();
-    
-    /**
-     * Tipo de la colección
-     * @return Tipo de la colección
-     */
-    CollectionType getCollectionType();
 }

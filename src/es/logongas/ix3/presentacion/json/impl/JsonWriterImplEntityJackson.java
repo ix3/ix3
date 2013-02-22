@@ -79,14 +79,14 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
             if (metaData != null) {
                 Map<String, Object> jsonMap = getMapFromEntity(obj, metaData);
-                
+
                 return jsonMap;
             } else {
                 //Como no es un objeto de negocio, retornamos el mismo objeto 
                 //y que se apache Jackson.
                 //Lo normal es que sea un String, Integer, etc.
                 Object jsonValue=obj;
-                
+
                 return jsonValue;
             }
         }
@@ -107,59 +107,68 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
             Object value;
 
-            if (propertyMetaData.isCollection() == false) {
-                //No es una colección
-
-                if (isPropertyScalar(propertyMetaData) == true) {
+            switch (propertyMetaData.getMetaType()) {
+                case Scalar: {
                     value = getValue(obj, propertyName);
-                } else if (isPropertyForeingEntity(propertyMetaData)) {
+                    break;
+                }
+                case Entity: {
                     Object rawValue = getValue(obj, propertyName);
                     if (rawValue != null) {
                         value = getMapFromForeingEntity(rawValue, propertyMetaData);
                     } else {
                         value = null;
                     }
-                } else {
-                    //Es una referencia a algo que no es otra entidad ni un valor escalar
+                    break;
+                }
+                case Component: {
                     Object rawValue = getValue(obj, propertyName);
                     if (rawValue != null) {
                         value = getMapFromEntity(rawValue, propertyMetaData);
                     } else {
                         value = null;
                     }
+
+                    break;
                 }
-            } else if (propertyMetaData.isCollectionLazy()==false) {
-                //Es una colección y no es Lazy así que la tenemos que escribir
-                Object rawValue = getValue(obj, propertyName);
-                
-                switch (propertyMetaData.getCollectionType()) {
-                    case Set:
-                    case List:
+                case List:
+                case Set: {
+                    if (propertyMetaData.isCollectionLazy() == false) {
+                        Object rawValue = getValue(obj, propertyName);
                         Collection collection = (Collection) rawValue;
                         List list = new ArrayList();
                         for (Object element : collection) {
-                            list.add(getMapFromForeingEntity(element,propertyMetaData));
+                            list.add(getMapFromForeingEntity(element, propertyMetaData));
                         }
-                       
-                        value=list;
-                        break;
-                    case Map:
+
+                        value = list;
+                    } else {
+                        //Es una colección y Lazy así que añadimos un array vacio
+                        value = new ArrayList();
+                    }
+                    break;
+                }
+                case Map: {
+                    if (propertyMetaData.isCollectionLazy() == false) {
+                        Object rawValue = getValue(obj, propertyName);
+
                         Map map = (Map) rawValue;
                         Map jsonMap = new LinkedHashMap();
                         for (Object key : map.keySet()) {
                             Object valueMap = map.get(key);
 
-                            jsonMap.put(key, getMapFromForeingEntity(valueMap,propertyMetaData));
+                            jsonMap.put(key, getMapFromForeingEntity(valueMap, propertyMetaData));
                         }
-                        
-                        value=jsonMap;
-                        break;
-                    default:
-                        throw new RuntimeException("Tipo desconocido:"+propertyMetaData.getCollectionType());
+
+                        value = jsonMap;
+                    } else {
+                        //Es una colección y Lazy así que añadimos un array vacio
+                        value = new ArrayList();
+                    }
+                    break;
                 }
-            } else {
-                //Es una colección y Lazy así que añadimos un array vacio
-                value = new ArrayList();
+                default:
+                    throw new RuntimeException("El MetaTypo es desconocido:" + propertyMetaData.getMetaType());
             }
 
             values.put(propertyName, value);
@@ -206,22 +215,6 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         values.put("toString", obj.toString());
 
         return values;
-    }
-
-    private boolean isPropertyForeingEntity(MetaData metaData) {
-        if (metaData.getPrimaryKeyPropertyName() != null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private boolean isPropertyScalar(MetaData metaData) {
-        if ((metaData.getPropertiesMetaData() == null) || (metaData.getPropertiesMetaData().size() == 0)) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**

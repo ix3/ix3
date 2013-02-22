@@ -52,7 +52,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         this.clazz = clazz;
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);        
+        objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
     }
 
     @Override
@@ -86,84 +86,79 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
-            
-            if (propertyMetaData.isCollection() == false) {
-                //No es una colección
 
-                if (isPropertyScalar(propertyMetaData) == true) {
+
+            switch (propertyMetaData.getMetaType()) {
+                case Scalar: {
                     Object rawValue = getValue(jsonObj, propertyName);
                     setValue(entity, rawValue, propertyName);
-                } else if (isPropertyForeingEntity(propertyMetaData)) {
+                    break;
+                }
+                case Entity: {
                     //Debemos leer la referencia de la base de datos
                     Object rawValue = getValue(jsonObj, propertyName);
 
                     Object value = readEntity(rawValue, propertyMetaData);
                     setValue(entity, value, propertyName);
-                } else {
-                    //Es una referencia a algo que no es otra entidad ni un valor escalar
-                    //Será un componente, así que hacemos la llamada recursiva
+                    break;
+                }
+                case Component: {
+                    //Es un componente, así que hacemos la llamada recursiva
                     Object rawValue = getValue(jsonObj, propertyName);
                     populateEntity(entity, rawValue, propertyMetaData);
+                    break;
                 }
-            } else {
-                //Es una colección
+                case List:
+                case Set: {
+                    Collection rawCollection = (Collection) getValue(jsonObj, propertyName);
+                    Collection currentCollection = (Collection) getValue(entity, propertyName);
 
-                if (propertyMetaData.isCollectionLazy() == false) {
-                    //Como es una colección "NO" perezona, los datos vendrán con el JSON
-                    switch (propertyMetaData.getCollectionType()) {
-                        case List:
-                        case Set:
-                            Collection rawCollection = (Collection) getValue(jsonObj, propertyName);
-                            Collection currentCollection = (Collection) getValue(entity, propertyName);
+                    //Borramos todos los elementos para añadir despues los que vienen desde JSON
+                    currentCollection.clear();
 
-                            //Borramos todos los elementos para añadir despues los que vienen desde JSON
-                            currentCollection.clear();
-
-                            //Añadimos los elementos que vienen desde JSON
-                            for (Object rawValue : rawCollection) {
-                                Object value = readEntity(rawValue, propertyMetaData);
-                                currentCollection.add(value);
-                            }
-
-                            break;
-                        case Map:
-                            Map rawMap = (Map) getValue(jsonObj, propertyName);
-                            Map currentMap = (Map) getValue(entity, propertyName);
-
-                            //Borramos todos los elementos para añadir despues los que vienen desde JSON
-                            currentMap.clear();
-
-                            //Añadimos los elementos que vienen desde JSON
-                            for (Object key : rawMap.keySet()) {
-                                Object rawValue = rawMap.get(key);
-                                Object value = readEntity(rawValue, propertyMetaData);
-                                currentMap.put(key, value);
-                            }
-
-                            break;
-                        default:
-                            throw new RuntimeException("El tipo de la colección no es válida:" + propertyMetaData.getCollectionType());
+                    //Añadimos los elementos que vienen desde JSON
+                    for (Object rawValue : rawCollection) {
+                        Object value = readEntity(rawValue, propertyMetaData);
+                        currentCollection.add(value);
                     }
-                } else {
-                    //Si es un colección perezosa no la cargamos pq no estará en el texto JSON
+                    break;
                 }
+                case Map: {
+                    Map rawMap = (Map) getValue(jsonObj, propertyName);
+                    Map currentMap = (Map) getValue(entity, propertyName);
+
+                    //Borramos todos los elementos para añadir despues los que vienen desde JSON
+                    currentMap.clear();
+
+                    //Añadimos los elementos que vienen desde JSON
+                    for (Object key : rawMap.keySet()) {
+                        Object rawValue = rawMap.get(key);
+                        Object value = readEntity(rawValue, propertyMetaData);
+                        currentMap.put(key, value);
+                    }
+                    break;
+                }
+                default:
+                    throw new RuntimeException("El MetaTypo es desconocido:" + propertyMetaData.getMetaType());
             }
         }
 
     }
 
     /**
-     * Lee una entidad de la base de datos en función de su clave primaria o de alguna de sus claves naturales
+     * Lee una entidad de la base de datos en función de su clave primaria o de
+     * alguna de sus claves naturales
+     *
      * @param propertyValue
      * @param propertyMetaData
-     * @return 
+     * @return
      */
     private Object readEntity(Object propertyValue, MetaData propertyMetaData) {
         try {
-            if (propertyValue==null) {
+            if (propertyValue == null) {
                 return null;
             }
-            
+
             //Usamos un Set para guardar todas las entidades
             //Al ser un Set si son la misma se quedará solo una.
             Set entities = new HashSet();
@@ -245,22 +240,6 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
 
         return false;
-    }
-
-    private boolean isPropertyForeingEntity(MetaData metaData) {
-        if (metaData.getPrimaryKeyPropertyName() != null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private boolean isPropertyScalar(MetaData metaData) {
-        if ((metaData.getPropertiesMetaData() == null) || (metaData.getPropertiesMetaData().size() == 0)) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**

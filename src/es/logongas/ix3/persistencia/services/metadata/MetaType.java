@@ -16,11 +16,14 @@
 package es.logongas.ix3.persistencia.services.metadata;
 
 /**
- * Tipo de la colección en una relación
+ *
  * @author Lorenzo González
  */
-public enum CollectionType {
+public enum MetaType {
+    Scalar,
+    Entity,
+    Component,
     List,
     Set,
-    Map;      
+    Map
 }
