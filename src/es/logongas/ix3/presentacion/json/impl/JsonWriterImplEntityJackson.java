@@ -109,11 +109,11 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
             switch (propertyMetaData.getMetaType()) {
                 case Scalar: {
-                    value = getValue(obj, propertyName);
+                    value = getValueFromBean(obj, propertyName);
                     break;
                 }
                 case Entity: {
-                    Object rawValue = getValue(obj, propertyName);
+                    Object rawValue = getValueFromBean(obj, propertyName);
                     if (rawValue != null) {
                         value = getMapFromForeingEntity(rawValue, propertyMetaData);
                     } else {
@@ -122,7 +122,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                     break;
                 }
                 case Component: {
-                    Object rawValue = getValue(obj, propertyName);
+                    Object rawValue = getValueFromBean(obj, propertyName);
                     if (rawValue != null) {
                         value = getMapFromEntity(rawValue, propertyMetaData);
                     } else {
@@ -134,11 +134,11 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 case List:
                 case Set: {
                     if (propertyMetaData.isCollectionLazy() == false) {
-                        Object rawValue = getValue(obj, propertyName);
+                        Object rawValue = getValueFromBean(obj, propertyName);
                         Collection collection = (Collection) rawValue;
                         List list = new ArrayList();
                         for (Object element : collection) {
-                            list.add(getMapFromForeingEntity(element, propertyMetaData));
+                            list.add(getMapFromEntity(element, propertyMetaData));
                         }
 
                         value = list;
@@ -150,14 +150,14 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 }
                 case Map: {
                     if (propertyMetaData.isCollectionLazy() == false) {
-                        Object rawValue = getValue(obj, propertyName);
+                        Object rawValue = getValueFromBean(obj, propertyName);
 
                         Map map = (Map) rawValue;
                         Map jsonMap = new LinkedHashMap();
                         for (Object key : map.keySet()) {
                             Object valueMap = map.get(key);
 
-                            jsonMap.put(key, getMapFromForeingEntity(valueMap, propertyMetaData));
+                            jsonMap.put(key, getMapFromEntity(valueMap, propertyMetaData));
                         }
 
                         value = jsonMap;
@@ -168,7 +168,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                     break;
                 }
                 default:
-                    throw new RuntimeException("El MetaTypo es desconocido:" + propertyMetaData.getMetaType());
+                    throw new RuntimeException("El MetaType es desconocido:" + propertyMetaData.getMetaType());
             }
 
             values.put(propertyName, value);
@@ -203,12 +203,12 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
         //Añadimos la clave primaria
         //No hace falta comprobar si es compuesta pq NO debería ni tener ciclos ni cosas raras.
-        values.put(metaData.getPrimaryKeyPropertyName(), getValue(obj, metaData.getPrimaryKeyPropertyName()));
+        values.put(metaData.getPrimaryKeyPropertyName(), getValueFromBean(obj, metaData.getPrimaryKeyPropertyName()));
 
         //Añadimos las claves natural o tambien llamadas de negocio
         for (String naturalKeyPropertyName : metaData.getNaturalKeyPropertiesName()) {
             //No hace falta comprobar si es compuesta pq NO debería ni tener ciclos ni cosas raras.
-            values.put(naturalKeyPropertyName, getValue(obj, naturalKeyPropertyName));
+            values.put(naturalKeyPropertyName, getValueFromBean(obj, naturalKeyPropertyName));
         }
 
         //Añadimos la representación como String del objeto
@@ -224,7 +224,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
      * @param propertyName El nombre de la propiedad
      * @return El valor de la propiedad
      */
-    private Object getValue(Object obj, String propertyName) {
+    private Object getValueFromBean(Object obj, String propertyName) {
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();

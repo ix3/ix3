@@ -24,9 +24,11 @@ import es.logongas.ix3.persistencia.services.metadata.MetaData;
 import es.logongas.ix3.persistencia.services.metadata.MetaDataFactory;
 import es.logongas.ix3.presentacion.json.JsonReader;
 import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
@@ -60,14 +62,33 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         try {
             Object jsonObj = objectMapper.readValue(json, clazz);
 
-            GenericDAO genericDAO = daoFactory.getDAO(clazz);
             MetaData metaData = metaDataFactory.getMetaData(clazz);
 
+            Object entity = readEntity(jsonObj, metaData);
+
+            return entity;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+    }
+
+    /**
+     * Crea una entidad completa en base a la clave primaria y a los datos que vienen desde JSON
+     * @param jsonObj Los datos JSON
+     * @param metaData Los metadatos de la entidad a tranformar
+     * @return El Objeto Entidad
+     */
+    private Object readEntity(Object jsonObj, MetaData metaData) {
+        try {
 
             Object entity;
-            if (emptyKey(getValue(jsonObj, metaData.getPrimaryKeyPropertyName())) == false) {
+
+            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+
+            if (emptyKey(getValueFromBean(jsonObj, metaData.getPrimaryKeyPropertyName())) == false) {
                 //Si hay clave primaria es que hay que leerla entidad pq ya existe
-                entity = genericDAO.read((Serializable) getValue(jsonObj, metaData.getPrimaryKeyPropertyName()));
+                entity = genericDAO.read((Serializable) getValueFromBean(jsonObj, metaData.getPrimaryKeyPropertyName()));
             } else {
                 //No hay clave primaria , así que creamos una nueva fila
 
@@ -82,69 +103,6 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         }
     }
 
-    private void populateEntity(Object entity, Object jsonObj, MetaData metaData) throws BussinessException {
-
-        for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
-            MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
-
-
-            switch (propertyMetaData.getMetaType()) {
-                case Scalar: {
-                    Object rawValue = getValue(jsonObj, propertyName);
-                    setValue(entity, rawValue, propertyName);
-                    break;
-                }
-                case Entity: {
-                    //Debemos leer la referencia de la base de datos
-                    Object rawValue = getValue(jsonObj, propertyName);
-
-                    Object value = readEntity(rawValue, propertyMetaData);
-                    setValue(entity, value, propertyName);
-                    break;
-                }
-                case Component: {
-                    //Es un componente, así que hacemos la llamada recursiva
-                    Object rawValue = getValue(jsonObj, propertyName);
-                    populateEntity(entity, rawValue, propertyMetaData);
-                    break;
-                }
-                case List:
-                case Set: {
-                    Collection rawCollection = (Collection) getValue(jsonObj, propertyName);
-                    Collection currentCollection = (Collection) getValue(entity, propertyName);
-
-                    //Borramos todos los elementos para añadir despues los que vienen desde JSON
-                    currentCollection.clear();
-
-                    //Añadimos los elementos que vienen desde JSON
-                    for (Object rawValue : rawCollection) {
-                        Object value = readEntity(rawValue, propertyMetaData);
-                        currentCollection.add(value);
-                    }
-                    break;
-                }
-                case Map: {
-                    Map rawMap = (Map) getValue(jsonObj, propertyName);
-                    Map currentMap = (Map) getValue(entity, propertyName);
-
-                    //Borramos todos los elementos para añadir despues los que vienen desde JSON
-                    currentMap.clear();
-
-                    //Añadimos los elementos que vienen desde JSON
-                    for (Object key : rawMap.keySet()) {
-                        Object rawValue = rawMap.get(key);
-                        Object value = readEntity(rawValue, propertyMetaData);
-                        currentMap.put(key, value);
-                    }
-                    break;
-                }
-                default:
-                    throw new RuntimeException("El MetaTypo es desconocido:" + propertyMetaData.getMetaType());
-            }
-        }
-
-    }
-
     /**
      * Lee una entidad de la base de datos en función de su clave primaria o de
      * alguna de sus claves naturales
@@ -153,7 +111,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
      * @param propertyMetaData
      * @return
      */
-    private Object readEntity(Object propertyValue, MetaData propertyMetaData) {
+    private Object readForeingEntity(Object propertyValue, MetaData propertyMetaData) {
         try {
             if (propertyValue == null) {
                 return null;
@@ -167,7 +125,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
             //Leer la entidad en función de su clave primaria
             String primaryKeyPropertyName = propertyMetaData.getPrimaryKeyPropertyName();
-            Object primaryKey = getValue(propertyValue, primaryKeyPropertyName);
+            Object primaryKey = getValueFromBean(propertyValue, primaryKeyPropertyName);
             if (primaryKey != null) {
                 Object entity = genericDAO.read((Serializable) primaryKey);
                 if (entity != null) {
@@ -177,7 +135,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
             //Leer la entidad en función de cada una de sus claves primarias
             for (String naturalKeyPropertyName : propertyMetaData.getNaturalKeyPropertiesName()) {
-                Object naturalKey = getValue(propertyValue, naturalKeyPropertyName);
+                Object naturalKey = getValueFromBean(propertyValue, naturalKeyPropertyName);
                 if (naturalKey != null) {
                     Object entity = genericDAO.readByNaturalKey((Serializable) naturalKey);
                     if (entity != null) {
@@ -192,14 +150,14 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                 StringBuilder sb = new StringBuilder();
                 sb.append(propertyMetaData.getPrimaryKeyPropertyName());
                 sb.append(":");
-                sb.append(getValue(propertyValue, propertyMetaData.getPrimaryKeyPropertyName()));
+                sb.append(getValueFromBean(propertyValue, propertyMetaData.getPrimaryKeyPropertyName()));
                 sb.append(",");
 
 
                 for (String naturalKeyPropertyName : propertyMetaData.getNaturalKeyPropertiesName()) {
                     sb.append(naturalKeyPropertyName);
                     sb.append(":");
-                    sb.append(getValue(propertyValue, naturalKeyPropertyName));
+                    sb.append(getValueFromBean(propertyValue, naturalKeyPropertyName));
                     sb.append(",");
                 }
 
@@ -220,6 +178,79 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         }
     }
 
+
+    private void populateEntity(Object entity, Object jsonObj, MetaData metaData) throws BussinessException {
+
+        for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
+            MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
+
+
+            switch (propertyMetaData.getMetaType()) {
+                case Scalar: {
+                    Object rawValue = getValueFromBean(jsonObj, propertyName);
+                    setValueToBean(entity, rawValue, propertyName);
+                    break;
+                }
+                case Entity: {
+                    //Debemos leer la referencia de la base de datos
+                    Object rawValue = getValueFromBean(jsonObj, propertyName);
+
+                    Object value = readForeingEntity(rawValue, propertyMetaData);
+                    setValueToBean(entity, value, propertyName);
+                    break;
+                }
+                case Component: {
+                    //Es un componente, así que hacemos la llamada recursiva
+                    Object rawValue = getValueFromBean(jsonObj, propertyName);
+                    populateEntity(entity, rawValue, propertyMetaData);
+                    break;
+                }
+                case List:
+                case Set: {
+                    if (propertyMetaData.isCollectionLazy() == false) {
+                        Collection rawCollection = (Collection) getValueFromBean(jsonObj, propertyName);
+                        Collection currentCollection = (Collection) getValueFromBean(entity, propertyName);
+
+                        //Borramos todos los elementos para añadir despues los que vienen desde JSON
+                        currentCollection.clear();
+
+                        //Añadimos los elementos que vienen desde JSON
+                        for (Object rawValue : rawCollection) {
+                            Object value = readEntity(rawValue, propertyMetaData);
+                            currentCollection.add(value);
+                        }
+                    } else {
+                        //NO hamos nada pq las colecciones Lazy no se cargan
+                    }
+                    break;
+                }
+                case Map: {
+                    if (propertyMetaData.isCollectionLazy() == false) {
+                        Map rawMap = (Map) getValueFromBean(jsonObj, propertyName);
+                        Map currentMap = (Map) getValueFromBean(entity, propertyName);
+
+                        //Borramos todos los elementos para añadir despues los que vienen desde JSON
+                        currentMap.clear();
+
+                        //Añadimos los elementos que vienen desde JSON
+                        for (Object key : rawMap.keySet()) {
+                            Object rawValue = rawMap.get(key);
+                            Object value = readEntity(rawValue, propertyMetaData);
+                            currentMap.put(key, value);
+                        }
+                    } else {
+                        //NO hamos nada pq las colecciones Lazy no se cargan
+                    }
+                    break;
+                }
+                default:
+                    throw new RuntimeException("El MetaTypo es desconocido:" + propertyMetaData.getMetaType());
+            }
+        }
+
+    }
+    
+    
     private boolean emptyKey(Object primaryKey) {
         if (primaryKey == null) {
             return true;
@@ -249,7 +280,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
      * @param propertyName El nombre de la propiedad
      * @return El valor de la propiedad
      */
-    private Object getValue(Object obj, String propertyName) {
+    private Object getValueFromBean(Object obj, String propertyName) {
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
@@ -279,7 +310,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
      * @param value El valor de la propiedad
      * @param propertyName El nombre de la propiedad
      */
-    private void setValue(Object obj, Object value, String propertyName) {
+    private void setValueToBean(Object obj, Object value, String propertyName) {
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
