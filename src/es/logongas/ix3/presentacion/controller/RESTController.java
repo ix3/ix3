@@ -24,6 +24,7 @@ import es.logongas.ix3.persistencia.services.metadata.MetaDataFactory;
 import es.logongas.ix3.presentacion.json.JsonFactory;
 import es.logongas.ix3.presentacion.json.JsonReader;
 import es.logongas.ix3.presentacion.json.JsonWriter;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -170,10 +171,34 @@ public class RESTController {
             for (int i = 0; i < method.getParameterTypes().length; i++) {
                 Class parameterType = method.getParameterTypes()[i];
                 Object parameterValue;
-                try {
-                    parameterValue = conversionService.convert(httpRequest.getParameter("parameter" + i), parameterType);
-                } catch (Exception ex) {
-                    throw new BussinessException(new BussinessMessage(null,"El " + i + "º parámetro no tiene el formato adecuado:"+httpRequest.getParameter("parameter" + i)));
+
+                MetaData metaDataParameter=metaDataFactory.getMetaData(parameterType);
+                if (metaDataParameter!=null) {
+                    //El parámetro es una Entidad de negocio pero solo nos han pasado la clave primaria.
+
+                    //Vamos a obtener el tipo de la clave primaria
+                    Class primaryKeyType=metaDataParameter.getPropertiesMetaData().get(metaDataParameter.getPrimaryKeyPropertyName()).getType();
+
+                    //Ahora vamos a obtener el valor de la clave primaria
+                    Serializable primaryKey;
+                    try {
+                        primaryKey = (Serializable)conversionService.convert(httpRequest.getParameter("parameter" + i), primaryKeyType);
+                    } catch (Exception ex) {
+                        throw new BussinessException(new BussinessMessage(null,"El " + i + "º parámetro no tiene el formato adecuado para ser una PK:"+httpRequest.getParameter("parameter" + i)));
+                    }
+
+                    //Y finalmente Leemos la entidad en función de la clave primaria
+                    GenericDAO genericDAOParameter=daoFactory.getDAO(parameterType);
+                    parameterValue=genericDAOParameter.read(primaryKey);
+                    if (parameterValue==null) {
+                        throw new BussinessException(new BussinessMessage(null,"El " + i + "º parámetro con valor '"+httpRequest.getParameter("parameter" + i)+"' no es de ninguna entidad."));
+                    }
+                } else {
+                    try {
+                        parameterValue = conversionService.convert(httpRequest.getParameter("parameter" + i), parameterType);
+                    } catch (Exception ex) {
+                        throw new BussinessException(new BussinessMessage(null,"El " + i + "º parámetro no tiene el formato adecuado:"+httpRequest.getParameter("parameter" + i)));
+                    }
                 }
                 args.add(parameterValue);
             }
