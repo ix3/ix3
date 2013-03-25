@@ -34,12 +34,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializable> implements GenericDAO<EntityType, PrimaryKeyType> {
 
     @Autowired
-    SessionFactory sessionFactory;
+    protected SessionFactory sessionFactory;
     @Autowired
-    MetaDataFactory metaDataFactory;
-    
+    protected MetaDataFactory metaDataFactory;
+
     Class entityType;
-    
+
     protected final Log log = LogFactory.getLog(getClass());
 
     public GenericDAOImplHibernate() {
@@ -374,7 +374,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         }
 
     }
-    
+
     public MetaData getEntityMetaData() {
         return metaDataFactory.getMetaData(entityType);
     }
