@@ -92,12 +92,12 @@ public class RESTController {
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
             Map<String, Object> filter = new HashMap<>();
-            Enumeration<String> enumeration = httpRequest.getAttributeNames();
+            Enumeration<String> enumeration = httpRequest.getParameterNames();
             while (enumeration.hasMoreElements()) {
                 String propertyName = enumeration.nextElement();
                 MetaData propertyMetaData=metaData.getPropertiesMetaData().get(propertyName);
                 if (propertyMetaData!=null) {
-                    Class propertyType = metaData.getPropertiesMetaData().get(propertyName).getType();
+                    Class propertyType = propertyMetaData.getType();
                     Object value = conversionService.convert(httpRequest.getParameter(propertyName), propertyType);
                     if (value!=null) {
                         filter.put(propertyName, value);
