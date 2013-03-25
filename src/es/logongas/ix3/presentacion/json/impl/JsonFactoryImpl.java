@@ -28,51 +28,54 @@ import org.springframework.context.ApplicationContext;
  * @author Lorenzo González
  */
 public class JsonFactoryImpl implements JsonFactory {
+
     @Autowired
     private ApplicationContext context;
-    
     @Autowired
     private MetaDataFactory metaDataFactory;
-    
+
     @Override
     public JsonReader getJsonReader(Class clazz) {
-        MetaData metaData=metaDataFactory.getMetaData(clazz);        
+        MetaData metaData = metaDataFactory.getMetaData(clazz);
         JsonReader jsonReader;
-        
-        if (metaData!=null) {
-            jsonReader=new JsonReaderImplEntityJackson(clazz);
+
+        if (metaData != null) {
+            jsonReader = new JsonReaderImplEntityJackson(clazz);
         } else {
-            jsonReader=new JsonReaderImplJackson(clazz);
-        }        
-        
+            jsonReader = new JsonReaderImplJackson(clazz);
+        }
+
         context.getAutowireCapableBeanFactory().autowireBean(jsonReader);
-        
+
         return jsonReader;
     }
 
     @Override
     public JsonWriter getJsonWriter(Class clazz) {
-        MetaData metaData=metaDataFactory.getMetaData(clazz);
         JsonWriter jsonWriter;
-        
-        if (metaData!=null) {
-            jsonWriter=new JsonWriterImplEntityJackson();
+
+        if (clazz == null) {
+            jsonWriter = new JsonWriterImplJackson();
         } else {
-            jsonWriter=new JsonWriterImplJackson();
+            MetaData metaData = metaDataFactory.getMetaData(clazz);
+            if (metaData != null) {
+                jsonWriter = new JsonWriterImplEntityJackson();
+            } else {
+                jsonWriter = new JsonWriterImplJackson();
+            }
         }
-        
+
         context.getAutowireCapableBeanFactory().autowireBean(jsonWriter);
-        
-        return jsonWriter; 
+
+        return jsonWriter;
     }
-    
+
     @Override
     public JsonWriter getJsonWriter() {
-        JsonWriter jsonWriter=new JsonWriterImplJackson();
-        
+        JsonWriter jsonWriter = new JsonWriterImplJackson();
+
         context.getAutowireCapableBeanFactory().autowireBean(jsonWriter);
-        
-        return jsonWriter; 
-    }    
-    
+
+        return jsonWriter;
+    }
 }

@@ -24,8 +24,11 @@ import es.logongas.ix3.persistencia.services.metadata.MetaDataFactory;
 import es.logongas.ix3.presentacion.json.JsonFactory;
 import es.logongas.ix3.presentacion.json.JsonReader;
 import es.logongas.ix3.presentacion.json.JsonWriter;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,12 +59,12 @@ public class RESTController {
     JsonFactory jsonFactory;
     private static Log log = LogFactory.getLog(RESTController.class);
 
-    @RequestMapping(value = {"/{entityName}/metadata"}, method = RequestMethod.GET,headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/metadata"}, method = RequestMethod.GET, headers = "Accept=application/json")
     public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData==null) {
-                throw new BussinessException(new BussinessMessage(null,"No existe la entidad "+entityName));
+            if (metaData == null) {
+                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
             }
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(MetaData.class);
 
@@ -81,12 +84,12 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.GET,headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.GET, headers = "Accept=application/json")
     public void search(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData==null) {
-                throw new BussinessException(new BussinessMessage(null,"No existe la entidad "+entityName));
+            if (metaData == null) {
+                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -95,11 +98,11 @@ public class RESTController {
             Enumeration<String> enumeration = httpRequest.getParameterNames();
             while (enumeration.hasMoreElements()) {
                 String propertyName = enumeration.nextElement();
-                MetaData propertyMetaData=metaData.getPropertiesMetaData().get(propertyName);
-                if (propertyMetaData!=null) {
+                MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
+                if (propertyMetaData != null) {
                     Class propertyType = propertyMetaData.getType();
                     Object value = conversionService.convert(httpRequest.getParameter(propertyName), propertyType);
-                    if (value!=null) {
+                    if (value != null) {
                         filter.put(propertyName, value);
                     }
                 }
@@ -137,12 +140,88 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET,headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/namedsearch"}, method = RequestMethod.GET, headers = "Accept=application/json")
+    public void namedSearch(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
+        try {
+            MetaData metaData = metaDataFactory.getMetaData(entityName);
+            if (metaData == null) {
+                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
+            }
+            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+            JsonWriter jsonWriter;
+
+            String namedSearch = httpRequest.getParameter("name");
+
+            Method method = null;
+            Method[] methods = genericDAO.getClass().getMethods();
+            for (int i = 0; i < methods.length; i++) {
+                Method currentMethod = methods[i];
+                if (currentMethod.getName().equals(namedSearch)) {
+                    method = currentMethod;
+                    break;
+                }
+            }
+
+            if (method == null) {
+                throw new BussinessException(new BussinessMessage(null, "No existe el método " + namedSearch + " en la entidad " + entityName));
+            }
+
+            List args = new ArrayList();
+            for (int i = 0; i < method.getParameterTypes().length; i++) {
+                Class parameterType = method.getParameterTypes()[i];
+                Object parameterValue;
+                try {
+                    parameterValue = conversionService.convert(httpRequest.getParameter("parameter" + i), parameterType);
+                } catch (Exception ex) {
+                    throw new BussinessException(new BussinessMessage(null,"El " + i + "º parámetro no tiene el formato adecuado:"+httpRequest.getParameter("parameter" + i)));
+                }
+                args.add(parameterValue);
+            }
+
+            Object result=method.invoke(genericDAO, args.toArray());
+            if (result!=null) {
+                jsonWriter = jsonFactory.getJsonWriter(null);
+            } else {
+                jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
+            }
+            String jsonOut = jsonWriter.toJson(result);
+
+            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+            httpServletResponse.setContentType("application/json; charset=UTF-8");
+            httpServletResponse.getWriter().println(jsonOut);
+        } catch (BussinessException ex) {
+            try {
+                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBussinessMessages());
+
+                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                httpServletResponse.setContentType("application/json; charset=UTF-8");
+                httpServletResponse.getWriter().println(jsonOut);
+            } catch (Exception ex2) {
+                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                httpServletResponse.setContentType("text/plain");
+                try {
+                    ex.printStackTrace(httpServletResponse.getWriter());
+                } catch (Exception ex3) {
+                    log.error("Falló al imprimir la traza", ex3);
+                }
+            }
+        } catch (Exception ex) {
+            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            httpServletResponse.setContentType("text/plain");
+            try {
+                ex.printStackTrace(httpServletResponse.getWriter());
+            } catch (Exception ex2) {
+                log.error("Falló al imprimir la traza", ex2);
+            }
+        }
+    }
+
+    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, headers = "Accept=application/json")
     public void read(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData==null) {
-                throw new BussinessException(new BussinessMessage(null,"No existe la entidad "+entityName));
+            if (metaData == null) {
+                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -180,12 +259,12 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/create"}, method = RequestMethod.GET,headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/create"}, method = RequestMethod.GET, headers = "Accept=application/json")
     public void create(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData==null) {
-                throw new BussinessException(new BussinessMessage(null,"No existe la entidad "+entityName));
+            if (metaData == null) {
+                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -224,12 +303,12 @@ public class RESTController {
 
     }
 
-    @RequestMapping(value = {"/{entityName}/"}, method = RequestMethod.POST, consumes = "application/json",headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/"}, method = RequestMethod.POST, consumes = "application/json", headers = "Accept=application/json")
     public void insert(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @RequestBody String jsonIn) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData==null) {
-                throw new BussinessException(new BussinessMessage(null,"No existe la entidad "+entityName));
+            if (metaData == null) {
+                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -269,12 +348,12 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json",headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json", headers = "Accept=application/json")
     public void update(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @RequestBody String jsonIn) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData==null) {
-                throw new BussinessException(new BussinessMessage(null,"No existe la entidad "+entityName));
+            if (metaData == null) {
+                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -315,18 +394,18 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE, consumes = "application/json",headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE, consumes = "application/json", headers = "Accept=application/json")
     public void delete(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData==null) {
-                throw new BussinessException(new BussinessMessage(null,"No existe la entidad "+entityName));
+            if (metaData == null) {
+                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
 
-            boolean deletedSuccess=genericDAO.delete(id);
-            if (deletedSuccess==false) {
-                throw new BussinessException(new BussinessMessage(null,"No existe la entidad a borrar"));
+            boolean deletedSuccess = genericDAO.delete(id);
+            if (deletedSuccess == false) {
+                throw new BussinessException(new BussinessMessage(null, "No existe la entidad a borrar"));
             }
 
             httpServletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
