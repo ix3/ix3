@@ -20,7 +20,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 /**
- *
+ * Esta clase es una ayuda para crear un Proxy de los interfaces DAO.
  * @author Lorenzo González
  */
 public class InvocationHandlerImplDAO implements InvocationHandler {
@@ -43,10 +43,27 @@ public class InvocationHandlerImplDAO implements InvocationHandler {
 
         for (Method realMethod : methods) {
             if (realMethod.getName().equals(method.getName()) == true) {
-                return realMethod;
+                if (equalParameterTypes(realMethod.getParameterTypes(),method.getParameterTypes())) {
+                    return realMethod;
+                }
             }
         }
 
         throw new RuntimeException("No existe ese método:" + method.toGenericString());
     }
+
+    private boolean equalParameterTypes(Class[] realParameterTypes,Class[] parameterTypes) {
+        if (realParameterTypes.length!=parameterTypes.length) {
+            return false;
+        }
+
+        for(int i=0;i<realParameterTypes.length;i++) {
+            if (realParameterTypes[i].isAssignableFrom(parameterTypes[i])==false) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 }
