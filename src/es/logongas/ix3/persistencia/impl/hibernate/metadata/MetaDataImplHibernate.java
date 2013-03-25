@@ -89,7 +89,7 @@ public class MetaDataImplHibernate implements MetaData {
 
         CollectionType collectionType = (CollectionType) type;
         String role=collectionType.getRole();
-        CollectionMetadata collectionMetadata=sessionFactory.getCollectionMetadata(role);       
+        CollectionMetadata collectionMetadata=sessionFactory.getCollectionMetadata(role);
 
         return collectionMetadata.isLazy();
     }
@@ -129,7 +129,7 @@ public class MetaDataImplHibernate implements MetaData {
     public Map<String, MetaData> getPropertiesMetaData() {
 
         if (metaDatas == null) {
-            metaDatas = new LinkedHashMap<>();
+            metaDatas = new MetaDatas();
 
             ClassMetadata classMetadata = getClassMetadata();
 
