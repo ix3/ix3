@@ -26,18 +26,19 @@ public class HibernateUtil {
 
     private static SessionFactory sessionFactory;
     private static SessionFactory sessionFactory2;
-    
+
     public static synchronized void buildSessionFactory() {
         Configuration configuration = new Configuration();
         configuration.configure();
         configuration.setProperty("hibernate.current_session_context_class", "thread");
-        
+
         ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
-        sessionFactory = configuration.buildSessionFactory(serviceRegistry); 
-        
+        sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+
         ServiceRegistry serviceRegistry2 = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
-        sessionFactory2 = configuration.buildSessionFactory(serviceRegistry2);         
-        
+        sessionFactory2 = configuration.buildSessionFactory(serviceRegistry2);
+
+        //new org.hibernate.tool.hbm2ddl.SchemaExport(configuration).setOutputFile("script.sql").setDelimiter(";").create(true, false);
     }
 
     public static void closeSessionFactory() {
@@ -53,39 +54,39 @@ public class HibernateUtil {
         Session session = sessionFactory.openSession();
         ThreadLocalSessionContext.bind(session);
         Session session2 = sessionFactory2.openSession();
-        ThreadLocalSessionContext.bind(session2);        
+        ThreadLocalSessionContext.bind(session2);
     }
-    
+
 
     public static SessionFactory getSessionFactory() {
         if (sessionFactory==null)  {
             buildSessionFactory();
-        }        
+        }
         if (sessionFactory.isClosed()==true) {
             throw new RuntimeException("El objeto sessionFactory está cerrado");
-        }       
+        }
         return sessionFactory;
     }
     public static SessionFactory getSessionFactory2() {
         if (sessionFactory2==null)  {
             buildSessionFactory();
-        }        
+        }
         if (sessionFactory2.isClosed()==true) {
             throw new RuntimeException("El objeto sessionFactory2 está cerrado");
-        }        
+        }
         return sessionFactory2;
-    }    
+    }
 
     public static void closeSessionAndUnbindFromThread() {
         Session session = ThreadLocalSessionContext.unbind(sessionFactory);
         if (session!=null) {
             session.close();
         }
-        
+
         Session session2 = ThreadLocalSessionContext.unbind(sessionFactory2);
         if (session2!=null) {
             session2.close();
-        }        
+        }
     }
 
 }

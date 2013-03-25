@@ -17,6 +17,7 @@ package es.logongas.ix3.persistencia.impl.hibernate.dao;
 
 import es.logongas.ix3.persistencia.services.dao.DAOFactory;
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
+import java.lang.reflect.Proxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
@@ -29,15 +30,11 @@ public class DAOFactoryImplHibernate implements DAOFactory {
 
     private String domainBasePackageName = null;
     private String daoBasePackageName = null;
+    private String daoImplBasePackageName = null;
     @Autowired
     private ApplicationContext context;
 
     public DAOFactoryImplHibernate() {
-    }
-
-    public DAOFactoryImplHibernate(String domainBasePackageName, String daoBasePackageName) {
-        this.domainBasePackageName = domainBasePackageName;
-        this.daoBasePackageName = daoBasePackageName;
     }
 
     /**
@@ -61,34 +58,81 @@ public class DAOFactoryImplHibernate implements DAOFactory {
 
 
         try {
-            fqcn = getFQCNSpecificPackageDAO(entityClass, domainBasePackageName, daoBasePackageName);
+            fqcn = getFQCNSpecificPackageDAOImpl(entityClass, domainBasePackageName, daoImplBasePackageName);
             daoClass = Class.forName(fqcn);
             genericDAO = (GenericDAO) daoClass.newInstance();
-
+            context.getAutowireCapableBeanFactory().autowireBean(genericDAO);
         } catch (Exception ex) {
             //Si no existe probamos con la siguiente
             try {
-                fqcn = getFQCNSamePackageDAO(entityClass, daoBasePackageName);
+                fqcn = getFQCNSamePackageDAOImpl(entityClass, daoImplBasePackageName);
                 daoClass = Class.forName(fqcn);
                 genericDAO = (GenericDAO) daoClass.newInstance();
+                context.getAutowireCapableBeanFactory().autowireBean(genericDAO);
             } catch (Exception ex1) {
                 //Si no existe probamos con la siguiente
-                genericDAO = new GenericDAOImplHibernate(entityClass);
+                //Pero como es generico deberemos ver si existe el interfaz
+                GenericDAO realGenericDAO = new GenericDAOImplHibernate(entityClass);
+                context.getAutowireCapableBeanFactory().autowireBean(realGenericDAO);
+                daoClass=getDAOClass(entityClass);
+                if (daoClass==null) {
+                    //Si no existe el interfaz no hace falta crear el Proxy pq
+                    //sería perder rendimiento.
+                   genericDAO=realGenericDAO;
+                } else {
+                    genericDAO=(GenericDAO)Proxy.newProxyInstance(InvocationHandlerImplDAO.class.getClassLoader(), new Class[] { daoClass }, new InvocationHandlerImplDAO(realGenericDAO));
+                }
             }
         }
-
-        context.getAutowireCapableBeanFactory().autowireBean(genericDAO);
 
         return genericDAO;
     }
 
     /**
-     * Establece el nombre del paquete Java donde están los DAO
+     * Busca el interfaz de un DAO. Si éste no existe retorna <code>null</code>
+     * @param entityClass
+     * @return
+     */
+    public Class<GenericDAO> getDAOClass(Class entityClass) {
+        //Hay 3 formas de encontrar el DAO
+        String fqcn;
+        Class daoClass;
+
+
+        try {
+            fqcn = getFQCNSpecificPackageDAO(entityClass, domainBasePackageName, daoBasePackageName);
+            daoClass = Class.forName(fqcn);
+        } catch (Exception ex) {
+            //Si no existe probamos con la siguiente
+            try {
+                fqcn = getFQCNSamePackageDAO(entityClass, daoBasePackageName);
+                daoClass = Class.forName(fqcn);
+            } catch (Exception ex1) {
+                //Si no existe es uqe no hay un interfaz concreto
+                //así que usamos GenericDAO como interfaz
+                daoClass=null;
+            }
+        }
+
+        return daoClass;
+    }
+
+    /**
+     * Establece el nombre del paquete Java donde están los interfaces DAO
      *
-     * @param daoBasePackageName Nombre del paquete Java donde están los DAO
+     * @param daoBasePackageName Nombre del paquete Java donde están los interfaces DAO
      */
     public void setDaoBasePackageName(String daoBasePackageName) {
         this.daoBasePackageName = daoBasePackageName;
+    }
+
+    /**
+     * Establece el nombre del paquete Java donde están las implementaciones de los interfaces DAO
+     *
+     * @param daoBasePackageName Nombre del paquete Java donde están los interfaces DAO
+     */
+    public void setDaoImplBasePackageName(String daoImplBasePackageName) {
+        this.daoImplBasePackageName = daoImplBasePackageName;
     }
 
     /**
@@ -119,7 +163,29 @@ public class DAOFactoryImplHibernate implements DAOFactory {
 
     }
 
+    protected String getFQCNSamePackageDAOImpl(Class entityClass, String daoImplBasePackageName) {
+        if (daoImplBasePackageName != null) {
+            return daoImplBasePackageName + "." + getDAOImplClassName(entityClass);
+        } else {
+            return null;
+        }
+    }
+
+    protected String getFQCNSpecificPackageDAOImpl(Class entityClass, String domainBasePackageName, String daoImplBasePackageName) {
+        if ((domainBasePackageName != null) && (daoImplBasePackageName != null)) {
+            String packageName = entityClass.getPackage().getName().replace(domainBasePackageName, daoImplBasePackageName);
+            return packageName + "." + getDAOImplClassName(entityClass);
+        } else {
+            return null;
+        }
+
+    }
+
+
     protected String getDAOClassName(Class entityClass) {
+        return entityClass.getSimpleName() + "DAO";
+    }
+    protected String getDAOImplClassName(Class entityClass) {
         return entityClass.getSimpleName() + "DAOImplHibernate";
     }
 }
