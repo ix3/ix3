@@ -17,7 +17,7 @@ package es.logongas.ix3.presentacion.json.impl;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.logongas.ix3.persistencia.services.dao.BussinessException;
+import es.logongas.ix3.persistencia.services.dao.BusinessException;
 import es.logongas.ix3.persistencia.services.dao.DAOFactory;
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
 import es.logongas.ix3.persistencia.services.metadata.MetaData;
@@ -142,7 +142,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                 }
             }
 
-            //Si hay más de un elemento es que hay conflictos entre 
+            //Si hay más de un elemento es que hay conflictos entre
             //la clave primaria y las claves naturales pq identifican entidades distintas
             if (entities.size() > 1) {
                 StringBuilder sb = new StringBuilder();
@@ -171,13 +171,13 @@ public class JsonReaderImplEntityJackson implements JsonReader {
             }
 
 
-        } catch (BussinessException be) {
+        } catch (BusinessException be) {
             throw new RuntimeException(be);
         }
     }
 
 
-    private void populateEntity(Object entity, Object jsonObj, MetaData metaData) throws BussinessException {
+    private void populateEntity(Object entity, Object jsonObj, MetaData metaData) throws BusinessException {
 
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
@@ -247,8 +247,8 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         }
 
     }
-    
-    
+
+
     private boolean emptyKey(Object primaryKey) {
         if (primaryKey == null) {
             return true;

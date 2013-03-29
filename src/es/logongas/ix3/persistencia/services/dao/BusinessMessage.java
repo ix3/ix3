@@ -16,11 +16,11 @@
 
 package es.logongas.ix3.persistencia.services.dao;
 
-public class BussinessMessage {
+public class BusinessMessage {
     private final String propertyName;
     private final String message;
 
-    public BussinessMessage(String propertyName, String message) {
+    public BusinessMessage(String propertyName, String message) {
         this.propertyName = propertyName;
         this.message = message;
     }
@@ -35,7 +35,7 @@ public class BussinessMessage {
             return message;
         }
     }
-    
+
 
     public String getPropertyName() {
         return propertyName;

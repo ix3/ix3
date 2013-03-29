@@ -15,7 +15,7 @@
  */
 package es.logongas.ix3.persistencia.impl.hibernate.dao;
 
-import es.logongas.ix3.persistencia.services.dao.BussinessException;
+import es.logongas.ix3.persistencia.services.dao.BusinessException;
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
 import es.logongas.ix3.persistencia.services.metadata.MetaData;
 import es.logongas.ix3.persistencia.services.metadata.MetaDataFactory;
@@ -51,7 +51,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public EntityType create() throws BussinessException {
+    public EntityType create() throws BusinessException {
         try {
             return (EntityType) getEntityMetaData().getType().newInstance();
         } catch (InstantiationException | IllegalAccessException ex) {
@@ -64,7 +64,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public void insert(EntityType entity) throws BussinessException {
+    public void insert(EntityType entity) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
@@ -78,7 +78,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -87,7 +87,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (RuntimeException ex) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -110,7 +110,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public boolean update(EntityType entity) throws BussinessException {
+    public boolean update(EntityType entity) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
@@ -133,7 +133,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -142,7 +142,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (RuntimeException ex) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -165,7 +165,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public EntityType read(PrimaryKeyType id) throws BussinessException {
+    public EntityType read(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
@@ -181,7 +181,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -190,7 +190,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (RuntimeException ex) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -213,7 +213,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public boolean delete(PrimaryKeyType id) throws BussinessException {
+    public boolean delete(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
             session.beginTransaction();
@@ -234,7 +234,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -243,7 +243,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (RuntimeException ex) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -266,7 +266,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public List<EntityType> search(Map<String, Object> filter) throws BussinessException {
+    public List<EntityType> search(Map<String, Object> filter) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
             Criteria criteria = session.createCriteria(getEntityMetaData().getType());
@@ -297,7 +297,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -306,7 +306,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (RuntimeException ex) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -329,7 +329,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public EntityType readByNaturalKey(Object value) throws BussinessException {
+    public EntityType readByNaturalKey(Object value) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
             EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(value);
@@ -343,7 +343,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -352,7 +352,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BussinessException(cve);
+            throw new BusinessException(cve);
         } catch (RuntimeException ex) {
             try {
                 if (session.getTransaction().isActive()) {

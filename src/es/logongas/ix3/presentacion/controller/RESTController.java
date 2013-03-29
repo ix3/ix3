@@ -15,8 +15,8 @@
  */
 package es.logongas.ix3.presentacion.controller;
 
-import es.logongas.ix3.persistencia.services.dao.BussinessException;
-import es.logongas.ix3.persistencia.services.dao.BussinessMessage;
+import es.logongas.ix3.persistencia.services.dao.BusinessException;
+import es.logongas.ix3.persistencia.services.dao.BusinessMessage;
 import es.logongas.ix3.persistencia.services.dao.DAOFactory;
 import es.logongas.ix3.persistencia.services.dao.GenericDAO;
 import es.logongas.ix3.persistencia.services.metadata.MetaData;
@@ -65,7 +65,7 @@ public class RESTController {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
             if (metaData == null) {
-                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
+                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(MetaData.class);
 
@@ -90,7 +90,7 @@ public class RESTController {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
             if (metaData == null) {
-                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
+                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -114,9 +114,9 @@ public class RESTController {
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
-        } catch (BussinessException ex) {
+        } catch (BusinessException ex) {
             try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBussinessMessages());
+                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -146,7 +146,7 @@ public class RESTController {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
             if (metaData == null) {
-                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
+                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter;
@@ -164,7 +164,7 @@ public class RESTController {
             }
 
             if (method == null) {
-                throw new BussinessException(new BussinessMessage(null, "No existe el método " + namedSearch + " en la entidad " + entityName));
+                throw new BusinessException(new BusinessMessage(null, "No existe el método " + namedSearch + " en la entidad " + entityName));
             }
 
             List args = new ArrayList();
@@ -184,20 +184,20 @@ public class RESTController {
                     try {
                         primaryKey = (Serializable)conversionService.convert(httpRequest.getParameter("parameter" + i), primaryKeyType);
                     } catch (Exception ex) {
-                        throw new BussinessException(new BussinessMessage(null,"El " + i + "º parámetro no tiene el formato adecuado para ser una PK:"+httpRequest.getParameter("parameter" + i)));
+                        throw new BusinessException(new BusinessMessage(null,"El " + i + "º parámetro no tiene el formato adecuado para ser una PK:"+httpRequest.getParameter("parameter" + i)));
                     }
 
                     //Y finalmente Leemos la entidad en función de la clave primaria
                     GenericDAO genericDAOParameter=daoFactory.getDAO(parameterType);
                     parameterValue=genericDAOParameter.read(primaryKey);
                     if (parameterValue==null) {
-                        throw new BussinessException(new BussinessMessage(null,"El " + i + "º parámetro con valor '"+httpRequest.getParameter("parameter" + i)+"' no es de ninguna entidad."));
+                        throw new BusinessException(new BusinessMessage(null,"El " + i + "º parámetro con valor '"+httpRequest.getParameter("parameter" + i)+"' no es de ninguna entidad."));
                     }
                 } else {
                     try {
                         parameterValue = conversionService.convert(httpRequest.getParameter("parameter" + i), parameterType);
                     } catch (Exception ex) {
-                        throw new BussinessException(new BussinessMessage(null,"El " + i + "º parámetro no tiene el formato adecuado:"+httpRequest.getParameter("parameter" + i)));
+                        throw new BusinessException(new BusinessMessage(null,"El " + i + "º parámetro no tiene el formato adecuado:"+httpRequest.getParameter("parameter" + i)));
                     }
                 }
                 args.add(parameterValue);
@@ -214,9 +214,9 @@ public class RESTController {
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
-        } catch (BussinessException ex) {
+        } catch (BusinessException ex) {
             try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBussinessMessages());
+                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -246,7 +246,7 @@ public class RESTController {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
             if (metaData == null) {
-                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
+                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -257,9 +257,9 @@ public class RESTController {
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
-        } catch (BussinessException ex) {
+        } catch (BusinessException ex) {
             try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBussinessMessages());
+                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -289,7 +289,7 @@ public class RESTController {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
             if (metaData == null) {
-                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
+                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -300,9 +300,9 @@ public class RESTController {
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
-        } catch (BussinessException ex) {
+        } catch (BusinessException ex) {
             try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBussinessMessages());
+                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -333,7 +333,7 @@ public class RESTController {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
             if (metaData == null) {
-                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
+                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -346,9 +346,9 @@ public class RESTController {
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
-        } catch (BussinessException ex) {
+        } catch (BusinessException ex) {
             try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBussinessMessages());
+                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -378,7 +378,7 @@ public class RESTController {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
             if (metaData == null) {
-                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
+                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -392,9 +392,9 @@ public class RESTController {
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
 
-        } catch (BussinessException ex) {
+        } catch (BusinessException ex) {
             try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBussinessMessages());
+                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -424,20 +424,20 @@ public class RESTController {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
             if (metaData == null) {
-                throw new BussinessException(new BussinessMessage(null, "No existe la entidad " + entityName));
+                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
 
             boolean deletedSuccess = genericDAO.delete(id);
             if (deletedSuccess == false) {
-                throw new BussinessException(new BussinessMessage(null, "No existe la entidad a borrar"));
+                throw new BusinessException(new BusinessMessage(null, "No existe la entidad a borrar"));
             }
 
             httpServletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        } catch (BussinessException ex) {
+        } catch (BusinessException ex) {
 
             try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBussinessMessages());
+                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");

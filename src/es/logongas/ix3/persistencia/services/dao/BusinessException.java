@@ -22,23 +22,23 @@ import java.util.List;
 import javax.validation.ConstraintViolation;
 import javax.validation.Path;
 
-public class BussinessException extends Exception {
+public class BusinessException extends Exception {
 
-    private List<BussinessMessage> bussinessMessages = new ArrayList<>();
+    private List<BusinessMessage> businessMessages = new ArrayList<>();
 
-    public BussinessException(List<BussinessMessage> bussinessMessages) {
-        this.bussinessMessages.addAll(bussinessMessages);
+    public BusinessException(List<BusinessMessage> businessMessages) {
+        this.businessMessages.addAll(businessMessages);
     }
 
-    public BussinessException(BussinessMessage bussinessMessage) {
-        this.bussinessMessages.add(bussinessMessage);
+    public BusinessException(BusinessMessage businessMessage) {
+        this.businessMessages.add(businessMessage);
     }
 
-    public BussinessException(Exception ex) {
-        bussinessMessages.add(new BussinessMessage(null, ex.toString()));
+    public BusinessException(Exception ex) {
+        businessMessages.add(new BusinessMessage(null, ex.toString()));
     }
 
-    public BussinessException(javax.validation.ConstraintViolationException cve) {
+    public BusinessException(javax.validation.ConstraintViolationException cve) {
         for (ConstraintViolation constraintViolation : cve.getConstraintViolations()) {
             String propertyName;
             String message;
@@ -46,31 +46,31 @@ public class BussinessException extends Exception {
             propertyName = getPropertyNameFromPath(constraintViolation.getPropertyPath());
             message = constraintViolation.getMessage();
 
-            bussinessMessages.add(new BussinessMessage(propertyName, message));
+            businessMessages.add(new BusinessMessage(propertyName, message));
         }
     }
 
-    public BussinessException(org.hibernate.exception.ConstraintViolationException cve) {
-        BussinessMessage bussinessMessage;
+    public BusinessException(org.hibernate.exception.ConstraintViolationException cve) {
+        BusinessMessage businessMessage;
 
         String message = cve.getMessage();
         int errorCode = cve.getErrorCode();
         String sqlState = cve.getSQLState();
-        
+
         ConstraintViolationTranslator constraintViolationTranslator = new ConstraintViolationTranslatorImplMySQL();
         es.logongas.ix3.persistencia.services.dao.database.ConstraintViolation constraintViolation = constraintViolationTranslator.translate(message, errorCode, sqlState);
 
         if (constraintViolation == null) {
             throw cve;
         } else {
-            bussinessMessage = new BussinessMessage(constraintViolation.getPropertyName(), constraintViolation.getMessage());
+            businessMessage = new BusinessMessage(constraintViolation.getPropertyName(), constraintViolation.getMessage());
         }
 
-        bussinessMessages.add(bussinessMessage);
+        businessMessages.add(businessMessage);
     }
 
-    public List<BussinessMessage> getBussinessMessages() {
-        return bussinessMessages;
+    public List<BusinessMessage> getBusinessMessages() {
+        return businessMessages;
     }
 
     private String getPropertyNameFromPath(Path path) {

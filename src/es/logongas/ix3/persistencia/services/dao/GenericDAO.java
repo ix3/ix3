@@ -26,11 +26,11 @@ import java.util.Map;
  * @param PrimaryKeyType Tipo de la clave primaria de la entidad
  */
 public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable> {
-    EntityType create() throws BussinessException;
-    void insert(EntityType entity) throws BussinessException;
-    EntityType read(PrimaryKeyType primaryKey) throws BussinessException;
-    boolean update(EntityType entity) throws BussinessException;
-    boolean delete(PrimaryKeyType primaryKey) throws BussinessException;
-    EntityType readByNaturalKey(Object value) throws BussinessException;
-    List<EntityType> search(Map<String,Object> filter) throws BussinessException;
+    EntityType create() throws BusinessException;
+    void insert(EntityType entity) throws BusinessException;
+    EntityType read(PrimaryKeyType primaryKey) throws BusinessException;
+    boolean update(EntityType entity) throws BusinessException;
+    boolean delete(PrimaryKeyType primaryKey) throws BusinessException;
+    EntityType readByNaturalKey(Object value) throws BusinessException;
+    List<EntityType> search(Map<String,Object> filter) throws BusinessException;
 }
