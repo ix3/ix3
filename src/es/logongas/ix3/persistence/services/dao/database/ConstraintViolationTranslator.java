@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.test.datos.prueba;
-
-import es.logongas.ix3.persistence.impl.hibernate.dao.GenericDAOImplHibernate;
-import es.logongas.ix3.test.negocio.prueba.Entidad;
-import java.io.Serializable;
-import org.springframework.stereotype.Component;
+package es.logongas.ix3.persistence.services.dao.database;
 
 /**
- *
+ * Transforma ciertos errores de la base de datos en mensajes para el usuario
  * @author Lorenzo González
  */
-public class EntidadDAOImplHibernate extends GenericDAOImplHibernate<Entidad, Serializable> {
-
-    public EntidadDAOImplHibernate() {
-    }
-
+public interface ConstraintViolationTranslator {
+    ConstraintViolation translate(String message, int errorCode, String sqlState);
 }

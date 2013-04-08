@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.test.datos.prueba;
-
-import es.logongas.ix3.persistence.impl.hibernate.dao.GenericDAOImplHibernate;
-import es.logongas.ix3.test.negocio.prueba.Entidad;
-import java.io.Serializable;
-import org.springframework.stereotype.Component;
+package es.logongas.ix3.persistence.services.metadata;
 
 /**
  *
  * @author Lorenzo González
  */
-public class EntidadDAOImplHibernate extends GenericDAOImplHibernate<Entidad, Serializable> {
-
-    public EntidadDAOImplHibernate() {
-    }
-
+public enum MetaType {
+    Scalar,
+    Entity,
+    Component,
+    List,
+    Set,
+    Map
 }

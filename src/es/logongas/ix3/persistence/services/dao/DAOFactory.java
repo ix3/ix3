@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Lorenzo González.
+ * Copyright 2012 Lorenzo González.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.test.datos.prueba;
-
-import es.logongas.ix3.persistence.impl.hibernate.dao.GenericDAOImplHibernate;
-import es.logongas.ix3.test.negocio.prueba.Entidad;
-import java.io.Serializable;
-import org.springframework.stereotype.Component;
+package es.logongas.ix3.persistence.services.dao;
 
 /**
  *
  * @author Lorenzo González
  */
-public class EntidadDAOImplHibernate extends GenericDAOImplHibernate<Entidad, Serializable> {
-
-    public EntidadDAOImplHibernate() {
-    }
-
+public interface DAOFactory {
+    GenericDAO getDAO(Class EntityClass);
 }
