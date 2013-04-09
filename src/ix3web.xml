@@ -22,4 +22,5 @@ limitations under the License.
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
 ">
         <bean  class="es.logongas.ix3.web.impl.json.JsonFactoryImpl" />
+        <bean id="filterImplSecurity" class="es.logongas.ix3.web.controllers.FilterImplSecurity" />
 </beans>
