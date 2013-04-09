@@ -32,9 +32,5 @@ public enum AuthorizationType {
      * No se dice nada sobre si se puede o no acceder al recurso
      * Aunque el proveeder conoce el tipo de recurso
      */
-    Abstain,
-    /*
-     * El proveedor no conoce el tipo de recurso
-     */
-    ResourceUnknown
+    Abstain
 }

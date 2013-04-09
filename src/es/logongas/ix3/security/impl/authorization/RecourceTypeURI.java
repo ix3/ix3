@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authorization;
+package es.logongas.ix3.security.impl.authorization;
 
-import es.logongas.ix3.security.services.authentication.User;
-
+import es.logongas.ix3.security.services.authorization.ResourceType;
 
 /**
  *
  * @author Lorenzo González
  */
-public interface AuthorizationProvider {
-    AuthorizationType authorized(User user,ResourceType resourceType,Object accessType, Object resource);
+public class RecourceTypeURI extends ResourceType {
+
 }

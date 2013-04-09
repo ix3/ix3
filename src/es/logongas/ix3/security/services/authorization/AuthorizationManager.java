@@ -22,5 +22,5 @@ import es.logongas.ix3.security.services.authentication.User;
  * @author Lorenzo González
  */
 public interface AuthorizationManager {
-    boolean authorized(User user,ResourceType resourceType,AccessType accessType,Object resource);
+    boolean authorized(User user,ResourceType resourceType,Object accessType,Object resource);
 }
