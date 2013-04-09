@@ -21,8 +21,6 @@ import es.logongas.ix3.security.services.authentication.Credential;
 import es.logongas.ix3.security.services.authentication.User;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  *
@@ -37,8 +35,8 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
         User user=null;
 
 
-        for(Object authenticationProvider:authenticationProviders) {
-            user=((AuthenticationProvider)authenticationProvider).authenticate(credential);
+        for(AuthenticationProvider authenticationProvider:authenticationProviders) {
+            user=authenticationProvider.authenticate(credential);
             if (user!=null) {
                 break;
             }
@@ -51,8 +49,8 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
     public User getUserByIdUser(String idUser) {
         User user=null;
 
-        for(Object authenticationProvider:authenticationProviders) {
-            user=((AuthenticationProvider)authenticationProvider).getUserByIdUser(idUser);
+        for(AuthenticationProvider authenticationProvider:authenticationProviders) {
+            user=authenticationProvider.getUserByIdUser(idUser);
             if (user!=null) {
                 break;
             }
