@@ -93,7 +93,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
     }
 
     private Map<String, Object> getMapFromEntity(Object obj, MetaData metaData) {
-        Map<String, Object> values = new LinkedHashMap<>();
+        Map<String, Object> values = new LinkedHashMap<String, Object>();
 
         if (obj == null) {
             throw new IllegalArgumentException("El argumento 'obj' no puede ser null");
@@ -192,7 +192,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
      * @return El Map con los valores para transformar en formato JSON
      */
     private Map<String, Object> getMapFromForeingEntity(Object obj, MetaData metaData) {
-        Map<String, Object> values = new LinkedHashMap<>();
+        Map<String, Object> values = new LinkedHashMap<String, Object>();
 
         if (obj == null) {
             throw new IllegalArgumentException("El argumento 'obj' no puede ser null");

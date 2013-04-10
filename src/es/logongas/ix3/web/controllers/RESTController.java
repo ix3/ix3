@@ -95,7 +95,7 @@ public class RESTController {
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
-            Map<String, Object> filter = new HashMap<>();
+            Map<String, Object> filter = new HashMap<String, Object>();
             Enumeration<String> enumeration = httpRequest.getParameterNames();
             while (enumeration.hasMoreElements()) {
                 String propertyName = enumeration.nextElement();
