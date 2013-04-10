@@ -54,8 +54,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     public EntityType create() throws BusinessException {
         try {
             return (EntityType) getEntityMetaData().getType().newInstance();
-        } catch (InstantiationException | IllegalAccessException ex) {
-            throw new RuntimeException(ex);
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {

@@ -38,7 +38,7 @@ import org.hibernate.type.Type;
  */
 public class MetaDataImplHibernate implements MetaData {
 
-    private static Map<Type, MetaData> cache = new ConcurrentHashMap<>();
+    private static Map<Type, MetaData> cache = new ConcurrentHashMap<Type, MetaData>();
     private SessionFactory sessionFactory;
     private Class entityType = null;
     private Type type = null;
@@ -165,7 +165,7 @@ public class MetaDataImplHibernate implements MetaData {
     @Override
     public List<String> getNaturalKeyPropertiesName() {
 
-        List<String> naturalKeyPropertiesName = new ArrayList<>();
+        List<String> naturalKeyPropertiesName = new ArrayList<String>();
 
         ClassMetadata classMetadata = getClassMetadata();
         if (classMetadata == null) {

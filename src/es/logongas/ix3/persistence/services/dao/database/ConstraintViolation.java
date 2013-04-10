@@ -53,7 +53,7 @@ public class ConstraintViolation {
 
 
     private String createMessage(String value, Type constraintViolationType) {
-        Map<Type,String> messageTemplates=new HashMap<>();
+        Map<Type,String> messageTemplates=new HashMap<Type,String>();
         messageTemplates.put(Type.DuplicateEntry, "El valor '%s' ya existe");
 
        return String.format(messageTemplates.get(constraintViolationType), value);

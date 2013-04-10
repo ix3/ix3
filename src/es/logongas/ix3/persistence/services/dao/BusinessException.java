@@ -24,7 +24,7 @@ import javax.validation.Path;
 
 public class BusinessException extends Exception {
 
-    private List<BusinessMessage> businessMessages = new ArrayList<>();
+    private List<BusinessMessage> businessMessages = new ArrayList<BusinessMessage>();
 
     public BusinessException(List<BusinessMessage> businessMessages) {
         this.businessMessages.addAll(businessMessages);
