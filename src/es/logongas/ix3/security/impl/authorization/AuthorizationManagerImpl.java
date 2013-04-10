@@ -30,7 +30,7 @@ import java.util.List;
 public class AuthorizationManagerImpl implements AuthorizationManager {
 
     boolean defaultAllow=true;
-    List<AuthorizationProvider> authorizationProviders=new ArrayList<>();
+    List<AuthorizationProvider> authorizationProviders=new ArrayList<AuthorizationProvider>();
 
     @Override
     public boolean authorized(User user, ResourceType resourceType, Object accessType, Object resource) {

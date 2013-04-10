@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class AuthenticationManagerImpl implements AuthenticationManager {
 
-    List<AuthenticationProvider> authenticationProviders=new ArrayList<>();
+    List<AuthenticationProvider> authenticationProviders=new ArrayList<AuthenticationProvider>();
 
     @Override
     public User authenticate(Credential credential) {
