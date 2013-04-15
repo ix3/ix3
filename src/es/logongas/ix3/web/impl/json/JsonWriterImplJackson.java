@@ -17,16 +17,22 @@ package es.logongas.ix3.web.impl.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import es.logongas.ix3.web.services.json.JsonWriter;
+import java.text.SimpleDateFormat;
 
 /**
  *
  * @author Lorenzo González
  */
 public class JsonWriterImplJackson implements JsonWriter {
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;
 
-
+    public JsonWriterImplJackson() {
+        objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
     @Override
     public String toJson(Object obj) {
         try {

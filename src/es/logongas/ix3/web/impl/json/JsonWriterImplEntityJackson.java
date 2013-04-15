@@ -16,7 +16,10 @@
 package es.logongas.ix3.web.impl.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.web.services.json.JsonWriter;
@@ -24,6 +27,7 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -39,12 +43,17 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
     @Autowired
     private MetaDataFactory metaDataFactory;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;
+
+    public JsonWriterImplEntityJackson() {
+        objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
 
     @Override
     public String toJson(Object obj) {
         try {
-            Object jsonValue=getJsonObjectFromObject(obj);
+            Object jsonValue = getJsonObjectFromObject(obj);
             return objectMapper.writeValueAsString(jsonValue);
         } catch (JsonProcessingException ex) {
             throw new RuntimeException(ex);
@@ -85,7 +94,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 //Como no es un objeto de negocio, retornamos el mismo objeto
                 //y que se apache Jackson.
                 //Lo normal es que sea un String, Integer, etc.
-                Object jsonValue=obj;
+                Object jsonValue = obj;
 
                 return jsonValue;
             }
