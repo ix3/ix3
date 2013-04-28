@@ -18,7 +18,6 @@ package es.logongas.ix3.persistence.impl.hibernate.metadata;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaType;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +25,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
@@ -62,7 +60,7 @@ public class MetaDataImplHibernate implements MetaData {
     @Override
     public Class getType() {
         if (isCollection()) {
-            return ((CollectionType) type).getElementType((SessionFactoryImplementor) this.sessionFactory).getReturnedClass();
+            return ((org.hibernate.type.CollectionType) type).getElementType((SessionFactoryImplementor) this.sessionFactory).getReturnedClass();
         } else if (entityType != null) {
             return entityType;
         } else if (type != null) {
@@ -87,7 +85,7 @@ public class MetaDataImplHibernate implements MetaData {
             return false;
         }
 
-        CollectionType collectionType = (CollectionType) type;
+        org.hibernate.type.CollectionType collectionType = (org.hibernate.type.CollectionType) type;
         String role=collectionType.getRole();
         CollectionMetadata collectionMetadata=sessionFactory.getCollectionMetadata(role);
 
@@ -96,33 +94,32 @@ public class MetaDataImplHibernate implements MetaData {
 
     @Override
     public MetaType getMetaType() {
-        if (isCollection() == false) {
-            if ((getPropertiesMetaData() == null) || (getPropertiesMetaData().size() == 0)) {
-                return MetaType.Scalar;
-            } else if (this.getPrimaryKeyPropertyName() != null) {
-                return MetaType.Entity;
-            } else {
-                return MetaType.Component;
-            }
+        if ((getPropertiesMetaData() == null) || (getPropertiesMetaData().size() == 0)) {
+            return MetaType.Scalar;
+        } else if (this.getPrimaryKeyPropertyName() != null) {
+            return MetaType.Entity;
         } else {
+            return MetaType.Component;
+        }
+    }
+
+
+    @Override
+    public es.logongas.ix3.persistence.services.metadata.CollectionType getCollectionType() {
             ClassMetadata classMetadata = getClassMetadata();
             if (classMetadata == null) {
                 throw new RuntimeException("No existen los metadatos");
             }
 
             if (type instanceof SetType) {
-                return MetaType.Set;
+                return es.logongas.ix3.persistence.services.metadata.CollectionType.Set;
             } else if (type instanceof ListType) {
-                return MetaType.List;
+                return es.logongas.ix3.persistence.services.metadata.CollectionType.List;
             } else if (type instanceof MapType) {
-                return MetaType.Map;
+                return es.logongas.ix3.persistence.services.metadata.CollectionType.Map;
             } else {
-                throw new RuntimeException("El tipo de la colección no está soportado:" + type.getName());
+                return null;
             }
-        }
-
-
-
     }
 
     @Override

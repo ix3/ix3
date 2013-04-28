@@ -32,7 +32,10 @@ public interface MetaData {
      * El MetaTypo de esta entidad.
      * @return Map con el nombre de cada propiedad y sis metadatos
      */
-    MetaType getMetaType();    /**
+    MetaType getMetaType();
+
+
+    /**
      * La Metadatas de todas las propiedades de esta entidad
      * @return Map con el nombre de cada propiedad y sis metadatos
      */
@@ -53,6 +56,11 @@ public interface MetaData {
      */
     boolean isCollection();
 
+    /**
+     * El tipo de colección de la entidad
+     * @return El tipo de colección
+     */
+    CollectionType getCollectionType();
     /**
      * Si la carga de la colección es perezosa
      * @return Retorna <code>true</code> si la carga de la colección es perezosa

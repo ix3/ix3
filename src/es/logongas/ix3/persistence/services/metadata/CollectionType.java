@@ -16,11 +16,11 @@
 package es.logongas.ix3.persistence.services.metadata;
 
 /**
- * El metatipo de un tipo de datos
+ * El tipo de colección de una propiedad
  * @author Lorenzo González
  */
-public enum MetaType {
-    Scalar,
-    Entity,
-    Component
+public enum CollectionType {
+    List,
+    Set,
+    Map
 }
