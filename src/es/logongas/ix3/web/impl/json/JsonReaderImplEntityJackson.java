@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
+import es.logongas.ix3.persistence.services.metadata.CollectionType;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.web.services.json.JsonReader;
@@ -182,70 +183,76 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
-
-            switch (propertyMetaData.getMetaType()) {
-                case Scalar: {
-                    Object rawValue = getValueFromBean(jsonObj, propertyName);
-                    setValueToBean(entity, rawValue, propertyName);
-                    break;
-                }
-                case Entity: {
-                    //Debemos leer la referencia de la base de datos
-                    Object rawValue = getValueFromBean(jsonObj, propertyName);
-
-                    Object value = readForeingEntity(rawValue, propertyMetaData);
-                    setValueToBean(entity, value, propertyName);
-                    break;
-                }
-                case Component: {
-                    //Es un componente, así que hacemos la llamada recursiva
-                    Object rawValue = getValueFromBean(jsonObj, propertyName);
-                    populateEntity(entity, rawValue, propertyMetaData);
-                    break;
-                }
-                case List:
-                case Set: {
-                    if (propertyMetaData.isCollectionLazy() == false) {
-                        Collection rawCollection = (Collection) getValueFromBean(jsonObj, propertyName);
-                        Collection currentCollection = (Collection) getValueFromBean(entity, propertyName);
-
-                        //Borramos todos los elementos para añadir despues los que vienen desde JSON
-                        currentCollection.clear();
-
-                        //Añadimos los elementos que vienen desde JSON
-                        for (Object rawValue : rawCollection) {
-                            Object value = readEntity(rawValue, propertyMetaData);
-                            currentCollection.add(value);
-                        }
-                    } else {
-                        //NO hamos nada pq las colecciones Lazy no se cargan
+            if (propertyMetaData.isCollection() == false) {
+                switch (propertyMetaData.getMetaType()) {
+                    case Scalar: {
+                        Object rawValue = getValueFromBean(jsonObj, propertyName);
+                        setValueToBean(entity, rawValue, propertyName);
+                        break;
                     }
-                    break;
-                }
-                case Map: {
-                    if (propertyMetaData.isCollectionLazy() == false) {
-                        Map rawMap = (Map) getValueFromBean(jsonObj, propertyName);
-                        Map currentMap = (Map) getValueFromBean(entity, propertyName);
+                    case Entity: {
+                        //Debemos leer la referencia de la base de datos
+                        Object rawValue = getValueFromBean(jsonObj, propertyName);
 
-                        //Borramos todos los elementos para añadir despues los que vienen desde JSON
-                        currentMap.clear();
-
-                        //Añadimos los elementos que vienen desde JSON
-                        for (Object key : rawMap.keySet()) {
-                            Object rawValue = rawMap.get(key);
-                            Object value = readEntity(rawValue, propertyMetaData);
-                            currentMap.put(key, value);
-                        }
-                    } else {
-                        //NO hamos nada pq las colecciones Lazy no se cargan
+                        Object value = readForeingEntity(rawValue, propertyMetaData);
+                        setValueToBean(entity, value, propertyName);
+                        break;
                     }
-                    break;
+                    case Component: {
+                        //Es un componente, así que hacemos la llamada recursiva
+                        Object rawValue = getValueFromBean(jsonObj, propertyName);
+                        populateEntity(entity, rawValue, propertyMetaData);
+                        break;
+                    }
+                    default:
+                        throw new RuntimeException("El MetaTypo es desconocido:" + propertyMetaData.getMetaType());
                 }
-                default:
-                    throw new RuntimeException("El MetaTypo es desconocido:" + propertyMetaData.getMetaType());
+            } else {
+                switch (propertyMetaData.getCollectionType()) {
+                    case List:
+                    case Set: {
+                        if (propertyMetaData.isCollectionLazy() == false) {
+                            Collection rawCollection = (Collection) getValueFromBean(jsonObj, propertyName);
+                            Collection currentCollection = (Collection) getValueFromBean(entity, propertyName);
+
+                            //Borramos todos los elementos para añadir despues los que vienen desde JSON
+                            currentCollection.clear();
+
+                            //Añadimos los elementos que vienen desde JSON
+                            for (Object rawValue : rawCollection) {
+                                Object value = readEntity(rawValue, propertyMetaData);
+                                currentCollection.add(value);
+                            }
+                        } else {
+                            //NO hamos nada pq las colecciones Lazy no se cargan
+                        }
+                        break;
+                    }
+                    case Map: {
+                        if (propertyMetaData.isCollectionLazy() == false) {
+                            Map rawMap = (Map) getValueFromBean(jsonObj, propertyName);
+                            Map currentMap = (Map) getValueFromBean(entity, propertyName);
+
+                            //Borramos todos los elementos para añadir despues los que vienen desde JSON
+                            currentMap.clear();
+
+                            //Añadimos los elementos que vienen desde JSON
+                            for (Object key : rawMap.keySet()) {
+                                Object rawValue = rawMap.get(key);
+                                Object value = readEntity(rawValue, propertyMetaData);
+                                currentMap.put(key, value);
+                            }
+                        } else {
+                            //NO hamos nada pq las colecciones Lazy no se cargan
+                        }
+                        break;
+                    }
+                    default:
+                        throw new RuntimeException("El CollectionType es desconocido:" + propertyMetaData.getCollectionType());
+                }
             }
-        }
 
+        }
     }
 
 

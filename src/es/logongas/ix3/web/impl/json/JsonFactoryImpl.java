@@ -53,17 +53,7 @@ public class JsonFactoryImpl implements JsonFactory {
     @Override
     public JsonWriter getJsonWriter(Class clazz) {
         JsonWriter jsonWriter;
-
-        if (clazz == null) {
-            jsonWriter = new JsonWriterImplJackson();
-        } else {
-            MetaData metaData = metaDataFactory.getMetaData(clazz);
-            if (metaData != null) {
-                jsonWriter = new JsonWriterImplEntityJackson();
-            } else {
-                jsonWriter = new JsonWriterImplJackson();
-            }
-        }
+        jsonWriter = new JsonWriterImplEntityJackson();
 
         context.getAutowireCapableBeanFactory().autowireBean(jsonWriter);
 
@@ -72,7 +62,7 @@ public class JsonFactoryImpl implements JsonFactory {
 
     @Override
     public JsonWriter getJsonWriter() {
-        JsonWriter jsonWriter = new JsonWriterImplJackson();
+        JsonWriter jsonWriter=new JsonWriterImplEntityJackson();
 
         context.getAutowireCapableBeanFactory().autowireBean(jsonWriter);
 

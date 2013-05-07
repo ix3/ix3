@@ -20,8 +20,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import es.logongas.ix3.persistence.services.metadata.CollectionType;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
+import es.logongas.ix3.persistence.services.metadata.MetaType;
 import es.logongas.ix3.web.services.json.JsonWriter;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
@@ -91,10 +93,15 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
                 return jsonMap;
             } else {
-                //Como no es un objeto de negocio, retornamos el mismo objeto
-                //y que se apache Jackson.
-                //Lo normal es que sea un String, Integer, etc.
-                Object jsonValue = obj;
+                Object jsonValue;
+
+                //Como no es un objeto de negocio obtenemos los metadatos mediante reflection
+                metaData = new MetaDataImplBean(obj.getClass(), null, true, false, metaDataFactory);
+                if (metaData.getMetaType() == MetaType.Scalar) {
+                    jsonValue = obj;
+                } else {
+                    jsonValue = getMapFromEntity(obj, metaData);
+                }
 
                 return jsonValue;
             }
@@ -116,70 +123,77 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
             Object value;
 
-            switch (propertyMetaData.getMetaType()) {
-                case Scalar: {
-                    value = getValueFromBean(obj, propertyName);
-                    break;
-                }
-                case Entity: {
-                    Object rawValue = getValueFromBean(obj, propertyName);
-                    if (rawValue != null) {
-                        value = getMapFromForeingEntity(rawValue, propertyMetaData);
-                    } else {
-                        value = null;
+            if (propertyMetaData.isCollection() == false) {
+                switch (propertyMetaData.getMetaType()) {
+                    case Scalar: {
+                        value = getValueFromBean(obj, propertyName);
+                        break;
                     }
-                    break;
-                }
-                case Component: {
-                    Object rawValue = getValueFromBean(obj, propertyName);
-                    if (rawValue != null) {
-                        value = getMapFromEntity(rawValue, propertyMetaData);
-                    } else {
-                        value = null;
-                    }
-
-                    break;
-                }
-                case List:
-                case Set: {
-                    if (propertyMetaData.isCollectionLazy() == false) {
+                    case Entity: {
                         Object rawValue = getValueFromBean(obj, propertyName);
-                        Collection collection = (Collection) rawValue;
-                        List list = new ArrayList();
-                        for (Object element : collection) {
-                            list.add(getMapFromEntity(element, propertyMetaData));
+                        if (rawValue != null) {
+                            value = getMapFromForeingEntity(rawValue, propertyMetaData);
+                        } else {
+                            value = null;
+                        }
+                        break;
+                    }
+                    case Component: {
+                        Object rawValue = getValueFromBean(obj, propertyName);
+                        if (rawValue != null) {
+                            value = getMapFromEntity(rawValue, propertyMetaData);
+                        } else {
+                            value = null;
                         }
 
-                        value = list;
-                    } else {
-                        //Es una colección y Lazy así que añadimos un array vacio
-                        value = new ArrayList();
+                        break;
+
                     }
-                    break;
+                    default:
+                        throw new RuntimeException("El MetaType es desconocido:" + propertyMetaData.getMetaType());
                 }
-                case Map: {
-                    if (propertyMetaData.isCollectionLazy() == false) {
-                        Object rawValue = getValueFromBean(obj, propertyName);
+            } else {
+                switch (propertyMetaData.getCollectionType()) {
+                    case List:
+                    case Set: {
+                        if (propertyMetaData.isCollectionLazy() == false) {
+                            Object rawValue = getValueFromBean(obj, propertyName);
+                            Collection collection = (Collection) rawValue;
+                            List list = new ArrayList();
+                            for (Object element : collection) {
+                                list.add(getJsonObjectFromObjectFromCollection(element,propertyMetaData));
+                            }
 
-                        Map map = (Map) rawValue;
-                        Map jsonMap = new LinkedHashMap();
-                        for (Object key : map.keySet()) {
-                            Object valueMap = map.get(key);
-
-                            jsonMap.put(key, getMapFromEntity(valueMap, propertyMetaData));
+                            value = list;
+                        } else {
+                            //Es una colección y Lazy así que añadimos un array vacio
+                            value = new ArrayList();
                         }
-
-                        value = jsonMap;
-                    } else {
-                        //Es una colección y Lazy así que añadimos un array vacio
-                        value = new ArrayList();
+                        break;
                     }
-                    break;
+                    case Map: {
+                        if (propertyMetaData.isCollectionLazy() == false) {
+                            Object rawValue = getValueFromBean(obj, propertyName);
+
+                            Map map = (Map) rawValue;
+                            Map jsonMap = new LinkedHashMap();
+                            for (Object key : map.keySet()) {
+                                Object valueMap = map.get(key);
+
+                                jsonMap.put(key, getJsonObjectFromObjectFromCollection(valueMap,propertyMetaData));
+                            }
+
+                            value = jsonMap;
+                        } else {
+                            //Es una colección y Lazy así que añadimos un array vacio
+                            value = new ArrayList();
+                        }
+                        break;
+                    }
+                    default:
+                        throw new RuntimeException("El CollectionType es desconocido:" + propertyMetaData.getCollectionType());
                 }
-                default:
-                    throw new RuntimeException("El MetaType es desconocido:" + propertyMetaData.getMetaType());
             }
-
             values.put(propertyName, value);
 
         }
@@ -188,6 +202,30 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         values.put("toString", obj.toString());
 
         return values;
+    }
+
+    private Object getJsonObjectFromObjectFromCollection(Object obj, MetaData metaData) {
+        if (obj == null) {
+            return null;
+        }
+
+        if (metaData.isCollection() == false) {
+            throw new RuntimeException("Debe ser una colección");
+        }
+
+
+        switch (metaData.getMetaType()) {
+            case Scalar:
+                return obj;
+            case Entity:
+            case Component:
+                Map<String, Object> jsonMap = getMapFromEntity(obj, metaData);
+
+                return jsonMap;
+            default:
+                throw new RuntimeException("El MetaType es desconocido:" + metaData.getMetaType());
+        }
+
     }
 
     /**
