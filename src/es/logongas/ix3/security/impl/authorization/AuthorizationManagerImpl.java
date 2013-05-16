@@ -19,7 +19,7 @@ import es.logongas.ix3.security.services.authentication.User;
 import es.logongas.ix3.security.services.authorization.AuthorizationManager;
 import es.logongas.ix3.security.services.authorization.AuthorizationProvider;
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
-import es.logongas.ix3.security.services.authorization.ResourceType;
+import es.logongas.ix3.security.services.authorization.Permission;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,12 +33,13 @@ public class AuthorizationManagerImpl implements AuthorizationManager {
     List<AuthorizationProvider> authorizationProviders=new ArrayList<AuthorizationProvider>();
 
     @Override
-    public boolean authorized(User user, ResourceType resourceType, Object accessType, Object resource) {
+    public boolean authorized(User user, String secureResourceTypeName, String secureResourceName, String permissionName) {
         Boolean authorized=null;
 
+        Permission permission=getPermission(secureResourceTypeName, secureResourceName, permissionName);
 
         for(AuthorizationProvider authorizationProvider:authorizationProviders) {
-            AuthorizationType authorizationType=authorizationProvider.authorized(user, resourceType, accessType, resource);
+            AuthorizationType authorizationType=authorizationProvider.authorized(user, permission);
 
             switch (authorizationType) {
                 case AccessAllow:
@@ -65,6 +66,10 @@ public class AuthorizationManagerImpl implements AuthorizationManager {
             throw new RuntimeException("Error de lógica");
         }
 
+    }
+
+    private Permission getPermission(String secureResourceTypeName, String secureResourceName, String permissionName) {
+        return null;
     }
 
 

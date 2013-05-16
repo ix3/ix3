@@ -46,7 +46,7 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
     }
 
     @Override
-    public User getUserByIdUser(String idUser) {
+    public User getUserByIdUser(int idUser) {
         User user=null;
 
         for(AuthenticationProvider authenticationProvider:authenticationProviders) {

@@ -18,7 +18,7 @@ package es.logongas.ix3.security.impl.authorization;
 import es.logongas.ix3.security.services.authentication.User;
 import es.logongas.ix3.security.services.authorization.AuthorizationProvider;
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
-import es.logongas.ix3.security.services.authorization.ResourceType;
+import es.logongas.ix3.security.services.authorization.Permission;
 
 /**
  * Este proveedor por defecto siempre se abstiene
@@ -27,8 +27,10 @@ import es.logongas.ix3.security.services.authorization.ResourceType;
 public class AuthorizationProviderImplDummy implements AuthorizationProvider {
 
     @Override
-    public AuthorizationType authorized(User user, ResourceType resourceType, Object accessType, Object resource) {
+    public AuthorizationType authorized(User user, Permission permission) {
         return AuthorizationType.Abstain;
     }
+
+
 
 }

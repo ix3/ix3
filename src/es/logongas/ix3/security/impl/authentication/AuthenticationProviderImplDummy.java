@@ -30,7 +30,7 @@ public class AuthenticationProviderImplDummy implements AuthenticationProvider {
         if (credential instanceof CredentialImplLoginPassword) {
             CredentialImplLoginPassword credentialImplLoginPassword=(CredentialImplLoginPassword)credential;
             if (("admin".equals(credentialImplLoginPassword.getLogin())) && ("admin".equals(credentialImplLoginPassword.getPassword()))  ) {
-                return new UserImpl("admin","Administrador");
+                return new UserImpl(1,"admin","Administrador","","");
             } else {
                 return null;
             }
@@ -40,9 +40,9 @@ public class AuthenticationProviderImplDummy implements AuthenticationProvider {
     }
 
     @Override
-    public User getUserByIdUser(String idUser) {
-        if ("admin".equals(idUser)) {
-            return new UserImpl("admin","Administrador");
+    public User getUserByIdUser(int idUser) {
+        if (idUser==1) {
+            return new UserImpl(1,"admin","Administrador","","");
         } else {
             return null;
         }

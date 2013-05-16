@@ -16,10 +16,10 @@
 package es.logongas.ix3.security.services.authentication;
 
 /**
- *
+ * Datos de un usuario
  * @author Lorenzo González
  */
 public interface User {
-    String getIdUser();
-    String getName();
+    int getIdUser();
+    String toString();
 }

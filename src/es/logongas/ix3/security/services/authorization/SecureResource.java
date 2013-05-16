@@ -16,9 +16,11 @@
 package es.logongas.ix3.security.services.authorization;
 
 /**
- *
+ * Un recurso que puede ser "securizado"
  * @author Lorenzo González
  */
-public abstract class AccessType {
-
+public class SecureResource {
+    int idSecureResource;
+    String name;
+    SecureResourceType secureResourceType;
 }

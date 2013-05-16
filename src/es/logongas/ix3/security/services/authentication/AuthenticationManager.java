@@ -21,5 +21,5 @@ package es.logongas.ix3.security.services.authentication;
  */
 public interface AuthenticationManager {
     User authenticate(Credential credential);
-    User getUserByIdUser(String idUser);
+    User getUserByIdUser(int idUser);
 }
