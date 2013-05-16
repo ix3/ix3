@@ -15,7 +15,6 @@
  */
 package es.logongas.ix3.web.controllers;
 
-import es.logongas.ix3.security.impl.authorization.RecourceTypeURI;
 import es.logongas.ix3.security.services.authentication.AuthenticationManager;
 import es.logongas.ix3.security.services.authentication.User;
 import es.logongas.ix3.security.services.authorization.AuthorizationManager;
@@ -55,14 +54,14 @@ public class FilterImplSecurity implements Filter {
             String method = httpServletRequest.getMethod();
 
             User user;
-            String idUser = (String) httpServletRequest.getSession().getAttribute("idUser");
+            Integer idUser = (Integer) httpServletRequest.getSession().getAttribute("idUser");
             if (idUser == null) {
                 user = null;
             } else {
                 user = authenticationManager.getUserByIdUser(idUser);
             }
 
-            if (authorizationManager.authorized(user, new RecourceTypeURI(), method, uri) == true) {
+            if (authorizationManager.authorized(user, "URL", uri, method) == true) {
                 filterChain.doFilter(servletRequest, servletResponse);
             } else {
                 httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);

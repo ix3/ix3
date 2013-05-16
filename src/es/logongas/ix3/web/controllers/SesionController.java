@@ -109,7 +109,7 @@ public class SesionController {
             User user;
 
             HttpSession httpSession = request.getSession();
-            String idUser = (String) httpSession.getAttribute("idUser");
+            Integer idUser = (Integer) httpSession.getAttribute("idUser");
 
             if (idUser == null) {
                 user = null;
