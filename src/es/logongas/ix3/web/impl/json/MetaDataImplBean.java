@@ -11,6 +11,7 @@ import es.logongas.ix3.persistence.services.metadata.MetaType;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -65,7 +66,7 @@ public class MetaDataImplBean implements MetaData {
             Map<String, MetaData> propertiesMetaData = new HashMap<String, MetaData>();
 
             //Si es un escalar seguro que no hay propieades. Así que mejor no intentar guscarlas pq seguro que hay algún "get".
-            if (getMetaType()==MetaType.Scalar) {
+            if (getMetaType() == MetaType.Scalar) {
                 return propertiesMetaData;
             }
 
@@ -77,7 +78,6 @@ public class MetaDataImplBean implements MetaData {
                 String propertyName = propertyDescriptor.getName();
                 Class propertyClass = propertyDescriptor.getPropertyType();
 
-
                 MetaData metaData = metaDataFactory.getMetaData(propertyClass);
                 if (metaData == null) {
                     CollectionType collectionType;
@@ -85,23 +85,23 @@ public class MetaDataImplBean implements MetaData {
 
                     if (Set.class.isAssignableFrom(propertyClass)) {
                         collectionType = CollectionType.Set;
-                        realPropertyClass=getCollectionClass(propertyClass);
-                         metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
+                        realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
+                        metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
                     } else if (List.class.isAssignableFrom(propertyClass)) {
                         collectionType = CollectionType.List;
-                        realPropertyClass=getCollectionClass(propertyClass);
-                         metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
+                        realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
+                        metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
                     } else if (Map.class.isAssignableFrom(propertyClass)) {
                         collectionType = CollectionType.Map;
-                        realPropertyClass=getCollectionClass(propertyClass);
-                         metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
+                        realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
+                        metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
                     } else {
                         //No es una colección
-                        collectionType=null;
-                        realPropertyClass=propertyClass;
+                        collectionType = null;
+                        realPropertyClass = propertyClass;
 
-                        metaData=metaDataFactory.getMetaData(realPropertyClass);
-                        if (metaData==null) {
+                        metaData = metaDataFactory.getMetaData(realPropertyClass);
+                        if (metaData == null) {
                             metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
                         }
 
@@ -162,37 +162,36 @@ public class MetaDataImplBean implements MetaData {
         return collectionType;
     }
 
-    private Class getCollectionClass(Class clazz) {
+    private Class getCollectionClass(Method method) {
         Class collectionClass;
 
-        Type type = clazz.getGenericSuperclass();
-        ParameterizedType parameterizedType=null;
-        if (type!=null) {
-            if (ParameterizedType.class.isAssignableFrom((Class)type)) {
-                parameterizedType = (ParameterizedType)type;
-            }
-        }
-
-        if (parameterizedType==null) {
-            collectionClass=Object.class;
+        if (method == null) {
+            collectionClass = Object.class;
         } else {
-            switch (parameterizedType.getActualTypeArguments().length) {
-                case 1:
-                    //Debe ser una lista pq solo tiene un tipo parametrizado.
-                    collectionClass=(Class)parameterizedType.getActualTypeArguments()[0];
-                    break;
-                case 2:
-                    //Debe ser un Map pq tiene 2 tipos parametrizados. Nos quedamos con el segundo
-                    collectionClass=(Class)parameterizedType.getActualTypeArguments()[1];
-                    break;
-                default:
-                    //Ni idea. Así que retornamos Object
-                    collectionClass=Object.class;
-                    break;
+
+            Class returnClass = method.getReturnType();
+            if (Collection.class.isAssignableFrom(returnClass)) {
+                Type returnType = method.getGenericReturnType();
+                if (returnType instanceof ParameterizedType) {
+                    ParameterizedType paramType = (ParameterizedType) returnType;
+                    Type[] argTypes = paramType.getActualTypeArguments();
+                    collectionClass = (Class) argTypes[0];
+                } else {
+                    collectionClass = Object.class;
+                }
+            } else if (Map.class.isAssignableFrom(returnClass)) {
+                Type returnType = method.getGenericReturnType();
+                if (returnType instanceof ParameterizedType) {
+                    ParameterizedType paramType = (ParameterizedType) returnType;
+                    Type[] argTypes = paramType.getActualTypeArguments();
+                    collectionClass = (Class) argTypes[1];
+                } else {
+                    collectionClass = Object.class;
+                }
+            } else {
+                throw new RuntimeException("El método no retorna un Map o una coleccion" + method.getName());
             }
         }
-
         return collectionClass;
     }
-
 }
