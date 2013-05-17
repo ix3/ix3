@@ -163,6 +163,8 @@ public class MetaDataImplBean implements MetaData {
     }
 
     private Class getCollectionClass(Method method) {
+        //http://stackoverflow.com/questions/1942644/get-generic-type-of-java-util-list
+
         Class collectionClass;
 
         if (method == null) {
