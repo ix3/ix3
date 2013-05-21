@@ -19,6 +19,9 @@ import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.BusinessMessage;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
+import es.logongas.ix3.persistence.services.dao.OrderDirection;
+import es.logongas.ix3.persistence.services.dao.Order;
+import es.logongas.ix3.persistence.services.dao.database.ConstraintViolation;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.web.services.json.JsonFactory;
@@ -31,6 +34,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -108,7 +113,10 @@ public class RESTController {
                     }
                 }
             }
-            Object entity = genericDAO.search(filter);
+
+            List<Order> orders = getOrders(metaData,httpRequest.getParameter("orderBy"));
+
+            Object entity = genericDAO.search(filter, orders);
             String jsonOut = jsonWriter.toJson(entity);
 
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -172,39 +180,39 @@ public class RESTController {
                 Class parameterType = method.getParameterTypes()[i];
                 Object parameterValue;
 
-                MetaData metaDataParameter=metaDataFactory.getMetaData(parameterType);
-                if (metaDataParameter!=null) {
+                MetaData metaDataParameter = metaDataFactory.getMetaData(parameterType);
+                if (metaDataParameter != null) {
                     //El parámetro es una Entidad de negocio pero solo nos han pasado la clave primaria.
 
                     //Vamos a obtener el tipo de la clave primaria
-                    Class primaryKeyType=metaDataParameter.getPropertiesMetaData().get(metaDataParameter.getPrimaryKeyPropertyName()).getType();
+                    Class primaryKeyType = metaDataParameter.getPropertiesMetaData().get(metaDataParameter.getPrimaryKeyPropertyName()).getType();
 
                     //Ahora vamos a obtener el valor de la clave primaria
                     Serializable primaryKey;
                     try {
-                        primaryKey = (Serializable)conversionService.convert(httpRequest.getParameter("parameter" + i), primaryKeyType);
+                        primaryKey = (Serializable) conversionService.convert(httpRequest.getParameter("parameter" + i), primaryKeyType);
                     } catch (Exception ex) {
-                        throw new BusinessException(new BusinessMessage(null,"El " + i + "º parámetro no tiene el formato adecuado para ser una PK:"+httpRequest.getParameter("parameter" + i)));
+                        throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro no tiene el formato adecuado para ser una PK:" + httpRequest.getParameter("parameter" + i)));
                     }
 
                     //Y finalmente Leemos la entidad en función de la clave primaria
-                    GenericDAO genericDAOParameter=daoFactory.getDAO(parameterType);
-                    parameterValue=genericDAOParameter.read(primaryKey);
-                    if (parameterValue==null) {
-                        throw new BusinessException(new BusinessMessage(null,"El " + i + "º parámetro con valor '"+httpRequest.getParameter("parameter" + i)+"' no es de ninguna entidad."));
+                    GenericDAO genericDAOParameter = daoFactory.getDAO(parameterType);
+                    parameterValue = genericDAOParameter.read(primaryKey);
+                    if (parameterValue == null) {
+                        throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro con valor '" + httpRequest.getParameter("parameter" + i) + "' no es de ninguna entidad."));
                     }
                 } else {
                     try {
                         parameterValue = conversionService.convert(httpRequest.getParameter("parameter" + i), parameterType);
                     } catch (Exception ex) {
-                        throw new BusinessException(new BusinessMessage(null,"El " + i + "º parámetro no tiene el formato adecuado:"+httpRequest.getParameter("parameter" + i)));
+                        throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro no tiene el formato adecuado:" + httpRequest.getParameter("parameter" + i)));
                     }
                 }
                 args.add(parameterValue);
             }
 
-            Object result=method.invoke(genericDAO, args.toArray());
-            if (result!=null) {
+            Object result = method.invoke(genericDAO, args.toArray());
+            if (result != null) {
                 jsonWriter = jsonFactory.getJsonWriter(null);
             } else {
                 jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
@@ -460,5 +468,54 @@ public class RESTController {
                 log.error("Falló al imprimir la traza", ex2);
             }
         }
+    }
+
+    /**
+     * Como se ordenan los datos
+     *
+     * @param metaData Metadatos de la que se quieren ordenar
+     * @param orderBy Debe tener la forma de "[campo [asc desc],](campo [asc
+     * desc])*)
+     * @return
+     */
+    private List<Order> getOrders(MetaData metaData, String orderBy) {
+        List<Order> orders = new ArrayList<Order>();
+
+        if (orderBy != null) {
+            String[] splitOrderFields = orderBy.split(",");
+
+            Pattern pattern = Pattern.compile("\\s*([^\\s]*)\\s*([^\\s]*)?\\s*");
+            for (String s : splitOrderFields) {
+                Matcher matcher = pattern.matcher(s);
+                if (matcher.matches() == false) {
+                    throw new RuntimeException("El campo orderBy no tiene el formato adecuado:" + s + " en "+orderBy);
+                }
+
+                String fieldName = matcher.group(1);
+                String orderName = matcher.group(2);
+                OrderDirection orderDirection;
+
+                if (metaData.getPropertiesMetaData().get(fieldName) == null) {
+                    throw new RuntimeException("No existe el campo de ordenación '" + fieldName + "' en la entidad '" + metaData.getType().getName() + "'");
+                }
+
+                if ((orderName == null) || (orderName.trim().length() == 0)) {
+                    orderDirection = OrderDirection.Ascending;
+                } else if (orderName.equalsIgnoreCase("ASC")) {
+                    orderDirection = OrderDirection.Ascending;
+                } else if (orderName.equalsIgnoreCase("DESC")) {
+                    orderDirection = OrderDirection.Descending;
+                } else {
+                    throw new RuntimeException("La dirección de la ordenacion no es válida:" + orderName);
+                }
+
+                Order order = new Order(fieldName, orderDirection);
+
+                orders.add(order);
+
+            }
+        }
+
+        return orders;
     }
 }
