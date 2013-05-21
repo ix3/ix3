@@ -33,4 +33,5 @@ public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable> {
     boolean delete(PrimaryKeyType primaryKey) throws BusinessException;
     EntityType readByNaturalKey(Object value) throws BusinessException;
     List<EntityType> search(Map<String,Object> filter) throws BusinessException;
+    List<EntityType> search(Map<String,Object> filter,List<Order> order) throws BusinessException;
 }

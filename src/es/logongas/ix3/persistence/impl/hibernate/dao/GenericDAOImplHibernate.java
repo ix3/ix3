@@ -17,10 +17,12 @@ package es.logongas.ix3.persistence.impl.hibernate.dao;
 
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
+import es.logongas.ix3.persistence.services.dao.Order;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.logging.Log;
@@ -265,6 +267,11 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     @Override
     public List<EntityType> search(Map<String, Object> filter) throws BusinessException {
+        return search(filter,new ArrayList<Order>());
+    }
+
+    @Override
+    public List<EntityType> search(Map<String, Object> filter,List<Order> orders) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
             Criteria criteria = session.createCriteria(getEntityMetaData().getType());
@@ -283,6 +290,25 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                     }
                 }
             }
+
+            if (orders!=null) {
+                for(Order order:orders) {
+                    org.hibernate.criterion.Order criteriaOrder;
+
+                    switch(order.getOrderDirection()) {
+                        case Ascending:
+                            criteriaOrder=org.hibernate.criterion.Order.asc(order.getFieldName());
+                            break;
+                        case Descending:
+                            criteriaOrder=org.hibernate.criterion.Order.desc(order.getFieldName());
+                            break;
+                        default:
+                            throw new RuntimeException("orderField.getOrder() desconocido"+order.getOrderDirection());
+                    }
+                    criteria.addOrder(criteriaOrder);
+                }
+            }
+
 
             List<EntityType> entities = criteria.list();
 
