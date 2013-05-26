@@ -280,6 +280,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
                 if (propertyDescriptor.getName().equals(propertyName)) {
                     readMethod = propertyDescriptor.getReadMethod();
+                    break;
                 }
             }
 
