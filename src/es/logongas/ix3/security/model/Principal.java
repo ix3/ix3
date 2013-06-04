@@ -29,14 +29,66 @@ public class Principal implements java.security.Principal {
     private List<Group> groups;
 
     public AuthorizationType authorized(SecureResource secureResource,Permission permission,Object arguments) {
-        AuthorizationType authorizationType=acl.authorized(secureResource, permission, arguments);
+        AuthorizationType authorizationType=getAcl().authorized(secureResource, permission, arguments);
 
         return authorizationType;
     }
 
+    /**
+     * @return the sid
+     */
+    public int getSid() {
+        return sid;
+    }
+
+    /**
+     * @param sid the sid to set
+     */
+    public void setSid(int sid) {
+        this.sid = sid;
+    }
+
+    /**
+     * @return the name
+     */
     @Override
     public String getName() {
         return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @return the acl
+     */
+    public ACL getAcl() {
+        return acl;
+    }
+
+    /**
+     * @param acl the acl to set
+     */
+    public void setAcl(ACL acl) {
+        this.acl = acl;
+    }
+
+    /**
+     * @return the groups
+     */
+    public List<Group> getGroups() {
+        return groups;
+    }
+
+    /**
+     * @param groups the groups to set
+     */
+    public void setGroups(List<Group> groups) {
+        this.groups = groups;
     }
 
 

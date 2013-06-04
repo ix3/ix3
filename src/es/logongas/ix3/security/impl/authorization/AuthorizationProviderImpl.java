@@ -13,16 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authentication;
+package es.logongas.ix3.security.impl.authorization;
 
+import es.logongas.ix3.security.model.Permission;
+import es.logongas.ix3.security.model.SecureResource;
 import es.logongas.ix3.security.model.User;
+import es.logongas.ix3.security.services.authorization.AuthorizationProvider;
+import es.logongas.ix3.security.services.authorization.AuthorizationType;
 
 /**
  *
  * @author Lorenzo González
  */
-public interface AuthenticationManager {
-    User authenticate(Credential credential);
-    User getUserBySID(int sid);
-    User getAnonymousUser();
+public class AuthorizationProviderImpl implements AuthorizationProvider {
+
+    @Override
+    public AuthorizationType authorized(User user, SecureResource secureResource, Permission permission, Object arguments) {
+        return AuthorizationType.Abstain;
+    }
+
 }

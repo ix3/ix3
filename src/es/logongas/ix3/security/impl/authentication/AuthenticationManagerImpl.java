@@ -13,16 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authentication;
+package es.logongas.ix3.security.impl.authentication;
 
 import es.logongas.ix3.security.model.User;
+import es.logongas.ix3.security.services.authentication.AuthenticationManager;
+import es.logongas.ix3.security.services.authentication.Credential;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author Lorenzo González
  */
-public interface AuthenticationManager {
-    User authenticate(Credential credential);
-    User getUserBySID(int sid);
-    User getAnonymousUser();
+public class AuthenticationManagerImpl implements AuthenticationManager {
+    List<AuthenticationManager> authenticationManagers=new ArrayList<AuthenticationManager>();
+
+    @Override
+    public User authenticate(Credential credential) {
+        return null;
+    }
+
+    @Override
+    public User getUserBySID(int sid) {
+        return null;
+    }
+
+    @Override
+    public User getAnonymousUser() {
+        return null;
+    }
+
+
+
 }

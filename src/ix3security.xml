@@ -25,7 +25,7 @@ limitations under the License.
     <bean id="authenticationManager" class="es.logongas.ix3.security.impl.authentication.AuthenticationManagerImpl"  >
         <property name="authenticationProviders">
             <list>
-                <bean class="es.logongas.ix3.security.impl.authentication.AuthenticationProviderImplDummy" />
+                <bean class="es.logongas.ix3.security.impl.authentication.AuthenticationProviderImplMoodle" />
             </list>
         </property>
     </bean>
@@ -33,7 +33,7 @@ limitations under the License.
     <bean id="authorizationManager" class="es.logongas.ix3.security.impl.authorization.AuthorizationManagerImpl"  >
         <property name="authorizationProviders">
             <list>
-                <bean class="es.logongas.ix3.security.impl.authorization.AuthorizationProviderImplDummy" />
+                <bean class="es.logongas.ix3.security.impl.authorization.AuthorizationProviderImpl" />
             </list>
         </property>
     </bean>
