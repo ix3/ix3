@@ -13,24 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.impl.authorization;
-
-import es.logongas.ix3.security.services.authentication.User;
-import es.logongas.ix3.security.services.authorization.AuthorizationProvider;
-import es.logongas.ix3.security.services.authorization.AuthorizationType;
-import es.logongas.ix3.security.services.authorization.Permission;
+package es.logongas.ix3.security.model;
 
 /**
- * Este proveedor por defecto siempre se abstiene
+ * Un recurso que puede ser "securizado"
  * @author Lorenzo González
  */
-public class AuthorizationProviderImplDummy implements AuthorizationProvider {
-
-    @Override
-    public AuthorizationType authorized(User user, Permission permission) {
-        return AuthorizationType.Abstain;
-    }
-
-
-
+public class SecureResource {
+    int idSecureResource;
+    String name;
+    SecureResourceType secureResourceType;
 }

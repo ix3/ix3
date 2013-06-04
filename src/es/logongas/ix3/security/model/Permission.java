@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authorization;
-
-import es.logongas.ix3.security.model.*;
+package es.logongas.ix3.security.model;
 
 /**
- *
+ * Cada de uno de los posibles permisos de un tipo de objeto.
+ * Por ejemplo.
+ * Para las impresoras cada permiso sería: imprmir, cancelar ,etc.
+ * Para una url cada permiso sería hacer GET, PUT, POST, DELETE , etc.
+ * Para una entidad REST cada sería : READ, LIST, CREATE , UPDATE, DELETE , etc.
  * @author Lorenzo González
  */
-public interface AuthorizationManager {
-    boolean authorized(User user,SecureResource secureResource,Permission permission,Object arguments);
+public class Permission {
+    int idPermission;
+    String name;
+    SecureResourceType secureResourceType;
 }

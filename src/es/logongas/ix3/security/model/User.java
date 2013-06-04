@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authorization;
-
-import es.logongas.ix3.security.model.*;
+package es.logongas.ix3.security.model;
 
 /**
  *
  * @author Lorenzo González
  */
-public interface AuthorizationManager {
-    boolean authorized(User user,SecureResource secureResource,Permission permission,Object arguments);
+public class User extends Principal  {
+
 }

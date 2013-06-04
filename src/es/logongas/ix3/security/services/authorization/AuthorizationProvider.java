@@ -15,7 +15,8 @@
  */
 package es.logongas.ix3.security.services.authorization;
 
-import es.logongas.ix3.security.services.authentication.User;
+import es.logongas.ix3.security.model.*;
+
 
 
 /**
@@ -23,5 +24,5 @@ import es.logongas.ix3.security.services.authentication.User;
  * @author Lorenzo González
  */
 public interface AuthorizationProvider {
-    AuthorizationType authorized(User user,Permission permission);
+    AuthorizationType authorized(User user,SecureResource secureResource,Permission permission,Object arguments);
 }

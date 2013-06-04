@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authorization;
+package es.logongas.ix3.security.model;
 
 /**
- *
+ * Tipo de un ACE.
  * @author Lorenzo González
  */
-public class Permission {
-    int idPermission;
-    String name;
-    SecureResource secureResource;
+public enum ACEType {
+    Allow,
+    Deny
 }

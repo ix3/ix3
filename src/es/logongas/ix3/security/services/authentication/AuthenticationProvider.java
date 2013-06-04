@@ -15,11 +15,13 @@
  */
 package es.logongas.ix3.security.services.authentication;
 
+import es.logongas.ix3.security.model.User;
+
 /**
  *
  * @author Lorenzo González
  */
 public interface AuthenticationProvider {
     User authenticate(Credential credential);
-    User getUserByIdUser(int idUser);
+    User getUserBySID(int sid);
 }
