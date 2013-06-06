@@ -20,8 +20,8 @@ import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.BusinessMessage;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.security.impl.authentication.CredentialImplLoginPassword;
+import es.logongas.ix3.model.User;
 import es.logongas.ix3.security.services.authentication.AuthenticationManager;
-import es.logongas.ix3.security.services.authentication.User;
 import es.logongas.ix3.web.services.json.JsonFactory;
 import es.logongas.ix3.web.services.json.JsonWriter;
 import java.io.IOException;
@@ -66,9 +66,9 @@ public class SesionController {
                 throw new BusinessException(new BusinessMessage(null, "El usuario o contraseña no son válidos"));
             }
 
-            //Creamos la sesión y la el idUser
+            //Creamos la sesión y la el sid
             HttpSession httpSession = request.getSession();
-            httpSession.setAttribute("idUser", user.getIdUser());
+            httpSession.setAttribute("sid", user.getSid());
 
 
             //Retornamos el user
@@ -109,12 +109,12 @@ public class SesionController {
             User user;
 
             HttpSession httpSession = request.getSession();
-            Integer idUser = (Integer) httpSession.getAttribute("idUser");
+            Integer sid = (Integer) httpSession.getAttribute("sid");
 
-            if (idUser == null) {
+            if (sid == null) {
                 user = null;
             } else {
-                user = authenticationManager.getUserByIdUser(idUser);
+                user = authenticationManager.getUserBySID(sid);
             }
 
             if (user != null) {
@@ -141,7 +141,7 @@ public class SesionController {
     @RequestMapping(value = {"/session"}, method = RequestMethod.DELETE)
     public void logout(HttpServletRequest request, HttpServletResponse httpServletResponse) {
         HttpSession httpSession = request.getSession();
-        httpSession.setAttribute("idUser", null);
+        httpSession.setAttribute("sid", null);
 
         httpServletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }

@@ -15,10 +15,13 @@
  */
 package es.logongas.ix3.web.controllers;
 
+import es.logongas.ix3.model.User;
+import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.security.services.authentication.AuthenticationManager;
-import es.logongas.ix3.security.services.authentication.User;
 import es.logongas.ix3.security.services.authorization.AuthorizationManager;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -54,14 +57,19 @@ public class FilterImplSecurity implements Filter {
             String method = httpServletRequest.getMethod();
 
             User user;
-            Integer idUser = (Integer) httpServletRequest.getSession().getAttribute("idUser");
-            if (idUser == null) {
+            Integer sid = (Integer) httpServletRequest.getSession().getAttribute("idUser");
+            if (sid == null) {
                 user = null;
             } else {
-                user = authenticationManager.getUserByIdUser(idUser);
+                try {
+                    user = authenticationManager.getUserBySID(sid);
+                } catch (BusinessException ex) {
+                    httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
             }
 
-            if (authorizationManager.authorized(user, "URL", uri, method) == true) {
+            if (authorizationManager.authorized(user, null, null, httpServletRequest.getParameterMap())==true) {
                 filterChain.doFilter(servletRequest, servletResponse);
             } else {
                 httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
