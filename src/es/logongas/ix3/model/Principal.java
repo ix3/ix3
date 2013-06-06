@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.model;
+package es.logongas.ix3.model;
 
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
 import java.util.List;
@@ -24,14 +24,26 @@ import java.util.List;
  */
 public class Principal implements java.security.Principal {
     private int sid;
+    private String login;
     private String name;
-    private ACL acl;
+    private List<ACE> acl;
     private List<Group> groups;
 
-    public AuthorizationType authorized(SecureResource secureResource,Permission permission,Object arguments) {
-        AuthorizationType authorizationType=getAcl().authorized(secureResource, permission, arguments);
+    public Principal() {
+    }
 
-        return authorizationType;
+    public Principal(int sid, String login, String name) {
+        this.sid = sid;
+        this.login = login;
+        this.name = name;
+    }
+
+
+
+    public AuthorizationType authorized(SecureResource secureResource,Permission permission,Object arguments) {
+        //AuthorizationType authorizationType=getAcl().authorized(secureResource, permission, arguments);
+
+        return AuthorizationType.Abstain;
     }
 
     /**
@@ -46,6 +58,20 @@ public class Principal implements java.security.Principal {
      */
     public void setSid(int sid) {
         this.sid = sid;
+    }
+
+    /**
+     * @return the login
+     */
+    public String getLogin() {
+        return login;
+    }
+
+    /**
+     * @param login the login to set
+     */
+    public void setLogin(String login) {
+        this.login = login;
     }
 
     /**
@@ -66,14 +92,14 @@ public class Principal implements java.security.Principal {
     /**
      * @return the acl
      */
-    public ACL getAcl() {
+    public List<ACE> getAcl() {
         return acl;
     }
 
     /**
      * @param acl the acl to set
      */
-    public void setAcl(ACL acl) {
+    public void setAcl(List<ACE> acl) {
         this.acl = acl;
     }
 
@@ -90,6 +116,5 @@ public class Principal implements java.security.Principal {
     public void setGroups(List<Group> groups) {
         this.groups = groups;
     }
-
 
 }

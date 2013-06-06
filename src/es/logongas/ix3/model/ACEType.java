@@ -13,18 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.model;
-
-import java.util.HashSet;
-import java.util.Set;
+package es.logongas.ix3.model;
 
 /**
- * Tipo de recurso securizado. Sus valores suelen ser "TABLE","PRINTER","CLASS","URL" , etc.
+ * Tipo de un ACE.
  * @author Lorenzo González
  */
-public class SecureResourceType {
-    int idSecureResourceType;
-    String name;
-    Set<Permission> permissions=new HashSet<Permission>();
-    Set<SecureResource> secureResources=new HashSet<SecureResource>();
+public enum ACEType {
+    Allow,
+    Deny
 }

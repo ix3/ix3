@@ -15,7 +15,9 @@
  */
 package es.logongas.ix3.security.services.authorization;
 
-import es.logongas.ix3.security.model.*;
+import es.logongas.ix3.model.Permission;
+import es.logongas.ix3.model.SecureResource;
+import es.logongas.ix3.model.User;
 
 /**
  *

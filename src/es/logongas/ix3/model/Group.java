@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.model;
-
-import es.logongas.ix3.security.services.authorization.AuthorizationType;
-import java.util.TreeSet;
+package es.logongas.ix3.model;
 
 /**
- * Lista de control de acceso
+ *
  * @author Lorenzo González
  */
+public class Group extends Principal {
 
-public class ACL extends TreeSet<ACE> {
-    public AuthorizationType authorized(SecureResource secureResource,Permission permission,Object arguments) {
-        return AuthorizationType.Abstain;
-    };
 }

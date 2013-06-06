@@ -15,9 +15,9 @@
  */
 package es.logongas.ix3.security.impl.authorization;
 
-import es.logongas.ix3.security.model.Permission;
-import es.logongas.ix3.security.model.SecureResource;
-import es.logongas.ix3.security.model.User;
+import es.logongas.ix3.model.Permission;
+import es.logongas.ix3.model.SecureResource;
+import es.logongas.ix3.model.User;
 import es.logongas.ix3.security.services.authorization.AuthorizationManager;
 import es.logongas.ix3.security.services.authorization.AuthorizationProvider;
 import java.util.ArrayList;
@@ -32,7 +32,21 @@ public class AuthorizationManagerImpl implements AuthorizationManager {
 
     @Override
     public boolean authorized(User user, SecureResource secureResource, Permission permission, Object arguments) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return true;
+    }
+
+    /**
+     * @return the authorizationProviders
+     */
+    public List<AuthorizationProvider> getAuthorizationProviders() {
+        return authorizationProviders;
+    }
+
+    /**
+     * @param authorizationProviders the authorizationProviders to set
+     */
+    public void setAuthorizationProviders(List<AuthorizationProvider> authorizationProviders) {
+        this.authorizationProviders = authorizationProviders;
     }
 
 

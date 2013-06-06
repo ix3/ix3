@@ -20,5 +20,5 @@ package es.logongas.ix3.security.services.authentication;
  * @author Lorenzo González
  */
 public interface Credential {
-
+    String getLogin();
 }
