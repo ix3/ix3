@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.impl.authorization;
-
-import es.logongas.ix3.model.Permission;
-import es.logongas.ix3.model.SecureResource;
-import es.logongas.ix3.model.User;
-import es.logongas.ix3.security.services.authorization.AuthorizationProvider;
-import es.logongas.ix3.security.services.authorization.AuthorizationType;
+package es.logongas.ix3.model;
 
 /**
- *
+ * El tipo de usuario
  * @author Lorenzo González
  */
-public class AuthorizationProviderImpl implements AuthorizationProvider {
-
-    @Override
-    public AuthorizationType authorized(User user, SecureResource secureResource, Permission permission, Object arguments) {
-        return AuthorizationType.Abstain;
-    }
-
+public enum UserType {
+    /**
+     * Usuario normal del sistema
+     */
+    Normal,
+    /**
+     * Los permisosde este usuario hacen referencia  a cualquier usuario , incluso si no hay ningun usuario
+     */
+    All,
+    /**
+     * Los permisos de este usuario hacen referencia a usuarios que se han identificado en el sistema.
+     */
+    Authenticated
 }

@@ -11,6 +11,9 @@
                 <param name="type">12</param>
             </type>
         </property>
+        <many-to-one name="secureResourceType">
+            <column name="idSecureResourceType"  />
+        </many-to-one>
         <many-to-one name="permission">
             <column name="idPermission"  />
         </many-to-one>

@@ -16,7 +16,7 @@
 package es.logongas.ix3.security.services.authorization;
 
 import es.logongas.ix3.model.Permission;
-import es.logongas.ix3.model.SecureResource;
+import es.logongas.ix3.model.SecureResourceType;
 import es.logongas.ix3.model.User;
 
 /**
@@ -24,5 +24,5 @@ import es.logongas.ix3.model.User;
  * @author Lorenzo González
  */
 public interface AuthorizationManager {
-    boolean authorized(User user,SecureResource secureResource,Permission permission,Object arguments);
+    boolean authorized(User user,SecureResourceType secureResourceType, String secureResource,Permission permission,Object arguments);
 }

@@ -10,30 +10,36 @@
         </natural-id>
         <property name="name"  />
 
-        <list name="acl"  cascade="all" inverse="true" >
+        <set name="acl"  cascade="all" inverse="false" order-by="priority" >
             <key>
                 <column name="sid"  />
             </key>
-            <list-index>
-                <column name="Idx"  />
-            </list-index>
             <one-to-many class="es.logongas.ix3.model.ACE" />
-        </list>
-        <list name="groups"  cascade="all" inverse="true"  >
+        </set>
+        <set name="memberOf"  cascade="save-update,evict,lock,merge,refresh,replicate" inverse="true"  >
             <key>
                 <column name="sid"  />
             </key>
-            <list-index>
-                <column name="Idx"  />
-            </list-index>
-            <one-to-many class="es.logongas.ix3.model.Group" />
-        </list>
+            <one-to-many class="es.logongas.ix3.model.GroupMember" />
+        </set>
 
         <joined-subclass name="es.logongas.ix3.model.User" table="userr" extends="es.logongas.ix3.model.Principal" >
             <key column="sid" />
+            <property name="aceType" >
+                <type name="org.hibernate.type.EnumType">
+                    <param name="enumClass">es.logongas.ix3.model.UserType</param>
+                    <param name="type">12</param>
+                </type>
+            </property>
         </joined-subclass>
         <joined-subclass name="es.logongas.ix3.model.Group" table="groupp" extends="es.logongas.ix3.model.Principal" >
             <key column="sid" />
+            <set name="groupMembers"  cascade="save-update,evict,lock,merge,refresh,replicate" inverse="true"  >
+                <key>
+                    <column name="sid"  />
+                </key>
+                <one-to-many class="es.logongas.ix3.model.GroupMember" />
+            </set>
         </joined-subclass>
 
 

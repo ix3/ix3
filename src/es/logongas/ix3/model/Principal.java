@@ -16,7 +16,7 @@
 package es.logongas.ix3.model;
 
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
-import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -26,8 +26,8 @@ public class Principal implements java.security.Principal {
     private int sid;
     private String login;
     private String name;
-    private List<ACE> acl;
-    private List<Group> groups;
+    private Set<ACE> acl;
+    private Set<GroupMember> memberOf;
 
     public Principal() {
     }
@@ -40,8 +40,27 @@ public class Principal implements java.security.Principal {
 
 
 
-    public AuthorizationType authorized(SecureResource secureResource,Permission permission,Object arguments) {
-        //AuthorizationType authorizationType=getAcl().authorized(secureResource, permission, arguments);
+    public AuthorizationType authorized(SecureResourceType secureResourceType,String secureResource,Permission permission,Object arguments) {
+        for(ACE ace:acl) {
+            AuthorizationType authorizationType=ace.authorized(secureResourceType, secureResource, permission, arguments);
+
+            if (authorizationType==AuthorizationType.AccessAllow) {
+                return authorizationType;
+            } else if (authorizationType==AuthorizationType.AccessDeny) {
+                return authorizationType;
+            }
+        }
+
+        for(GroupMember groupMember:memberOf) {
+            AuthorizationType authorizationType=groupMember.getGroup().authorized(secureResourceType, secureResource, permission, arguments);
+
+            if (authorizationType==AuthorizationType.AccessAllow) {
+                return authorizationType;
+            } else if (authorizationType==AuthorizationType.AccessDeny) {
+                return authorizationType;
+            }
+        }
+
 
         return AuthorizationType.Abstain;
     }
@@ -92,29 +111,30 @@ public class Principal implements java.security.Principal {
     /**
      * @return the acl
      */
-    public List<ACE> getAcl() {
+    public Set<ACE> getAcl() {
         return acl;
     }
 
     /**
      * @param acl the acl to set
      */
-    public void setAcl(List<ACE> acl) {
+    public void setAcl(Set<ACE> acl) {
         this.acl = acl;
     }
 
     /**
-     * @return the groups
+     * @return the memberOf
      */
-    public List<Group> getGroups() {
-        return groups;
+    public Set<GroupMember> getMemberOf() {
+        return memberOf;
     }
 
     /**
-     * @param groups the groups to set
+     * @param memberOf the memberOf to set
      */
-    public void setGroups(List<Group> groups) {
-        this.groups = groups;
+    public void setMemberOf(Set<GroupMember> memberOf) {
+        this.memberOf = memberOf;
     }
+
 
 }

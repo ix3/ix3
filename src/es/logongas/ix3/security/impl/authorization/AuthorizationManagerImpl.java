@@ -16,23 +16,34 @@
 package es.logongas.ix3.security.impl.authorization;
 
 import es.logongas.ix3.model.Permission;
-import es.logongas.ix3.model.SecureResource;
+import es.logongas.ix3.model.SecureResourceType;
 import es.logongas.ix3.model.User;
 import es.logongas.ix3.security.services.authorization.AuthorizationManager;
 import es.logongas.ix3.security.services.authorization.AuthorizationProvider;
+import es.logongas.ix3.security.services.authorization.AuthorizationType;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Busca por orden correlativo todos los AuthorizationProvider y se queda con el primero que encuentra que permite o deniega
  * @author Lorenzo González
  */
 public class AuthorizationManagerImpl implements AuthorizationManager {
     private List<AuthorizationProvider> authorizationProviders=new ArrayList<AuthorizationProvider>();
+    private boolean defaultAuthorization=false;
 
     @Override
-    public boolean authorized(User user, SecureResource secureResource, Permission permission, Object arguments) {
-        return true;
+    public boolean authorized(User user,SecureResourceType secureResourceType, String secureResource, Permission permission, Object arguments) {
+        for(AuthorizationProvider authorizationProvider:authorizationProviders) {
+            AuthorizationType authorizationType=authorizationProvider.authorized(user, secureResourceType, secureResource, permission, arguments);
+
+            if (authorizationType==AuthorizationType.AccessAllow) {
+                return true;
+            } else if (authorizationType==AuthorizationType.AccessDeny) {
+                return false;
+            }
+        }
+        return defaultAuthorization;
     }
 
     /**
@@ -47,6 +58,20 @@ public class AuthorizationManagerImpl implements AuthorizationManager {
      */
     public void setAuthorizationProviders(List<AuthorizationProvider> authorizationProviders) {
         this.authorizationProviders = authorizationProviders;
+    }
+
+    /**
+     * @return the defaultAuthorization
+     */
+    public boolean isDefaultAuthorization() {
+        return defaultAuthorization;
+    }
+
+    /**
+     * @param defaultAuthorization the defaultAuthorization to set
+     */
+    public void setDefaultAuthorization(boolean defaultAuthorization) {
+        this.defaultAuthorization = defaultAuthorization;
     }
 
 

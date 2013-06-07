@@ -15,36 +15,68 @@
  */
 package es.logongas.ix3.model;
 
+import es.logongas.ix3.security.services.authorization.AuthorizationType;
+
 /**
  *
  * @author Lorenzo González
  */
-public class ACE implements Comparable<ACE> {
+public class ACE  {
     private int idACE;
     private ACEType aceType;
     private Permission permission;
     private Principal principal;
+    private SecureResourceType secureResourceType;
     private String secureResourceRegExp;
     private String conditionalScript;
     private int priority;
 
     @Override
-    public int compareTo(ACE o) {
-        if (getPriority()>o.getPriority()) {
-            return -1;
-        } else if (getPriority()<o.getPriority()) {
-            return 1;
-        } else if (getPriority()==o.getPriority()) {
-            if ((getAceType()==ACEType.Deny) && (o.getAceType()==ACEType.Allow)) {
-                return -1;
-            } else if ((getAceType()==ACEType.Allow) && (o.getAceType()==ACEType.Deny)) {
-                return 1;
+    public String toString() {
+        String cs="";
+        if (conditionalScript!=null) {
+            cs=" WHERE (" + conditionalScript + ")";
+        }
+        return aceType + " - " + permission + " => " + secureResourceRegExp  + cs;
+    }
+
+    public AuthorizationType authorized(SecureResourceType secureResourceType,String secureResource,Permission permission,Object arguments) {
+        AuthorizationType authorizationType;
+
+        if ((this.secureResourceType==secureResourceType) && (this.permission==permission)) {
+            if (secureResource.matches(secureResourceRegExp)) {
+                if (conditionalScript!=null) {
+                    if (evaluateConditionalScript()==true) {
+                        authorizationType=aceTypeToAuthorizationType(aceType);
+                    } else {
+                        authorizationType=AuthorizationType.Abstain;
+                    }
+                } else {
+                    authorizationType=aceTypeToAuthorizationType(aceType);
+                }
             } else {
-                return 0;
+               authorizationType=AuthorizationType.Abstain;
             }
         } else {
-            throw new RuntimeException("Error de lógica:"+getPriority() + "," + o.getPriority());
+            authorizationType=AuthorizationType.Abstain;
         }
+
+        return authorizationType;
+    }
+
+    private AuthorizationType aceTypeToAuthorizationType(ACEType aceType) {
+        switch (aceType) {
+            case Allow:
+                return AuthorizationType.AccessAllow;
+            case Deny:
+                return AuthorizationType.AccessDeny;
+            default:
+                throw new RuntimeException("El tipo de ACE es desconocido:"+aceType);
+        }
+    }
+
+    private boolean evaluateConditionalScript() {
+        return true;
     }
 
     /**
@@ -143,5 +175,19 @@ public class ACE implements Comparable<ACE> {
      */
     public void setPriority(int priority) {
         this.priority = priority;
+    }
+
+    /**
+     * @return the secureResourceType
+     */
+    public SecureResourceType getSecureResourceType() {
+        return secureResourceType;
+    }
+
+    /**
+     * @param secureResourceType the secureResourceType to set
+     */
+    public void setSecureResourceType(SecureResourceType secureResourceType) {
+        this.secureResourceType = secureResourceType;
     }
 }

@@ -15,10 +15,27 @@
  */
 package es.logongas.ix3.model;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  *
  * @author Lorenzo González
  */
 public class Group extends Principal {
+    private Set<GroupMember> groupMembers;
 
+    /**
+     * @return the groupMembers
+     */
+    public Set<GroupMember> getGroupMembers() {
+        return groupMembers;
+    }
+
+    /**
+     * @param groupMembers the groupMembers to set
+     */
+    public void setGroupMembers(Set<GroupMember> groupMembers) {
+        this.groupMembers = groupMembers;
+    }
 }

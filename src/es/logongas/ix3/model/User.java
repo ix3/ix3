@@ -15,10 +15,27 @@
  */
 package es.logongas.ix3.model;
 
+import es.logongas.ix3.security.services.authorization.AuthorizationType;
+
 /**
  *
  * @author Lorenzo González
  */
 public class User extends Principal  {
+    private UserType userType;
+
+    /**
+     * @return the userType
+     */
+    public UserType getUserType() {
+        return userType;
+    }
+
+    /**
+     * @param userType the userType to set
+     */
+    public void setUserType(UserType userType) {
+        this.userType = userType;
+    }
 
 }

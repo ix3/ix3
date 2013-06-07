@@ -29,6 +29,13 @@ public class Permission {
     private String description;
     private SecureResourceType secureResourceType;
 
+    @Override
+    public String toString() {
+        return description;
+    }
+
+
+
     /**
      * @return the idPermission
      */
