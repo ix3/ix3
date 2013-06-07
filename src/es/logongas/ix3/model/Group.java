@@ -15,7 +15,6 @@
  */
 package es.logongas.ix3.model;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -24,6 +23,15 @@ import java.util.Set;
  */
 public class Group extends Principal {
     private Set<GroupMember> groupMembers;
+
+    public Group() {
+    }
+
+    public Group(int sid, String login, String name) {
+        super(sid, login, name);
+    }
+
+
 
     /**
      * @return the groupMembers

@@ -16,6 +16,12 @@
 package es.logongas.ix3.model;
 
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import org.hibernate.validator.internal.util.scriptengine.ScriptEvaluator;
 
 /**
  *
@@ -30,6 +36,27 @@ public class ACE  {
     private String secureResourceRegExp;
     private String conditionalScript;
     private int priority;
+
+
+
+    private static ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
+    private static ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
+
+    public ACE() {
+    }
+
+    public ACE(int idACE, ACEType aceType, Permission permission, Principal principal, SecureResourceType secureResourceType, String secureResourceRegExp, String conditionalScript, int priority) {
+        this.idACE = idACE;
+        this.aceType = aceType;
+        this.permission = permission;
+        this.principal = principal;
+        this.secureResourceType = secureResourceType;
+        this.secureResourceRegExp = secureResourceRegExp;
+        this.conditionalScript = conditionalScript;
+        this.priority = priority;
+    }
+
+
 
     @Override
     public String toString() {
@@ -46,7 +73,7 @@ public class ACE  {
         if ((this.secureResourceType==secureResourceType) && (this.permission==permission)) {
             if (secureResource.matches(secureResourceRegExp)) {
                 if (conditionalScript!=null) {
-                    if (evaluateConditionalScript()==true) {
+                    if (evaluateConditionalScript(arguments)==true) {
                         authorizationType=aceTypeToAuthorizationType(aceType);
                     } else {
                         authorizationType=AuthorizationType.Abstain;
@@ -75,8 +102,13 @@ public class ACE  {
         }
     }
 
-    private boolean evaluateConditionalScript() {
-        return true;
+    private boolean evaluateConditionalScript(Object arguments) {
+        ScriptEvaluator scriptEvaluator=new ScriptEvaluator(scriptEngine);
+        try {
+            return (Boolean)scriptEvaluator.evaluate(conditionalScript, arguments, "args");
+        } catch (ScriptException ex) {
+            throw new RuntimeException("Fallo al evaluar el Script:"+conditionalScript);
+        }
     }
 
     /**

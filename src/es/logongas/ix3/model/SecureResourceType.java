@@ -29,6 +29,17 @@ public class SecureResourceType {
     private Set<Permission> permissions=new HashSet<Permission>();
     private Set<SecureResource> secureResources=new HashSet<SecureResource>();
 
+    public SecureResourceType() {
+    }
+
+    public SecureResourceType(int idSecureResourceType, String name, String description) {
+        this.idSecureResourceType = idSecureResourceType;
+        this.name = name;
+        this.description = description;
+    }
+
+
+
     /**
      * @return the idSecureResourceType
      */

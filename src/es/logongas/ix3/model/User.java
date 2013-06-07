@@ -24,6 +24,15 @@ import es.logongas.ix3.security.services.authorization.AuthorizationType;
 public class User extends Principal  {
     private UserType userType;
 
+    public User() {
+    }
+
+    public User(int sid, String login, String name) {
+        super(sid, login, name);
+    }
+
+
+
     /**
      * @return the userType
      */

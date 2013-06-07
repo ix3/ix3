@@ -24,6 +24,17 @@ public class GroupMember {
     private Group group;
     private Principal principal;
 
+    public GroupMember() {
+    }
+
+    public GroupMember(int idGroupMember, Group group, Principal principal) {
+        this.idGroupMember = idGroupMember;
+        this.group = group;
+        this.principal = principal;
+    }
+
+
+
     /**
      * @return the idGroupMember
      */

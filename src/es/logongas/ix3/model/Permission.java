@@ -29,6 +29,18 @@ public class Permission {
     private String description;
     private SecureResourceType secureResourceType;
 
+    public Permission() {
+    }
+
+    public Permission(int idPermission, String name, String description, SecureResourceType secureResourceType) {
+        this.idPermission = idPermission;
+        this.name = name;
+        this.description = description;
+        this.secureResourceType = secureResourceType;
+    }
+
+
+
     @Override
     public String toString() {
         return description;

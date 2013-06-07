@@ -25,6 +25,18 @@ public class SecureResource {
     private String description;
     private SecureResourceType secureResourceType;
 
+    public SecureResource() {
+    }
+
+    public SecureResource(int idSecureResource, String name, String description, SecureResourceType secureResourceType) {
+        this.idSecureResource = idSecureResource;
+        this.name = name;
+        this.description = description;
+        this.secureResourceType = secureResourceType;
+    }
+
+
+
     /**
      * @return the idSecureResource
      */
