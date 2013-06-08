@@ -5,9 +5,7 @@
         <id name="idPermission" >
             <generator class="identity" />
         </id>
-        <natural-id>
-            <property name="name"  />
-        </natural-id>
+        <property name="name"  />
         <property name="description"  />
         <many-to-one name="secureResourceType">
             <column name="idSecureResourceType"  />

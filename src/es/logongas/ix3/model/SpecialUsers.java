@@ -16,14 +16,10 @@
 package es.logongas.ix3.model;
 
 /**
- * El tipo de usuario
+ * El Login de usuarios especiales del sistema
  * @author Lorenzo González
  */
-public enum UserType {
-    /**
-     * Usuario normal del sistema
-     */
-    Normal,
+public enum SpecialUsers {
     /**
      * Los permisosde este usuario hacen referencia  a cualquier usuario , incluso si no hay ningun usuario
      */

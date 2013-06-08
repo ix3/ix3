@@ -67,10 +67,10 @@ public class ACE  {
         return aceType + " - " + permission + " => " + secureResourceRegExp  + cs;
     }
 
-    public AuthorizationType authorized(SecureResourceType secureResourceType,String secureResource,Permission permission,Object arguments) {
+    public AuthorizationType authorized(String secureResource,Permission permission,Object arguments) {
         AuthorizationType authorizationType;
 
-        if ((this.secureResourceType==secureResourceType) && (this.permission==permission)) {
+        if (this.permission==permission) {
             if (secureResource.matches(secureResourceRegExp)) {
                 if (conditionalScript!=null) {
                     if (evaluateConditionalScript(arguments,this.secureResourceType.getName().toLowerCase())==true) {

@@ -20,29 +20,12 @@ package es.logongas.ix3.model;
  * @author Lorenzo González
  */
 public class User extends Principal  {
-    private UserType userType;
 
     public User() {
     }
 
     public User(int sid, String login, String name) {
         super(sid, login, name);
-    }
-
-
-
-    /**
-     * @return the userType
-     */
-    public UserType getUserType() {
-        return userType;
-    }
-
-    /**
-     * @param userType the userType to set
-     */
-    public void setUserType(UserType userType) {
-        this.userType = userType;
     }
 
 }

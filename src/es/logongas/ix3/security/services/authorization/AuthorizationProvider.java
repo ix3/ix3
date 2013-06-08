@@ -26,5 +26,5 @@ import es.logongas.ix3.model.User;
  * @author Lorenzo González
  */
 public interface AuthorizationProvider {
-    AuthorizationType authorized(User user,SecureResourceType secureResourceType,String secureResource,Permission permission,Object arguments);
+    AuthorizationType authorized(User user,String secureResource,Permission permission,Object arguments);
 }

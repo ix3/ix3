@@ -18,7 +18,7 @@ package es.logongas.ix3.security.impl.authorization;
 import es.logongas.ix3.model.Permission;
 import es.logongas.ix3.model.SecureResourceType;
 import es.logongas.ix3.model.User;
-import es.logongas.ix3.model.UserType;
+import es.logongas.ix3.model.SpecialUsers;
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
@@ -37,24 +37,24 @@ public class AuthorizationProviderImplUser implements AuthorizationProvider {
     DAOFactory daoFactory;
 
     @Override
-    public AuthorizationType authorized(User user, SecureResourceType secureResourceType, String secureResource, Permission permission, Object arguments) {
+    public AuthorizationType authorized(User user, String secureResource, Permission permission, Object arguments) {
         try {
             AuthorizationType authorizationType;
             GenericDAO genericDAO = (GenericDAO) daoFactory.getDAO(User.class);
 
             if (user != null) {
-                authorizationType = user.authorized(secureResourceType, secureResource, permission, arguments);
+                authorizationType = user.authorized(secureResource, permission, arguments);
                 if (authorizationType == AuthorizationType.Abstain) {
-                    User authenticatedUser = (User) genericDAO.readByNaturalKey(UserType.Authenticated.name());
-                    authorizationType = authenticatedUser.authorized(secureResourceType, secureResource, permission, arguments);
+                    User authenticatedUser = (User) genericDAO.readByNaturalKey(SpecialUsers.Authenticated.name());
+                    authorizationType = authenticatedUser.authorized( secureResource, permission, arguments);
                     if (authorizationType == AuthorizationType.Abstain) {
-                        User allUser = (User) genericDAO.readByNaturalKey(UserType.All.name());
-                        authorizationType = allUser.authorized(secureResourceType, secureResource, permission, arguments);
+                        User allUser = (User) genericDAO.readByNaturalKey(SpecialUsers.All.name());
+                        authorizationType = allUser.authorized(secureResource, permission, arguments);
                     }
                 }
             } else {
-                User allUser = (User) genericDAO.readByNaturalKey(UserType.All.name());
-                authorizationType = allUser.authorized(secureResourceType, secureResource, permission, arguments);
+                User allUser = (User) genericDAO.readByNaturalKey(SpecialUsers.All.name());
+                authorizationType = allUser.authorized(secureResource, permission, arguments);
             }
 
             return authorizationType;

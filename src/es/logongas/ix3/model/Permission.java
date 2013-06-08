@@ -15,15 +15,18 @@
  */
 package es.logongas.ix3.model;
 
+import org.hibernate.Hibernate;
+
 /**
- * Cada de uno de los posibles permisos de un tipo de objeto.
- * Por ejemplo.
- * Para las impresoras cada permiso sería: imprmir, cancelar ,etc.
- * Para una url cada permiso sería hacer GET, PUT, POST, DELETE , etc.
- * Para una entidad REST cada sería : READ, LIST, CREATE , UPDATE, DELETE , etc.
+ * Cada de uno de los posibles permisos de un tipo de objeto. Por ejemplo. Para
+ * las impresoras cada permiso sería: imprmir, cancelar ,etc. Para una url cada
+ * permiso sería hacer GET, PUT, POST, DELETE , etc. Para una entidad REST cada
+ * sería : READ, LIST, CREATE , UPDATE, DELETE , etc.
+ *
  * @author Lorenzo González
  */
 public class Permission {
+
     private int idPermission;
     private String name;
     private String description;
@@ -39,14 +42,53 @@ public class Permission {
         this.secureResourceType = secureResourceType;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (Hibernate.getClass(this) != Hibernate.getClass(obj)) {
+            return false;
+        }
 
+        Permission permission = (Permission) obj;
+        Object obj1_prop1 = getName();
+        Object obj2_prop1 = permission.getName();
+        SecureResourceType obj1_prop2 = getSecureResourceType();
+        SecureResourceType obj2_prop2 = permission.getSecureResourceType();
+
+
+        if ((obj1_prop1 == null) || (obj2_prop1 == null) || (obj1_prop2 == null) || (obj2_prop2 == null)) {
+            if ((obj1_prop1 == null) && (obj2_prop1 == null) && (obj1_prop2 == null) && (obj2_prop2 == null)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if ((obj1_prop1.equals(obj2_prop1) == true) && (obj1_prop2.equals(obj2_prop2))) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        Object obj1_prop1 = name;
+        Object obj1_prop2 = secureResourceType;
+        int resultado;
+
+        resultado = ((obj1_prop1 == null ? 0 : obj1_prop1.hashCode()) ^ (obj1_prop2 == null ? 0 : obj1_prop2.hashCode()));
+
+        return resultado;
+    }
 
     @Override
     public String toString() {
         return description;
     }
-
-
 
     /**
      * @return the idPermission

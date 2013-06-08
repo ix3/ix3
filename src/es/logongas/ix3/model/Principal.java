@@ -40,9 +40,9 @@ public class Principal implements java.security.Principal {
 
 
 
-    public AuthorizationType authorized(SecureResourceType secureResourceType,String secureResource,Permission permission,Object arguments) {
+    public AuthorizationType authorized(String secureResource,Permission permission,Object arguments) {
         for(ACE ace:acl) {
-            AuthorizationType authorizationType=ace.authorized(secureResourceType, secureResource, permission, arguments);
+            AuthorizationType authorizationType=ace.authorized(secureResource, permission, arguments);
 
             if (authorizationType==AuthorizationType.AccessAllow) {
                 return authorizationType;
@@ -52,7 +52,7 @@ public class Principal implements java.security.Principal {
         }
 
         for(GroupMember groupMember:memberOf) {
-            AuthorizationType authorizationType=groupMember.getGroup().authorized(secureResourceType, secureResource, permission, arguments);
+            AuthorizationType authorizationType=groupMember.getGroup().authorized(secureResource, permission, arguments);
 
             if (authorizationType==AuthorizationType.AccessAllow) {
                 return authorizationType;

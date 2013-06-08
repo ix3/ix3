@@ -17,6 +17,7 @@ package es.logongas.ix3.model;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.Hibernate;
 
 /**
  * Tipo de recurso securizado. Sus valores suelen ser "TABLE","PRINTER","CLASS","URL" , etc.
@@ -38,6 +39,50 @@ public class SecureResourceType {
         this.description = description;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (Hibernate.getClass(this) != Hibernate.getClass(obj)) {
+            return false;
+        }
+
+        Permission permission = (Permission) obj;
+        Object obj1_prop1 = getName();
+        Object obj2_prop1 = permission.getName();
+
+
+        if ((obj1_prop1 == null) || (obj2_prop1 == null) ) {
+            if ((obj1_prop1 == null) && (obj2_prop1 == null)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (obj1_prop1.equals(obj2_prop1) == true) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        Object obj1_prop1 = name;
+        int resultado;
+
+        resultado = (obj1_prop1 == null ? 0 : obj1_prop1.hashCode());
+
+        return resultado;
+    }
+
+    @Override
+    public String toString() {
+        return description;
+    }
 
 
     /**
