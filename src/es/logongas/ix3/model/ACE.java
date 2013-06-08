@@ -39,8 +39,8 @@ public class ACE  {
 
 
 
-    private static ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-    private static ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
+    private static final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
+    private static final ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
 
     public ACE() {
     }
@@ -73,7 +73,7 @@ public class ACE  {
         if ((this.secureResourceType==secureResourceType) && (this.permission==permission)) {
             if (secureResource.matches(secureResourceRegExp)) {
                 if (conditionalScript!=null) {
-                    if (evaluateConditionalScript(arguments)==true) {
+                    if (evaluateConditionalScript(arguments,this.secureResourceType.getName().toLowerCase())==true) {
                         authorizationType=aceTypeToAuthorizationType(aceType);
                     } else {
                         authorizationType=AuthorizationType.Abstain;
@@ -102,12 +102,12 @@ public class ACE  {
         }
     }
 
-    private boolean evaluateConditionalScript(Object arguments) {
+    private boolean evaluateConditionalScript(Object arguments,String argumentsObjectName) {
         ScriptEvaluator scriptEvaluator=new ScriptEvaluator(scriptEngine);
         try {
-            return (Boolean)scriptEvaluator.evaluate(conditionalScript, arguments, "args");
+            return (Boolean)scriptEvaluator.evaluate(conditionalScript, arguments, argumentsObjectName);
         } catch (ScriptException ex) {
-            throw new RuntimeException("Fallo al evaluar el Script:"+conditionalScript);
+            throw new RuntimeException("Fallo al evaluar el Script:"+conditionalScript,ex);
         }
     }
 

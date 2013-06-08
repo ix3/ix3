@@ -127,7 +127,7 @@ public class ACETest {
         User user=new User(1, "Juan", "Juan García");
         Map<String,Object> arguments = new HashMap<String,Object>();
         arguments.put("user","pepe");
-        ACE instance = new ACE(1, ACEType.Allow, permission, user,secureResourceType , "/.*/.*", "args.get('user')=='pepe'", 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user,secureResourceType , "/.*/.*", "url.get('user')=='pepe'", 10);
         AuthorizationType expResult = AuthorizationType.AccessAllow;
         AuthorizationType result = instance.authorized(secureResourceType, "/pepe/index.html", permission, arguments);
         assertEquals(expResult, result);
@@ -141,7 +141,7 @@ public class ACETest {
         User user=new User(1, "Juan", "Juan García");
         Map<String,Object> arguments = new HashMap<String,Object>();
         arguments.put("user","pepe");
-        ACE instance = new ACE(1, ACEType.Allow, permission, user,secureResourceType , "/.*/.*", "args.get('user')=='juan'", 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user,secureResourceType , "/.*/.*", "url.get('user')=='juan'", 10);
         AuthorizationType expResult = AuthorizationType.Abstain;
         AuthorizationType result = instance.authorized(secureResourceType, "/pepe/index.html", permission, arguments);
         assertEquals(expResult, result);
