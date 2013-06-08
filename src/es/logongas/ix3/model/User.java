@@ -15,8 +15,6 @@
  */
 package es.logongas.ix3.model;
 
-import es.logongas.ix3.security.services.authorization.AuthorizationType;
-
 /**
  *
  * @author Lorenzo González
