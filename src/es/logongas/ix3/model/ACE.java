@@ -16,8 +16,6 @@
 package es.logongas.ix3.model;
 
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -35,7 +33,7 @@ public class ACE  {
     private SecureResourceType secureResourceType;
     private String secureResourceRegExp;
     private String conditionalScript;
-    private int priority;
+    private Integer priority;
 
 
 
@@ -45,7 +43,7 @@ public class ACE  {
     public ACE() {
     }
 
-    public ACE(int idACE, ACEType aceType, Permission permission, Principal principal, SecureResourceType secureResourceType, String secureResourceRegExp, String conditionalScript, int priority) {
+    public ACE(int idACE, ACEType aceType, Permission permission, Principal principal, SecureResourceType secureResourceType, String secureResourceRegExp, String conditionalScript, Integer priority) {
         this.idACE = idACE;
         this.aceType = aceType;
         this.permission = permission;
@@ -198,14 +196,14 @@ public class ACE  {
     /**
      * @return the priority
      */
-    public int getPriority() {
+    public Integer getPriority() {
         return priority;
     }
 
     /**
      * @param priority the priority to set
      */
-    public void setPriority(int priority) {
+    public void setPriority(Integer priority) {
         this.priority = priority;
     }
 
