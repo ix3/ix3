@@ -23,6 +23,7 @@ public class GroupMember {
     private int idGroupMember;
     private Group group;
     private Principal principal;
+    private Integer priority;
 
     public GroupMember() {
     }
@@ -75,5 +76,19 @@ public class GroupMember {
      */
     public void setPrincipal(Principal principal) {
         this.principal = principal;
+    }
+
+    /**
+     * @return the priority
+     */
+    public Integer getPriority() {
+        return priority;
+    }
+
+    /**
+     * @param priority the priority to set
+     */
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 }

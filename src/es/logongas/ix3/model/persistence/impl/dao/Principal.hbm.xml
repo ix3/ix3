@@ -16,7 +16,7 @@
             </key>
             <one-to-many class="es.logongas.ix3.model.ACE" />
         </set>
-        <set name="memberOf"  cascade="save-update,evict,lock,merge,refresh,replicate" inverse="true"  >
+        <set name="memberOf"  cascade="save-update,evict,lock,merge,refresh,replicate" inverse="true" order-by="priority" >
             <key>
                 <column name="sid"  />
             </key>

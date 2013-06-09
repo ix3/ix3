@@ -11,5 +11,6 @@
         <many-to-one name="principal">
             <column name="sid"  />
         </many-to-one>
+        <property name="priority"  />
     </class>
 </hibernate-mapping>
