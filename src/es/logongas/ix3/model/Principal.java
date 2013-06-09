@@ -41,6 +41,8 @@ public class Principal implements java.security.Principal {
 
 
     public AuthorizationType authorized(String secureResource,Permission permission,Object arguments) {
+
+        //Los ACE deben estar ordenador por prioridad
         for(ACE ace:acl) {
             AuthorizationType authorizationType=ace.authorized(secureResource, permission, arguments);
 
@@ -51,6 +53,7 @@ public class Principal implements java.security.Principal {
             }
         }
 
+        //Los Grupos deben estar ordenador por prioridad
         for(GroupMember groupMember:memberOf) {
             AuthorizationType authorizationType=groupMember.getGroup().authorized(secureResource, permission, arguments);
 

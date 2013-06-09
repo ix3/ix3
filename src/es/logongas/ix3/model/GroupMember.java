@@ -28,13 +28,12 @@ public class GroupMember {
     public GroupMember() {
     }
 
-    public GroupMember(int idGroupMember, Group group, Principal principal) {
+    public GroupMember(int idGroupMember, Group group, Principal principal, Integer priority) {
         this.idGroupMember = idGroupMember;
         this.group = group;
         this.principal = principal;
+        this.priority = priority;
     }
-
-
 
     /**
      * @return the idGroupMember
