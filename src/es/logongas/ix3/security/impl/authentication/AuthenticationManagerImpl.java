@@ -33,38 +33,31 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author Lorenzo González
  */
 public class AuthenticationManagerImpl implements AuthenticationManager {
-    @Autowired
-    DAOFactory daoFactory;
 
     private List<AuthenticationProvider> authenticationProviders=new ArrayList<AuthenticationProvider>();
 
     @Override
-    public Identity authenticate(Credential credential) throws BusinessException {
-        boolean authenticated=false;
+    public Principal authenticate(Credential credential) throws BusinessException {
         for(AuthenticationProvider authenticationProvider:getAuthenticationProviders()) {
-            authenticated=authenticationProvider.authenticate(credential);
-            if (authenticated==true) {
-                break;
+            Principal principal=authenticationProvider.authenticate(credential);
+            if (principal!=null) {
+                return principal;
             }
         }
 
-        if (authenticated==true) {
-            GenericDAO<Identity,Integer> genericDAO=daoFactory.getDAO(Identity.class);
-            Identity identity=genericDAO.readByNaturalKey(credential.getLogin());
-
-            return identity;
-        } else {
-            return null;
-        }
-
+        return null;
     }
 
     @Override
     public Principal getPrincipalBySID(Serializable sid) throws BusinessException {
-        Integer idIdentity=(Integer)sid;
-        GenericDAO<Identity,Integer> genericDAO=daoFactory.getDAO(Identity.class);
+        for(AuthenticationProvider authenticationProvider:getAuthenticationProviders()) {
+            Principal principal=authenticationProvider.getPrincipalBySID(sid);
+            if (principal!=null) {
+                return principal;
+            }
+        }
 
-        return genericDAO.read(idIdentity);
+        return null;
     }
 
     /**

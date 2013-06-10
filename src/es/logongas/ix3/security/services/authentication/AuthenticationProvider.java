@@ -15,10 +15,14 @@
  */
 package es.logongas.ix3.security.services.authentication;
 
+import es.logongas.ix3.persistence.services.dao.BusinessException;
+import java.io.Serializable;
+
 /**
  *
  * @author Lorenzo González
  */
 public interface AuthenticationProvider {
-    boolean authenticate(Credential credential);
+    Principal authenticate(Credential credential) throws BusinessException;
+    Principal getPrincipalBySID(Serializable sid) throws BusinessException;
 }

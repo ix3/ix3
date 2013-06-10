@@ -15,12 +15,18 @@
  */
 package es.logongas.ix3.security.impl.authentication;
 
+import es.logongas.ix3.model.Identity;
+import es.logongas.ix3.persistence.services.dao.BusinessException;
+import es.logongas.ix3.persistence.services.dao.DAOFactory;
+import es.logongas.ix3.persistence.services.dao.GenericDAO;
 import es.logongas.ix3.security.services.authentication.AuthenticationProvider;
 import es.logongas.ix3.security.services.authentication.Credential;
+import es.logongas.ix3.security.services.authentication.Principal;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpResponse;
@@ -34,6 +40,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Autenticar a un usuario mediante el usuario y contraseña de moodle
@@ -43,12 +50,14 @@ import org.jsoup.select.Elements;
 public class AuthenticationProviderImplMoodle implements AuthenticationProvider {
 
     private String moodleLoginURL="http://www.fpmislata.com/moodle/login/index.php";
+    @Autowired
+    DAOFactory daoFactory;
 
     @Override
-    public boolean authenticate(Credential credential) {
+    public Principal authenticate(Credential credential) {
         try {
             if ((credential instanceof CredentialImplLoginPassword) == false) {
-                return false;
+                return null;
             }
             CredentialImplLoginPassword credentialImplLoginPassword = (CredentialImplLoginPassword) credential;
 
@@ -64,16 +73,16 @@ public class AuthenticationProviderImplMoodle implements AuthenticationProvider 
 
             Elements divElements = document.getElementsByClass("logininfo");
             if (divElements.size() == 0) {
-                return false;
+                return null;
             }
             Element divElement = divElements.get(0);
             Elements aElements = divElement.getElementsByTag("a");
             if (aElements.size() == 0) {
-                return false;
+                return null;
             }
             Element aElement = aElements.get(aElements.size() - 1);
             if (aElement.attr("href").indexOf("logout") < 0) {
-                return false;
+                return null;
             }
 
             DefaultHttpClient httpclient2 = new DefaultHttpClient();
@@ -81,11 +90,22 @@ public class AuthenticationProviderImplMoodle implements AuthenticationProvider 
 
             httpclient2.execute(httpGet);
 
-            return true;
+            GenericDAO<Identity,Integer> genericDAO=daoFactory.getDAO(Identity.class);
+            Identity identity=genericDAO.readByNaturalKey(credentialImplLoginPassword.getLogin());
+
+            return identity;
 
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public Principal getPrincipalBySID(Serializable sid) throws BusinessException {
+        Integer idIdentity=(Integer)sid;
+        GenericDAO<Identity,Integer> genericDAO=daoFactory.getDAO(Identity.class);
+
+        return genericDAO.read(idIdentity);
     }
 
     private String inputStreamToString(InputStream inputStream) {
