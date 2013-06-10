@@ -26,6 +26,7 @@ import es.logongas.ix3.security.services.authentication.Principal;
 import es.logongas.ix3.web.services.json.JsonFactory;
 import es.logongas.ix3.web.services.json.JsonWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -110,7 +111,7 @@ public class SesionController {
             Principal principal;
 
             HttpSession httpSession = request.getSession();
-            Integer sid = (Integer) httpSession.getAttribute("sid");
+            Serializable sid = (Serializable) httpSession.getAttribute("sid");
 
             if (sid == null) {
                 principal = null;

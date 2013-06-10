@@ -21,6 +21,7 @@ import es.logongas.ix3.security.services.authentication.AuthenticationManager;
 import es.logongas.ix3.security.services.authentication.Principal;
 import es.logongas.ix3.security.services.authorization.AuthorizationManager;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.Filter;
@@ -58,7 +59,7 @@ public class FilterImplSecurity implements Filter {
             String method = httpServletRequest.getMethod();
 
             Principal principal;
-            Integer sid = (Integer) httpServletRequest.getSession().getAttribute("sid");
+            Serializable sid = (Serializable) httpServletRequest.getSession().getAttribute("sid");
             if (sid == null) {
                 principal = null;
             } else {
@@ -84,6 +85,13 @@ public class FilterImplSecurity implements Filter {
     public void destroy() {
     }
 
+    /**
+     * Obtiene la URL pero si la parte del ContextPath
+     * De esa forma al establecer la seguridad no tenemos que saber donde está desplegada la aplicación
+     * @param uri
+     * @param contextPath
+     * @return
+     */
     private String getSecureURI(String uri,String contextPath) {
         int beginIndex;
         if (contextPath==null) {
@@ -94,7 +102,7 @@ public class FilterImplSecurity implements Filter {
                 throw new RuntimeException("uri no empieza por '" + contextPath + "':"+uri);
             }
         }
-        
+
 
 
         String secureURI=uri.substring(beginIndex);
