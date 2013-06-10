@@ -356,8 +356,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     public EntityType readByNaturalKey(Object value) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
+            session.beginTransaction();
             EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(value);
-
+            session.getTransaction().commit();
             return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
