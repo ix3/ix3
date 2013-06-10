@@ -9,7 +9,7 @@
             <column name="idGroup"  />
         </many-to-one>
         <many-to-one name="identity">
-            <column name="sid"  />
+            <column name="idIdentity"  />
         </many-to-one>
         <property name="priority"  />
     </class>

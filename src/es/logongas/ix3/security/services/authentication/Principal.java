@@ -15,10 +15,12 @@
  */
 package es.logongas.ix3.security.services.authentication;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Lorenzo González
  */
 public interface Principal extends java.security.Principal {
-    public int getSid();
+    public Serializable getSid();
 }

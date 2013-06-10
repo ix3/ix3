@@ -16,6 +16,7 @@
 package es.logongas.ix3.model;
 
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
+import java.io.Serializable;
 import java.util.Set;
 
 /**
@@ -23,7 +24,7 @@ import java.util.Set;
  * @author Lorenzo González
  */
 public class Identity implements es.logongas.ix3.security.services.authentication.Principal {
-    private int sid;
+    private int idIdentity;
     private String login;
     private String name;
     private Set<ACE> acl;
@@ -32,8 +33,8 @@ public class Identity implements es.logongas.ix3.security.services.authenticatio
     public Identity() {
     }
 
-    public Identity(int sid, String login, String name) {
-        this.sid = sid;
+    public Identity(int idIdentity, String login, String name) {
+        this.idIdentity = idIdentity;
         this.login = login;
         this.name = name;
     }
@@ -68,19 +69,25 @@ public class Identity implements es.logongas.ix3.security.services.authenticatio
         return AuthorizationType.Abstain;
     }
 
-    /**
-     * @return the sid
-     */
     @Override
-    public int getSid() {
-        return sid;
+    public Serializable getSid() {
+        return idIdentity;
+    }
+
+
+
+    /**
+     * @return the idIdentity
+     */
+    public int getIdIdentity() {
+        return idIdentity;
     }
 
     /**
-     * @param sid the sid to set
+     * @param idIdentity the IdIdentity to set
      */
-    public void setSid(int sid) {
-        this.sid = sid;
+    public void setIdIdentity(int idIdentity) {
+        this.idIdentity = idIdentity;
     }
 
     /**

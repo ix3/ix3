@@ -27,8 +27,8 @@ public class Group extends Identity {
     public Group() {
     }
 
-    public Group(int sid, String login, String name) {
-        super(sid, login, name);
+    public Group(int idIdentity, String login, String name) {
+        super(idIdentity, login, name);
     }
 
 

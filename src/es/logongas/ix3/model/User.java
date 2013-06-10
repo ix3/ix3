@@ -24,8 +24,8 @@ public class User extends Identity  {
     public User() {
     }
 
-    public User(int sid, String login, String name) {
-        super(sid, login, name);
+    public User(int idIdentity, String login, String name) {
+        super(idIdentity, login, name);
     }
 
 }

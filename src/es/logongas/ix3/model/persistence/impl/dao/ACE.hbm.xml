@@ -15,7 +15,7 @@
             <column name="idPermission"  />
         </many-to-one>
         <many-to-one name="identity">
-            <column name="sid"  />
+            <column name="idIdentity"  />
         </many-to-one>
         <property name="secureResourceRegExp"  />
         <property name="conditionalScript"  />

@@ -23,6 +23,7 @@ import es.logongas.ix3.security.services.authentication.AuthenticationManager;
 import es.logongas.ix3.security.services.authentication.AuthenticationProvider;
 import es.logongas.ix3.security.services.authentication.Credential;
 import es.logongas.ix3.security.services.authentication.Principal;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,10 +60,11 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
     }
 
     @Override
-    public Principal getPrincipalBySID(int sid) throws BusinessException {
+    public Principal getPrincipalBySID(Serializable sid) throws BusinessException {
+        Integer idIdentity=(Integer)sid;
         GenericDAO<Identity,Integer> genericDAO=daoFactory.getDAO(Identity.class);
 
-        return genericDAO.read(sid);
+        return genericDAO.read(idIdentity);
     }
 
     /**

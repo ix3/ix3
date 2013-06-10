@@ -2,7 +2,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <class name="es.logongas.ix3.model.Identity" >
-        <id name="sid" >
+        <id name="idIdentity" >
             <generator class="identity" />
         </id>
         <natural-id>
@@ -12,25 +12,25 @@
 
         <set name="acl"  cascade="all" inverse="false" order-by="priority" >
             <key>
-                <column name="sid"  />
+                <column name="idIdentity"  />
             </key>
             <one-to-many class="es.logongas.ix3.model.ACE" />
         </set>
         <set name="memberOf"  cascade="save-update,evict,lock,merge,refresh,replicate" inverse="true" order-by="priority" >
             <key>
-                <column name="sid"  />
+                <column name="idIdentity"  />
             </key>
             <one-to-many class="es.logongas.ix3.model.GroupMember" />
         </set>
 
         <joined-subclass name="es.logongas.ix3.model.User" table="userr" extends="es.logongas.ix3.model.Identity" >
-            <key column="sid" />
+            <key column="idIdentity" />
         </joined-subclass>
         <joined-subclass name="es.logongas.ix3.model.Group" table="groupp" extends="es.logongas.ix3.model.Identity" >
-            <key column="sid" />
+            <key column="idIdentity" />
             <set name="groupMembers"  cascade="save-update,evict,lock,merge,refresh,replicate" inverse="true"  >
                 <key>
-                    <column name="sid"  />
+                    <column name="idIdentity"  />
                 </key>
                 <one-to-many class="es.logongas.ix3.model.GroupMember" />
             </set>
