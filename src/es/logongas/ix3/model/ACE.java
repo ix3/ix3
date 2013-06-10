@@ -29,8 +29,7 @@ public class ACE  {
     private int idACE;
     private ACEType aceType;
     private Permission permission;
-    private Principal principal;
-    private SecureResourceType secureResourceType;
+    private Identity identity;
     private String secureResourceRegExp;
     private String conditionalScript;
     private Integer priority;
@@ -43,12 +42,11 @@ public class ACE  {
     public ACE() {
     }
 
-    public ACE(int idACE, ACEType aceType, Permission permission, Principal principal, SecureResourceType secureResourceType, String secureResourceRegExp, String conditionalScript, Integer priority) {
+    public ACE(int idACE, ACEType aceType, Permission permission, Identity identity, String secureResourceRegExp, String conditionalScript, Integer priority) {
         this.idACE = idACE;
         this.aceType = aceType;
         this.permission = permission;
-        this.principal = principal;
-        this.secureResourceType = secureResourceType;
+        this.identity = identity;
         this.secureResourceRegExp = secureResourceRegExp;
         this.conditionalScript = conditionalScript;
         this.priority = priority;
@@ -68,10 +66,10 @@ public class ACE  {
     public AuthorizationType authorized(String secureResource,Permission permission,Object arguments) {
         AuthorizationType authorizationType;
 
-        if (this.permission==permission) {
+        if (this.permission.equals(permission)) {
             if (secureResource.matches(secureResourceRegExp)) {
                 if (conditionalScript!=null) {
-                    if (evaluateConditionalScript(arguments,this.secureResourceType.getName().toLowerCase())==true) {
+                    if (evaluateConditionalScript(arguments,this.permission.getSecureResourceType().getName().toLowerCase())==true) {
                         authorizationType=aceTypeToAuthorizationType(aceType);
                     } else {
                         authorizationType=AuthorizationType.Abstain;
@@ -152,17 +150,17 @@ public class ACE  {
     }
 
     /**
-     * @return the principal
+     * @return the identity
      */
-    public Principal getPrincipal() {
-        return principal;
+    public Identity getIdentity() {
+        return identity;
     }
 
     /**
-     * @param principal the principal to set
+     * @param identity the identity to set
      */
-    public void setPrincipal(Principal principal) {
-        this.principal = principal;
+    public void setIdentity(Identity identity) {
+        this.identity = identity;
     }
 
     /**
@@ -205,19 +203,5 @@ public class ACE  {
      */
     public void setPriority(Integer priority) {
         this.priority = priority;
-    }
-
-    /**
-     * @return the secureResourceType
-     */
-    public SecureResourceType getSecureResourceType() {
-        return secureResourceType;
-    }
-
-    /**
-     * @param secureResourceType the secureResourceType to set
-     */
-    public void setSecureResourceType(SecureResourceType secureResourceType) {
-        this.secureResourceType = secureResourceType;
     }
 }

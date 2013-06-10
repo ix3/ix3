@@ -21,7 +21,7 @@ import java.util.Set;
  *
  * @author Lorenzo González
  */
-public class Group extends Principal {
+public class Group extends Identity {
     private Set<GroupMember> groupMembers;
 
     public Group() {

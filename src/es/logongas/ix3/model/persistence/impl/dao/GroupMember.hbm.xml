@@ -8,7 +8,7 @@
         <many-to-one name="group">
             <column name="idGroup"  />
         </many-to-one>
-        <many-to-one name="principal">
+        <many-to-one name="identity">
             <column name="sid"  />
         </many-to-one>
         <property name="priority"  />

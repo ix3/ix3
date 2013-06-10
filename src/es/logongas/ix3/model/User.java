@@ -19,7 +19,7 @@ package es.logongas.ix3.model;
  *
  * @author Lorenzo González
  */
-public class User extends Principal  {
+public class User extends Identity  {
 
     public User() {
     }

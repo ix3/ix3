@@ -13,17 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authorization;
-
-import es.logongas.ix3.model.Permission;
-import es.logongas.ix3.security.services.authentication.Principal;
-
-
+package es.logongas.ix3.security.services.authentication;
 
 /**
  *
  * @author Lorenzo González
  */
-public interface AuthorizationProvider {
-    AuthorizationType authorized(Principal principal,String secureResource,Permission permission,Object arguments);
+public interface Principal extends java.security.Principal {
+    public int getSid();
 }

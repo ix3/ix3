@@ -15,7 +15,6 @@
  */
 package es.logongas.ix3.security.services.authentication;
 
-import es.logongas.ix3.model.User;
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 
 /**
@@ -23,7 +22,6 @@ import es.logongas.ix3.persistence.services.dao.BusinessException;
  * @author Lorenzo González
  */
 public interface AuthenticationManager {
-    User authenticate(Credential credential) throws BusinessException;
-    User getUserBySID(int sid) throws BusinessException;
-    User getAnonymousUser() throws BusinessException;
+    Principal authenticate(Credential credential) throws BusinessException;
+    Principal getPrincipalBySID(int sid) throws BusinessException;
 }

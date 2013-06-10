@@ -22,17 +22,17 @@ import java.util.Set;
  *
  * @author Lorenzo González
  */
-public class Principal implements java.security.Principal {
+public class Identity implements es.logongas.ix3.security.services.authentication.Principal {
     private int sid;
     private String login;
     private String name;
     private Set<ACE> acl;
     private Set<GroupMember> memberOf;
 
-    public Principal() {
+    public Identity() {
     }
 
-    public Principal(int sid, String login, String name) {
+    public Identity(int sid, String login, String name) {
         this.sid = sid;
         this.login = login;
         this.name = name;
@@ -71,6 +71,7 @@ public class Principal implements java.security.Principal {
     /**
      * @return the sid
      */
+    @Override
     public int getSid() {
         return sid;
     }
@@ -137,6 +138,11 @@ public class Principal implements java.security.Principal {
      */
     public void setMemberOf(Set<GroupMember> memberOf) {
         this.memberOf = memberOf;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 
 

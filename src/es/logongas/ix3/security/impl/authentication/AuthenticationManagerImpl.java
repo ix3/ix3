@@ -15,14 +15,14 @@
  */
 package es.logongas.ix3.security.impl.authentication;
 
-import es.logongas.ix3.model.Principal;
-import es.logongas.ix3.model.User;
+import es.logongas.ix3.model.Identity;
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
 import es.logongas.ix3.security.services.authentication.AuthenticationManager;
 import es.logongas.ix3.security.services.authentication.AuthenticationProvider;
 import es.logongas.ix3.security.services.authentication.Credential;
+import es.logongas.ix3.security.services.authentication.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
     private List<AuthenticationProvider> authenticationProviders=new ArrayList<AuthenticationProvider>();
 
     @Override
-    public User authenticate(Credential credential) throws BusinessException {
+    public Identity authenticate(Credential credential) throws BusinessException {
         boolean authenticated=false;
         for(AuthenticationProvider authenticationProvider:getAuthenticationProviders()) {
             authenticated=authenticationProvider.authenticate(credential);
@@ -48,10 +48,10 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
         }
 
         if (authenticated==true) {
-            GenericDAO genericDAO=daoFactory.getDAO(Principal.class);
-            User user=(User)genericDAO.readByNaturalKey(credential.getLogin());
+            GenericDAO<Identity,Integer> genericDAO=daoFactory.getDAO(Identity.class);
+            Identity identity=genericDAO.readByNaturalKey(credential.getLogin());
 
-            return user;
+            return identity;
         } else {
             return null;
         }
@@ -59,15 +59,10 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
     }
 
     @Override
-    public User getUserBySID(int sid) throws BusinessException {
-        GenericDAO genericDAO=daoFactory.getDAO(User.class);
+    public Principal getPrincipalBySID(int sid) throws BusinessException {
+        GenericDAO<Identity,Integer> genericDAO=daoFactory.getDAO(Identity.class);
 
-        return (User)genericDAO.read(sid);
-    }
-
-    @Override
-    public User getAnonymousUser() throws BusinessException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return genericDAO.read(sid);
     }
 
     /**

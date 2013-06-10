@@ -30,10 +30,10 @@ limitations under the License.
         </property>
     </bean>
 
-    <bean id="authorizationManager" class="es.logongas.ix3.security.impl.authorization.AuthorizationManagerImpl"  >
+    <bean id="authorizationManager" class="es.logongas.ix3.security.impl.authorization.AuthorizationManagerImplIdentity"  >
         <property name="authorizationProviders">
             <list>
-                <bean class="es.logongas.ix3.security.impl.authorization.AuthorizationProviderImpl" />
+                <bean class="es.logongas.ix3.security.impl.authorization.AuthorizationProviderImplIdentity" />
             </list>
         </property>
     </bean>

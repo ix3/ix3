@@ -16,22 +16,22 @@
 package es.logongas.ix3.model;
 
 /**
- * Relación entre los "Principal" que están incluidos en un grupo
+ * Relación entre los "Identity" que están incluidos en un grupo
  * @author Lorenzo González
  */
 public class GroupMember {
     private int idGroupMember;
     private Group group;
-    private Principal principal;
+    private Identity identity;
     private Integer priority;
 
     public GroupMember() {
     }
 
-    public GroupMember(int idGroupMember, Group group, Principal principal, Integer priority) {
+    public GroupMember(int idGroupMember, Group group, Identity identity, Integer priority) {
         this.idGroupMember = idGroupMember;
         this.group = group;
-        this.principal = principal;
+        this.identity = identity;
         this.priority = priority;
     }
 
@@ -64,17 +64,17 @@ public class GroupMember {
     }
 
     /**
-     * @return the principal
+     * @return the identity
      */
-    public Principal getPrincipal() {
-        return principal;
+    public Identity getIdentity() {
+        return identity;
     }
 
     /**
-     * @param principal the principal to set
+     * @param identity the identity to set
      */
-    public void setPrincipal(Principal principal) {
-        this.principal = principal;
+    public void setIdentity(Identity identity) {
+        this.identity = identity;
     }
 
     /**
