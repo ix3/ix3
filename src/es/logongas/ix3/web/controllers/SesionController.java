@@ -16,12 +16,13 @@
 package es.logongas.ix3.web.controllers;
 
 
+import es.logongas.ix3.model.User;
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.BusinessMessage;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.security.impl.authentication.CredentialImplLoginPassword;
-import es.logongas.ix3.model.User;
 import es.logongas.ix3.security.services.authentication.AuthenticationManager;
+import es.logongas.ix3.security.services.authentication.Principal;
 import es.logongas.ix3.web.services.json.JsonFactory;
 import es.logongas.ix3.web.services.json.JsonWriter;
 import java.io.IOException;
@@ -60,20 +61,20 @@ public class SesionController {
             CredentialImplLoginPassword credentialImplLoginPassword=new CredentialImplLoginPassword(login, password);
 
 
-            User user=authenticationManager.authenticate(credentialImplLoginPassword);
+            Principal principal=authenticationManager.authenticate(credentialImplLoginPassword);
 
-            if (user==null) {
+            if (principal==null) {
                 throw new BusinessException(new BusinessMessage(null, "El usuario o contraseña no son válidos"));
             }
 
             //Creamos la sesión y la el sid
             HttpSession httpSession = request.getSession();
-            httpSession.setAttribute("sid", user.getSid());
+            httpSession.setAttribute("sid", principal.getSid());
 
 
             //Retornamos el user
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(User.class);
-            String datos = jsonWriter.toJson(user);
+            String datos = jsonWriter.toJson(principal);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(datos);
@@ -106,20 +107,20 @@ public class SesionController {
     @RequestMapping(value = {"/session"}, method = RequestMethod.GET, headers = "Accept=application/json")
     public void logged(HttpServletRequest request, HttpServletResponse httpServletResponse) {
         try {
-            User user;
+            Principal principal;
 
             HttpSession httpSession = request.getSession();
             Integer sid = (Integer) httpSession.getAttribute("sid");
 
             if (sid == null) {
-                user = null;
+                principal = null;
             } else {
-                user = authenticationManager.getUserBySID(sid);
+                principal = authenticationManager.getPrincipalBySID(sid);
             }
 
-            if (user != null) {
+            if (principal != null) {
                 JsonWriter jsonWriter = jsonFactory.getJsonWriter(User.class);
-                String datos = jsonWriter.toJson(user);
+                String datos = jsonWriter.toJson(principal);
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_OK);
                 httpServletResponse.setContentType("application/json; charset=UTF-8");

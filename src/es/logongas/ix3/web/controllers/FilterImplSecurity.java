@@ -18,6 +18,7 @@ package es.logongas.ix3.web.controllers;
 import es.logongas.ix3.model.User;
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.security.services.authentication.AuthenticationManager;
+import es.logongas.ix3.security.services.authentication.Principal;
 import es.logongas.ix3.security.services.authorization.AuthorizationManager;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -56,20 +57,23 @@ public class FilterImplSecurity implements Filter {
             String uri = httpServletRequest.getRequestURI();
             String method = httpServletRequest.getMethod();
 
-            User user;
-            Integer sid = (Integer) httpServletRequest.getSession().getAttribute("idUser");
+            Principal principal;
+            Integer sid = (Integer) httpServletRequest.getSession().getAttribute("sid");
             if (sid == null) {
-                user = null;
+                principal = null;
             } else {
                 try {
-                    user = authenticationManager.getUserBySID(sid);
+                    principal = authenticationManager.getPrincipalBySID(sid);
                 } catch (BusinessException ex) {
                     httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     return;
                 }
             }
 
-            if (authorizationManager.authorized(user, null, null, httpServletRequest.getParameterMap())==true) {
+
+
+
+            if (authorizationManager.authorized(principal,"URL", getSecureURI(uri,httpServletRequest.getContextPath()), method, httpServletRequest.getParameterMap())==true) {
                 filterChain.doFilter(servletRequest, servletResponse);
             } else {
                 httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -78,6 +82,28 @@ public class FilterImplSecurity implements Filter {
 
     @Override
     public void destroy() {
+    }
+
+    private String getSecureURI(String uri,String contextPath) {
+        int beginIndex;
+        if (contextPath==null) {
+            beginIndex=0;
+        } else {
+            beginIndex=contextPath.length();
+            if (uri.startsWith(contextPath)==false) {
+                throw new RuntimeException("uri no empieza por '" + contextPath + "':"+uri);
+            }
+        }
+        
+
+
+        String secureURI=uri.substring(beginIndex);
+
+        if (secureURI.startsWith("/")==false) {
+            throw new RuntimeException("secureURI no empieza por '/':"+secureURI);
+        }
+
+        return secureURI;
     }
 
 }
