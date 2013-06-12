@@ -16,6 +16,7 @@
 package es.logongas.ix3.security.impl.authentication;
 
 import es.logongas.ix3.security.services.authentication.Credential;
+import es.logongas.ix3.security.services.authentication.Principal;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -34,8 +35,8 @@ public class AuthenticationProviderImplMoodleTest {
         Credential credential = new CredentialImplLoginPassword("guest", "guest");
         AuthenticationProviderImplMoodle instance = new AuthenticationProviderImplMoodle();
         instance.setMoodleLoginURL("http://www.fpmislata.com/moodle/login/index.php");
-        boolean expResult = false;
-        boolean result = instance.authenticate(credential);
+        Principal expResult = null;
+        Principal result = instance.authenticate(credential);
         assertEquals(expResult, result);
     }
 }
