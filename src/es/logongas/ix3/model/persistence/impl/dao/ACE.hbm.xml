@@ -18,7 +18,7 @@
             <column name="idIdentity"  />
         </many-to-one>
         <property name="secureResourceRegExp"  />
-        <property name="conditionalScript"  />
+        <property name="conditionalScript" type="text" />
         <property name="priority"  />
     </class>
 </hibernate-mapping>

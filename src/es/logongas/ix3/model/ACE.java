@@ -16,16 +16,18 @@
 package es.logongas.ix3.model;
 
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
+import es.logongas.ix3.util.ScriptEvaluator;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import org.hibernate.validator.internal.util.scriptengine.ScriptEvaluator;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
  * @author Lorenzo González
  */
-public class ACE  {
+public class ACE {
+
     private int idACE;
     private ACEType aceType;
     private Permission permission;
@@ -35,9 +37,11 @@ public class ACE  {
     private Integer priority;
 
 
-
     private static final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
     private static final ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
+    private static final ScriptEvaluator scriptEvaluator = new ScriptEvaluator(scriptEngine);
+
+    protected final Log log = LogFactory.getLog(getClass());
 
     public ACE() {
     }
@@ -52,36 +56,30 @@ public class ACE  {
         this.priority = priority;
     }
 
-
-
     @Override
     public String toString() {
-        String cs="";
-        if (conditionalScript!=null) {
-            cs=" WHERE (" + conditionalScript + ")";
+        String cs = "";
+        if (conditionalScript != null) {
+            cs = " WHERE (" + conditionalScript + ")";
         }
-        return aceType + " - " + permission + " => " + secureResourceRegExp  + cs;
+        return aceType + " - " + permission + " => " + secureResourceRegExp + cs;
     }
 
-    public AuthorizationType authorized(String secureResource,Permission permission,Object arguments) {
+    public AuthorizationType authorized(Identity identity, String secureResourceName, Permission permission, Object arguments) {
         AuthorizationType authorizationType;
 
         if (this.permission.equals(permission)) {
-            if (secureResource.matches(secureResourceRegExp)) {
-                if (conditionalScript!=null) {
-                    if (evaluateConditionalScript(arguments,this.permission.getSecureResourceType().getName().toLowerCase())==true) {
-                        authorizationType=aceTypeToAuthorizationType(aceType);
-                    } else {
-                        authorizationType=AuthorizationType.Abstain;
-                    }
+            if (secureResourceName.matches(secureResourceRegExp)) {
+                if (evaluateConditionalScript(this, identity, secureResourceName, arguments)==true) {
+                    authorizationType = aceTypeToAuthorizationType(aceType);
                 } else {
-                    authorizationType=aceTypeToAuthorizationType(aceType);
+                    authorizationType = AuthorizationType.Abstain;
                 }
             } else {
-               authorizationType=AuthorizationType.Abstain;
+                authorizationType = AuthorizationType.Abstain;
             }
         } else {
-            authorizationType=AuthorizationType.Abstain;
+            authorizationType = AuthorizationType.Abstain;
         }
 
         return authorizationType;
@@ -94,17 +92,36 @@ public class ACE  {
             case Deny:
                 return AuthorizationType.AccessDeny;
             default:
-                throw new RuntimeException("El tipo de ACE es desconocido:"+aceType);
+                throw new RuntimeException("El tipo de ACE es desconocido:" + aceType);
         }
     }
 
-    private boolean evaluateConditionalScript(Object arguments,String argumentsObjectName) {
-        ScriptEvaluator scriptEvaluator=new ScriptEvaluator(scriptEngine);
-        try {
-            return (Boolean)scriptEvaluator.evaluate(conditionalScript, arguments, argumentsObjectName);
-        } catch (ScriptException ex) {
-            throw new RuntimeException("Fallo al evaluar el Script:"+conditionalScript,ex);
+    private boolean evaluateConditionalScript(ACE ace, Identity identity, String secureResourceName, Object arguments) {
+        Object result;
+
+
+        //Si no hay Script retirnamos 'true'
+        if ((conditionalScript==null) || (conditionalScript.trim().length()==0)) {
+            return true;
         }
+
+        String functionName = "conditionalScript_" + ace.getIdACE()+"_"+Math.abs(conditionalScript.hashCode());
+
+        //Si aun no se ha compilado el Script lo hacemos ahora
+        if (((Boolean) scriptEvaluator.evaluate("typeof " + functionName + "=='function'")) == false) {
+            scriptEvaluator.evaluate("function " + functionName + "(ace,identity,secureResourceName,arguments) {" + ace.getConditionalScript() + "}");
+            log.debug("Compilando código del ACE " +  ace.getIdACE()+ ":"+ace.getConditionalScript());
+        }
+
+        result =scriptEvaluator.invokeFunction(functionName, ace, identity, secureResourceName, arguments);
+        if (result==null) {
+            throw new RuntimeException("El método no puede retornal null:"+conditionalScript);
+        }
+        if (!(result instanceof Boolean)) {
+            throw new RuntimeException("El método no ha retornado un boolean:"+conditionalScript + " ," + result + " , " + result.getClass().getName());
+        }
+
+        return (Boolean)result;
     }
 
     /**

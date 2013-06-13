@@ -42,10 +42,14 @@ public class Identity implements es.logongas.ix3.security.services.authenticatio
 
 
     public AuthorizationType authorized(String secureResource,Permission permission,Object arguments) {
+        return doAuthorized(this, secureResource, permission, arguments);
+    }
+
+    protected AuthorizationType doAuthorized(Identity rootIdentity,String secureResource,Permission permission,Object arguments) {
 
         //Los ACE deben estar ordenador por prioridad
         for(ACE ace:acl) {
-            AuthorizationType authorizationType=ace.authorized(secureResource, permission, arguments);
+            AuthorizationType authorizationType=ace.authorized(rootIdentity,secureResource, permission, arguments);
 
             if (authorizationType==AuthorizationType.AccessAllow) {
                 return authorizationType;
@@ -56,7 +60,7 @@ public class Identity implements es.logongas.ix3.security.services.authenticatio
 
         //Los Grupos deben estar ordenador por prioridad
         for(GroupMember groupMember:memberOf) {
-            AuthorizationType authorizationType=groupMember.getGroup().authorized(secureResource, permission, arguments);
+            AuthorizationType authorizationType=groupMember.getGroup().doAuthorized(rootIdentity,secureResource, permission, arguments);
 
             if (authorizationType==AuthorizationType.AccessAllow) {
                 return authorizationType;
@@ -68,6 +72,7 @@ public class Identity implements es.logongas.ix3.security.services.authenticatio
 
         return AuthorizationType.Abstain;
     }
+
 
     @Override
     public Serializable getSid() {
