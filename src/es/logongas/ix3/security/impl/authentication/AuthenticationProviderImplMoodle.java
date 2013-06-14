@@ -29,6 +29,8 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -49,7 +51,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class AuthenticationProviderImplMoodle implements AuthenticationProvider {
 
-    private String moodleLoginURL="http://www.fpmislata.com/moodle/login/index.php";
+    private String moodleLoginURL = "http://www.fpmislata.com/moodle/login/index.php";
+    private String fqcnIdentity=Identity.class.getName();
     @Autowired
     DAOFactory daoFactory;
 
@@ -90,11 +93,13 @@ public class AuthenticationProviderImplMoodle implements AuthenticationProvider 
 
             httpclient2.execute(httpGet);
 
-            GenericDAO<Identity,Integer> genericDAO=daoFactory.getDAO(Identity.class);
-            Identity identity=genericDAO.readByNaturalKey(credentialImplLoginPassword.getLogin());
+            GenericDAO<Identity, Integer> genericDAO = daoFactory.getDAO(Identity.class);
+            Identity identity = genericDAO.readByNaturalKey(credentialImplLoginPassword.getLogin());
 
             return identity;
 
+        } catch (BusinessException ex) {
+            return null;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -102,10 +107,17 @@ public class AuthenticationProviderImplMoodle implements AuthenticationProvider 
 
     @Override
     public Principal getPrincipalBySID(Serializable sid) throws BusinessException {
-        Integer idIdentity=(Integer)sid;
-        GenericDAO<Identity,Integer> genericDAO=daoFactory.getDAO(Identity.class);
+        Integer idIdentity = (Integer) sid;
+        GenericDAO<Identity, Integer> genericDAO = daoFactory.getDAO(getClassIdentity());
 
         return genericDAO.read(idIdentity);
+    }
+
+    protected Principal getPrincipalByLogin(String login) throws BusinessException {
+        GenericDAO<Identity, Integer> genericDAO = daoFactory.getDAO(getClassIdentity());
+        Identity identity = genericDAO.readByNaturalKey(login);
+
+        return identity;
     }
 
     private String inputStreamToString(InputStream inputStream) {
@@ -136,4 +148,27 @@ public class AuthenticationProviderImplMoodle implements AuthenticationProvider 
     public void setMoodleLoginURL(String moodleLoginURL) {
         this.moodleLoginURL = moodleLoginURL;
     }
+
+    /**
+     * @return the fqcnIdentity
+     */
+    public String getFqcnIdentity() {
+        return fqcnIdentity;
+    }
+
+    /**
+     * @param fqcnIdentity the fqcnIdentity to set
+     */
+    public void setFqcnIdentity(String fqcnIdentity) {
+        this.fqcnIdentity = fqcnIdentity;
+    }
+
+    private Class getClassIdentity() {
+        try {
+            return Class.forName(fqcnIdentity);
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
 }
