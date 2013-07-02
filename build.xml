@@ -7,14 +7,14 @@
 <!-- the Compile on Save feature is turned off for the project. -->
 <!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
 <!-- in the project's Project Properties dialog box.-->
-<project name="ix3security" default="default" basedir=".">
+<project name="ix3security" default="default" basedir="." xmlns:sonar="antlib:org.sonar.ant">
     <description>Builds, tests, and runs the project ix3security.</description>
     <import file="nbproject/build-impl.xml"/>
     <!--
 
-    There exist several targets which are by default empty and which can be 
-    used for execution of your tasks. These targets are usually executed 
-    before and after some main targets. They are: 
+    There exist several targets which are by default empty and which can be
+    used for execution of your tasks. These targets are usually executed
+    before and after some main targets. They are:
 
       -pre-init:                 called before initialization of project properties
       -post-init:                called after initialization of project properties
@@ -40,12 +40,12 @@
             </obfuscate>
         </target>
 
-    For list of available properties check the imported 
-    nbproject/build-impl.xml file. 
+    For list of available properties check the imported
+    nbproject/build-impl.xml file.
 
 
     Another way to customize the build is by overriding existing main targets.
-    The targets of interest are: 
+    The targets of interest are:
 
       -init-macrodef-javac:     defines macro for javac compilation
       -init-macrodef-junit:     defines macro for junit execution
@@ -53,7 +53,7 @@
       -init-macrodef-java:      defines macro for class execution
       -do-jar-with-manifest:    JAR building (if you are using a manifest)
       -do-jar-without-manifest: JAR building (if you are not using a manifest)
-      run:                      execution of project 
+      run:                      execution of project
       -javadoc-build:           Javadoc generation
       test-report:              JUnit report generation
 
@@ -65,10 +65,50 @@
             </exec>
         </target>
 
-    Notice that the overridden target depends on the jar target and not only on 
-    the compile target as the regular run target does. Again, for a list of available 
+    Notice that the overridden target depends on the jar target and not only on
+    the compile target as the regular run target does. Again, for a list of available
     properties which you can use, check the target you are overriding in the
-    nbproject/build-impl.xml file. 
+    nbproject/build-impl.xml file.
 
     -->
+    <target name="-configureAnt">
+        <echo>Configurando Ant</echo>
+
+        <property name="libAnt.path" value="libant" />
+
+        <path id="libAnt.classpath">
+            <fileset dir="${libAnt.path}">
+                <include name="**/*.jar" />
+            </fileset>
+            <fileset dir="lib">
+                <include name="**/*.jar" />
+            </fileset>
+        </path>
+
+        <!-- Propiedades del proyecto -->
+        <property file="nbproject/project.properties"/>
+
+
+    </target>
+
+
+
+    <target name="sonar" depends="jar,-configureAnt">
+        <taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
+            <!-- Update the following line, or put the "sonar-ant-task-*.jar" file in your "$HOME/.ant/lib" folder -->
+            <classpath path="${libAnt.path}/sonar-ant-task-2.1.jar" />
+        </taskdef>
+
+        <property name="sonar.host.url" value="http://localhost/sonar" />
+        <property name="sonar.jdbc.url" value="jdbc:mysql://localhost:3306/sonar?useUnicode=true&amp;characterEncoding=utf8" />
+        <property name="sonar.jdbc.username" value="sonar" />
+        <property name="sonar.jdbc.password" value="sonar" />
+        <property name="sonar.projectKey" value="es.logongas.ix3:ix3-security" />
+        <property name="sonar.projectName" value="ix3 Security" />
+        <property name="sonar.projectVersion" value="1.0" />
+        <property name="sonar.language" value="java" />
+        <property name="sonar.sources" value="${src.dir}" />
+        <property name="sonar.binaries" value="${dist.dir}" />
+        <sonar:sonar />
+    </target>
 </project>
