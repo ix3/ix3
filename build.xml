@@ -93,7 +93,7 @@
 
 
 
-    <target name="sonar" depends="dist,-configureAnt">
+    <target name="sonar" depends="default,-configureAnt">
         <taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
             <!-- Update the following line, or put the "sonar-ant-task-*.jar" file in your "$HOME/.ant/lib" folder -->
             <classpath path="${libAnt.path}/sonar-ant-task-2.1.jar" />
