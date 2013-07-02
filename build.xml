@@ -108,7 +108,7 @@
         <property name="sonar.projectVersion" value="1.0" />
         <property name="sonar.language" value="java" />
         <property name="sonar.sources" value="${src.dir}" />
-        <property name="sonar.binaries" value="${basedir}/${dist.jar}" />
+        <property name="sonar.binaries" value="${dist.dir}" />
         <sonar:sonar />
     </target>
 
