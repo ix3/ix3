@@ -108,4 +108,34 @@ public class BusinessException extends Exception {
         }
 
     }
+    
+    private String getDetailMessage() {
+        StringBuilder sb=new StringBuilder();
+        
+        if (businessMessages!=null) {
+            for(BusinessMessage businessMessage:businessMessages) {
+                if (businessMessage!=null) {
+                    try {
+                        sb.append(businessMessage.toString());
+                    } catch (Exception ex) {
+                       sb.append(ex.getMessage());
+                    }
+                    sb.append("|");
+                }
+            }
+        }
+        
+        return sb.toString();
+    }
+
+    @Override
+    public String getMessage() {
+        return getDetailMessage();
+    }    
+    
+    @Override
+    public String toString() {
+        return getDetailMessage();
+    }
+    
 }
