@@ -18,6 +18,7 @@ package es.logongas.ix3.persistence.impl.hibernate.metadata;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import java.util.Map;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
@@ -41,7 +42,12 @@ public class MetaDataFactoryImplHibernate implements MetaDataFactory {
             return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory);
         }
     }
-
+    
+    @Override
+    public MetaData getMetaData(Object obj) {
+        return getMetaData(Hibernate.getClass(obj));
+    }
+    
     @Override
     public MetaData getMetaData(String entityName) {
         ClassMetadata classMetadata=getClassMetadata(entityName);
