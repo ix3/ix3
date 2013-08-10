@@ -86,7 +86,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             return jsonMap;
         } else {
             //Es simplemente un objeto "simple"
-            MetaData metaData = metaDataFactory.getMetaData(obj.getClass());
+            MetaData metaData = metaDataFactory.getMetaData(obj);
 
             if (metaData != null) {
                 Map<String, Object> jsonMap = getMapFromEntity(obj, metaData);
