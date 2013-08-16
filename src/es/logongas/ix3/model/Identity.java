@@ -24,6 +24,7 @@ import java.util.Set;
  * @author Lorenzo González
  */
 public class Identity implements es.logongas.ix3.security.services.authentication.Principal {
+
     private int idIdentity;
     private String login;
     private String name;
@@ -39,47 +40,45 @@ public class Identity implements es.logongas.ix3.security.services.authenticatio
         this.name = name;
     }
 
-
-
-    public AuthorizationType authorized(String secureResource,Permission permission,Object arguments) {
+    public AuthorizationType authorized(String secureResource, Permission permission, Object arguments) {
         return doAuthorized(this, secureResource, permission, arguments);
     }
 
-    protected AuthorizationType doAuthorized(Identity rootIdentity,String secureResource,Permission permission,Object arguments) {
+    protected AuthorizationType doAuthorized(Identity rootIdentity, String secureResource, Permission permission, Object arguments) {
 
         //Los ACE deben estar ordenador por prioridad
-        for(ACE ace:acl) {
-            AuthorizationType authorizationType=ace.authorized(rootIdentity,secureResource, permission, arguments);
+        if (acl != null) {
+            for (ACE ace : acl) {
+                AuthorizationType authorizationType = ace.authorized(rootIdentity, secureResource, permission, arguments);
 
-            if (authorizationType==AuthorizationType.AccessAllow) {
-                return authorizationType;
-            } else if (authorizationType==AuthorizationType.AccessDeny) {
-                return authorizationType;
+                if (authorizationType == AuthorizationType.AccessAllow) {
+                    return authorizationType;
+                } else if (authorizationType == AuthorizationType.AccessDeny) {
+                    return authorizationType;
+                }
             }
         }
 
         //Los Grupos deben estar ordenador por prioridad
-        for(GroupMember groupMember:memberOf) {
-            AuthorizationType authorizationType=groupMember.getGroup().doAuthorized(rootIdentity,secureResource, permission, arguments);
+        if (memberOf != null) {
+            for (GroupMember groupMember : memberOf) {
+                AuthorizationType authorizationType = groupMember.getGroup().doAuthorized(rootIdentity, secureResource, permission, arguments);
 
-            if (authorizationType==AuthorizationType.AccessAllow) {
-                return authorizationType;
-            } else if (authorizationType==AuthorizationType.AccessDeny) {
-                return authorizationType;
+                if (authorizationType == AuthorizationType.AccessAllow) {
+                    return authorizationType;
+                } else if (authorizationType == AuthorizationType.AccessDeny) {
+                    return authorizationType;
+                }
             }
         }
 
-
         return AuthorizationType.Abstain;
     }
-
 
     @Override
     public Serializable getSid() {
         return idIdentity;
     }
-
-
 
     /**
      * @return the idIdentity
@@ -156,6 +155,4 @@ public class Identity implements es.logongas.ix3.security.services.authenticatio
     public String toString() {
         return getName();
     }
-
-
 }
