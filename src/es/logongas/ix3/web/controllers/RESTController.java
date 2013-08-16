@@ -65,7 +65,7 @@ public class RESTController {
     JsonFactory jsonFactory;
     private static Log log = LogFactory.getLog(RESTController.class);
 
-    @RequestMapping(value = {"/{entityName}/metadata"}, method = RequestMethod.GET, headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/metadata"}, method = RequestMethod.GET, produces = "application/json")
     public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -90,7 +90,7 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.GET, headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.GET, produces = "application/json")
     public void search(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -149,7 +149,7 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/namedsearch"}, method = RequestMethod.GET, headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/namedsearch"}, method = RequestMethod.GET, produces = "application/json")
     public void namedSearch(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -249,7 +249,7 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET,  produces = "application/json")
     public void read(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -292,7 +292,7 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/create"}, method = RequestMethod.GET, headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/create"}, method = RequestMethod.GET, produces = "application/json")
     public void create(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -336,7 +336,7 @@ public class RESTController {
 
     }
 
-    @RequestMapping(value = {"/{entityName}/"}, method = RequestMethod.POST, consumes = "application/json", headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.POST, consumes = "application/json",produces = "application/json")
     public void insert(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @RequestBody String jsonIn) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -381,7 +381,7 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json", headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
     public void update(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @RequestBody String jsonIn) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -427,7 +427,7 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE, consumes = "application/json", headers = "Accept=application/json")
+    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
     public void delete(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
