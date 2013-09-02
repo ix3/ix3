@@ -27,6 +27,9 @@ import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.web.services.json.JsonFactory;
 import es.logongas.ix3.web.services.json.JsonReader;
 import es.logongas.ix3.web.services.json.JsonWriter;
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -292,6 +295,65 @@ public class RESTController {
         }
     }
 
+    @RequestMapping(value = {"/{entityName}/{id}/{child}"}, method = RequestMethod.GET,  produces = "application/json")
+    public void readChild(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @PathVariable("child") String child) {
+        try {
+            MetaData metaData = metaDataFactory.getMetaData(entityName);
+            if (metaData == null) {
+                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+            }
+            if (metaData.getPropertiesMetaData().get(child)==null) {
+                throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "' no existe la propiedad '" + child +"'"));
+            }
+            if (metaData.getPropertiesMetaData().get(child).isCollection()==false) {
+                throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "'  la propiedad '" + child + "' no es una colección"));
+            }
+            
+            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+            JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
+
+            Object entity = genericDAO.read(id);
+            Object childData;
+            if (entity!=null) {
+                childData=getValueFromBean(entity,child);
+            } else {
+                //Si no hay datos , retornamos una lista vacia
+                childData=new ArrayList();
+            }
+            String jsonOut = jsonWriter.toJson(childData);
+
+            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+            httpServletResponse.setContentType("application/json; charset=UTF-8");
+            httpServletResponse.getWriter().println(jsonOut);
+        } catch (BusinessException ex) {
+            try {
+                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
+
+                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                httpServletResponse.setContentType("application/json; charset=UTF-8");
+                httpServletResponse.getWriter().println(jsonOut);
+            } catch (Exception ex2) {
+                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                httpServletResponse.setContentType("text/plain");
+                try {
+                    ex.printStackTrace(httpServletResponse.getWriter());
+                } catch (Exception ex3) {
+                    log.error("Falló al imprimir la traza", ex3);
+                }
+            }
+        } catch (Exception ex) {
+            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            httpServletResponse.setContentType("text/plain");
+            try {
+                ex.printStackTrace(httpServletResponse.getWriter());
+            } catch (Exception ex2) {
+                log.error("Falló al imprimir la traza", ex2);
+            }
+        }
+    }
+    
+    
+    
     @RequestMapping(value = {"/{entityName}/create"}, method = RequestMethod.GET, produces = "application/json")
     public void create(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
@@ -427,7 +489,7 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE)
     public void delete(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -518,4 +580,34 @@ public class RESTController {
 
         return orders;
     }
+    
+    /**
+     * Obtiene el valor de la propiedad de un Bean
+     *
+     * @param obj El objeto Bean
+     * @param propertyName El nombre de la propiedad
+     * @return El valor de la propiedad
+     */
+    private Object getValueFromBean(Object obj, String propertyName) {
+        try {
+            BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
+            PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+            Method readMethod = null;
+            for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                if (propertyDescriptor.getName().equals(propertyName)) {
+                    readMethod = propertyDescriptor.getReadMethod();
+                }
+            }
+
+            if (readMethod == null) {
+                throw new RuntimeException("No existe la propiedad:" + propertyName);
+            }
+
+            return readMethod.invoke(obj);
+
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }    
 }
