@@ -15,9 +15,11 @@
  */
 package es.logongas.ix3.model;
 
+import es.logongas.ix3.persistence.services.dao.Caption;
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
 import java.io.Serializable;
 import java.util.Set;
+import org.hibernate.validator.constraints.NotBlank;
 
 /**
  *
@@ -26,7 +28,11 @@ import java.util.Set;
 public class Identity implements es.logongas.ix3.security.services.authentication.Principal {
 
     private int idIdentity;
+    @NotBlank
+    @Caption("Identificador")
     private String login;
+    @NotBlank
+    @Caption("Nombre")
     private String name;
     private Set<ACE> acl;
     private Set<GroupMember> memberOf;
