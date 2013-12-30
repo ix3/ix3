@@ -16,11 +16,8 @@
 package es.logongas.ix3.web.impl.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import es.logongas.ix3.persistence.services.metadata.CollectionType;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.persistence.services.metadata.MetaType;
@@ -29,12 +26,13 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -154,17 +152,32 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 }
             } else {
                 switch (propertyMetaData.getCollectionType()) {
-                    case List:
+                    case List: {
+                        if (propertyMetaData.isCollectionLazy() == false) {
+                            Object rawValue = getValueFromBean(obj, propertyName);
+                            List list = (List) rawValue;
+                            List jsonList = new ArrayList();
+                            for (Object element : list) {
+                                jsonList.add(getJsonObjectFromObjectFromCollection(element,propertyMetaData));
+                            }
+
+                            value = jsonList;
+                        } else {
+                            //Es una colección y Lazy así que añadimos un array vacio
+                            value = new ArrayList();
+                        }
+                        break;
+                    }
                     case Set: {
                         if (propertyMetaData.isCollectionLazy() == false) {
                             Object rawValue = getValueFromBean(obj, propertyName);
-                            Collection collection = (Collection) rawValue;
-                            List list = new ArrayList();
-                            for (Object element : collection) {
-                                list.add(getJsonObjectFromObjectFromCollection(element,propertyMetaData));
+                            Set set = (Set) rawValue;
+                            Set jsonSet = new HashSet();
+                            for (Object element : set) {
+                                jsonSet.add(getJsonObjectFromObjectFromCollection(element,propertyMetaData));
                             }
 
-                            value = list;
+                            value = jsonSet;
                         } else {
                             //Es una colección y Lazy así que añadimos un array vacio
                             value = new ArrayList();

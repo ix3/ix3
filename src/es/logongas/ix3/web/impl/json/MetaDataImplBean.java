@@ -17,7 +17,6 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -30,11 +29,11 @@ import java.util.Set;
  */
 public class MetaDataImplBean implements MetaData {
 
-    private Class clazz;
-    private boolean read;
-    private boolean write;
-    private CollectionType collectionType;
-    private MetaDataFactory metaDataFactory;
+    private final Class clazz;
+    private final boolean read;
+    private final boolean write;
+    private final CollectionType collectionType;
+    private final MetaDataFactory metaDataFactory;
 
     public MetaDataImplBean(Class clazz, CollectionType collectionType, boolean read, boolean write, MetaDataFactory metaDataFactory) {
         this.clazz = clazz;
@@ -70,7 +69,6 @@ public class MetaDataImplBean implements MetaData {
                 return propertiesMetaData;
             }
 
-
             BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
 
@@ -80,34 +78,32 @@ public class MetaDataImplBean implements MetaData {
 
                 MetaData metaData = metaDataFactory.getMetaData(propertyClass);
                 if (metaData == null) {
-                    CollectionType collectionType;
+                    CollectionType newCollectionType;
                     Class realPropertyClass;
-
-                    if (Set.class.isAssignableFrom(propertyClass)) {
-                        collectionType = CollectionType.Set;
+                    
+                    if (propertyClass.isAssignableFrom(Set.class)) {
+                        newCollectionType = CollectionType.Set;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
-                        metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
-                    } else if (List.class.isAssignableFrom(propertyClass)) {
-                        collectionType = CollectionType.List;
+                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory);
+                    } else if (propertyClass.isAssignableFrom(List.class)) {
+                        newCollectionType = CollectionType.List;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
-                        metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
-                    } else if (Map.class.isAssignableFrom(propertyClass)) {
-                        collectionType = CollectionType.Map;
+                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory);
+                    } else if (propertyClass.isAssignableFrom(Map.class)) {
+                        newCollectionType = CollectionType.Map;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
-                        metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
+                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory);
                     } else {
                         //No es una colección
-                        collectionType = null;
+                        newCollectionType = null;
                         realPropertyClass = propertyClass;
 
                         metaData = metaDataFactory.getMetaData(realPropertyClass);
                         if (metaData == null) {
-                            metaData = new MetaDataImplBean(realPropertyClass, collectionType, read, write, metaDataFactory);
+                            metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory);
                         }
 
                     }
-
-
 
                 }
 
@@ -118,7 +114,8 @@ public class MetaDataImplBean implements MetaData {
                 if ((propertyDescriptor.getWriteMethod() == null) && (write == true)) {
                     add = false;
                 }
-                if (propertyName.equals("class")) {
+                if (metaData.getType().getName().equals("java.lang.Class")) {
+                    //Nunca se añaden propiedades que retornan Objetos "java.lang.Class" pq no son serializables por JSON
                     add = false;
                 }
 
@@ -172,7 +169,7 @@ public class MetaDataImplBean implements MetaData {
         } else {
 
             Class returnClass = method.getReturnType();
-            if (Collection.class.isAssignableFrom(returnClass)) {
+            if (returnClass.isAssignableFrom(List.class) || returnClass.isAssignableFrom(Set.class)) {
                 Type returnType = method.getGenericReturnType();
                 if (returnType instanceof ParameterizedType) {
                     ParameterizedType paramType = (ParameterizedType) returnType;
@@ -181,7 +178,7 @@ public class MetaDataImplBean implements MetaData {
                 } else {
                     collectionClass = Object.class;
                 }
-            } else if (Map.class.isAssignableFrom(returnClass)) {
+            } else if (returnClass.isAssignableFrom(Map.class)) {
                 Type returnType = method.getGenericReturnType();
                 if (returnType instanceof ParameterizedType) {
                     ParameterizedType paramType = (ParameterizedType) returnType;
