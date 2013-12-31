@@ -21,9 +21,10 @@ import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
 import es.logongas.ix3.persistence.services.dao.OrderDirection;
 import es.logongas.ix3.persistence.services.dao.Order;
-import es.logongas.ix3.persistence.services.dao.database.ConstraintViolation;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
+import es.logongas.ix3.web.controllers.metadata.Metadata;
+import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
 import es.logongas.ix3.web.services.json.JsonFactory;
 import es.logongas.ix3.web.services.json.JsonReader;
 import es.logongas.ix3.web.services.json.JsonWriter;
@@ -75,9 +76,11 @@ public class RESTController {
             if (metaData == null) {
                 throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter(MetaData.class);
+            
+            Metadata metadata=(new MetadataFactory()).getMetadata(metaData);
+            JsonWriter jsonWriter = jsonFactory.getJsonWriter();
 
-            String jsonOut = jsonWriter.toJson(metaData);
+            String jsonOut = jsonWriter.toJson(metadata);
 
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
