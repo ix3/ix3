@@ -5,6 +5,7 @@
 package es.logongas.ix3.web.impl.json;
 
 import es.logongas.ix3.persistence.services.metadata.CollectionType;
+import es.logongas.ix3.persistence.services.metadata.Format;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.persistence.services.metadata.MetaType;
@@ -34,13 +35,15 @@ public class MetaDataImplBean implements MetaData {
     private final boolean write;
     private final CollectionType collectionType;
     private final MetaDataFactory metaDataFactory;
+    private final String propertyName;
 
-    public MetaDataImplBean(Class clazz, CollectionType collectionType, boolean read, boolean write, MetaDataFactory metaDataFactory) {
+    public MetaDataImplBean(Class clazz, CollectionType collectionType, boolean read, boolean write, MetaDataFactory metaDataFactory,String propertyName) {
         this.clazz = clazz;
         this.collectionType = collectionType;
         this.read = read;
         this.write = write;
         this.metaDataFactory = metaDataFactory;
+        this.propertyName=propertyName;
     }
 
     @Override
@@ -86,15 +89,15 @@ public class MetaDataImplBean implements MetaData {
                     if (propertyClass.isAssignableFrom(Set.class)) {
                         newCollectionType = CollectionType.Set;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
-                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory);
+                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory,propertyName);
                     } else if (propertyClass.isAssignableFrom(List.class)) {
                         newCollectionType = CollectionType.List;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
-                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory);
+                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory,propertyName);
                     } else if (propertyClass.isAssignableFrom(Map.class)) {
                         newCollectionType = CollectionType.Map;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
-                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory);
+                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory,propertyName);
                     } else {
                         //No es una colección
                         newCollectionType = null;
@@ -102,7 +105,7 @@ public class MetaDataImplBean implements MetaData {
 
                         metaData = metaDataFactory.getMetaData(realPropertyClass);
                         if (metaData == null) {
-                            metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory);
+                            metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory,propertyName);
                         }
 
                     }
@@ -194,5 +197,50 @@ public class MetaDataImplBean implements MetaData {
             }
         }
         return collectionClass;
+    }
+
+    @Override
+    public String getPropertyName() {
+        return this.propertyName;
+    }
+
+    @Override
+    public String getCaption() {
+        return getPropertyName();
+    }
+
+    @Override
+    public boolean isRequired() {
+        return false;
+    }
+
+    @Override
+    public long getMinimum() {
+        return 0L;
+    }
+
+    @Override
+    public long getMaximum() {
+        return Long.MAX_VALUE;
+    }
+
+    @Override
+    public int getMinLength() {
+        return 0;
+    }
+
+    @Override
+    public int getMaxLength() {
+        return Integer.MAX_VALUE;
+    }
+
+    @Override
+    public String getPattern() {
+        return null;
+    }
+
+    @Override
+    public Format getFormat() {
+        return null;
     }
 }

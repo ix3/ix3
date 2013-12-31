@@ -16,6 +16,7 @@
 
 package es.logongas.ix3.web.controllers.metadata;
 
+import es.logongas.ix3.persistence.services.metadata.Format;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,12 +30,12 @@ public class Property {
     private Type type;
     private String className;//Solo hay valor aqui si type==OBJECT
 
-    private boolean isRequired;
-    private boolean isKey;
-    private boolean isNaturalKey;
+    private boolean required;
+    private boolean key;
+    private boolean naturalKey;
     private Map<String,Property> properties=new LinkedHashMap<String, Property>(); //Solo hay valor aqui si type==OBJECT
-    private int minimum;
-    private int maximum ;
+    private Long minimum;
+    private Long maximum ;
     private int minLength;
     private int maxLength;
     private String pattern;
@@ -75,45 +76,45 @@ public class Property {
     }
 
     /**
-     * @return the isRequired
+     * @return the required
      */
-    public boolean isIsRequired() {
-        return isRequired;
+    public boolean isRequired() {
+        return required;
     }
 
     /**
-     * @param isRequired the isRequired to set
+     * @param required the required to set
      */
-    public void setIsRequired(boolean isRequired) {
-        this.isRequired = isRequired;
+    public void setRequired(boolean required) {
+        this.required = required;
     }
 
     /**
-     * @return the isKey
+     * @return the key
      */
-    public boolean isIsKey() {
-        return isKey;
+    public boolean isKey() {
+        return key;
     }
 
     /**
-     * @param isKey the isKey to set
+     * @param key the key to set
      */
-    public void setIsKey(boolean isKey) {
-        this.isKey = isKey;
+    public void setKey(boolean key) {
+        this.key = key;
     }
 
     /**
-     * @return the isNaturalKey
+     * @return the naturalKey
      */
-    public boolean isIsNaturalKey() {
-        return isNaturalKey;
+    public boolean isNaturalKey() {
+        return naturalKey;
     }
 
     /**
-     * @param isNaturalKey the isNaturalKey to set
+     * @param naturalKey the naturalKey to set
      */
-    public void setIsNaturalKey(boolean isNaturalKey) {
-        this.isNaturalKey = isNaturalKey;
+    public void setNaturalKey(boolean naturalKey) {
+        this.naturalKey = naturalKey;
     }
 
     /**
@@ -133,28 +134,28 @@ public class Property {
     /**
      * @return the minimum
      */
-    public int getMinimum() {
+    public Long getMinimum() {
         return minimum;
     }
 
     /**
      * @param minimum the minimum to set
      */
-    public void setMinimum(int minimum) {
+    public void setMinimum(Long minimum) {
         this.minimum = minimum;
     }
 
     /**
      * @return the maximum
      */
-    public int getMaximum() {
+    public Long getMaximum() {
         return maximum;
     }
 
     /**
      * @param maximum the maximum to set
      */
-    public void setMaximum(int maximum) {
+    public void setMaximum(Long maximum) {
         this.maximum = maximum;
     }
 
@@ -283,4 +284,11 @@ public class Property {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    @Override
+    public String toString() {
+        return this.getLabel();
+    }
+    
+    
 }

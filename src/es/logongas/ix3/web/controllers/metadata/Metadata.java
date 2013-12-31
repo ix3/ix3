@@ -84,4 +84,11 @@ public class Metadata {
     public void setProperties(Map<String,Property> properties) {
         this.properties = properties;
     }
+
+    @Override
+    public String toString() {
+        return this.title;
+    }
+    
+    
 }

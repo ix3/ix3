@@ -70,22 +70,22 @@ public class MetadataFactory {
             property.setValues(getValuesFromEnum(metaData.getType()));
         }
         
-/*
-        property.isRequired;
-        property.isKey;
-        property.isNaturalKey;
-        property.minimum;
-        property.maximum;
-        property.minLength;
-        property.maxLength;
-        property.pattern; //Para los Strings si es una URL o un EMAIL, etc.
-        property.format;
-        property.urlValues; //las propiedades values o urlValues son excluyentes
-        property.dependProperties = new ArrayList<String>(); //Solo está este valor si urlValues!=null
 
-        property.label = metaData.;
-        property.description;
-*/
+        property.setRequired(metaData.isRequired());
+        property.setMinimum(metaData.getMinimum());
+        property.setMaximum(metaData.getMaximum());
+        property.setMinLength(metaData.getMinLength());
+        property.setMaxLength(metaData.getMaxLength());
+        property.setPattern(metaData.getPattern());
+        property.setFormat(metaData.getFormat());
+        //property.urlValues; //las propiedades values o urlValues son excluyentes
+        //property.dependProperties = new ArrayList<String>(); //Solo está este valor si urlValues!=null
+        //property.setKey(metadata.);
+        //property.setNaturalKey(metadata.);
+        
+        property.setLabel(metaData.getCaption());
+        property.setDescription(metaData.getCaption());
+
         
         return property;
     }

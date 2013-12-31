@@ -94,7 +94,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 Object jsonValue;
 
                 //Como no es un objeto de negocio obtenemos los metadatos mediante reflection
-                metaData = new MetaDataImplBean(obj.getClass(), null, true, false, metaDataFactory);
+                metaData = new MetaDataImplBean(obj.getClass(), null, true, false, metaDataFactory,null);
                 if (metaData.getMetaType() == MetaType.Scalar) {
                     jsonValue = obj;
                 } else {

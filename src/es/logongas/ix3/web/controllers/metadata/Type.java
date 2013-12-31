@@ -29,8 +29,7 @@ public enum Type {
     INTEGER,
     NUMBER,
     BOOLEAN,
-    DATE,
-    DATETIME;
+    DATE;
     
     public static Type getTypeFromClass(Class clazz) {
         Type type;
