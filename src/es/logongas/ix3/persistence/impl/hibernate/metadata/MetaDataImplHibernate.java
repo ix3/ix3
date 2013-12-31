@@ -15,12 +15,22 @@
  */
 package es.logongas.ix3.persistence.impl.hibernate.metadata;
 
+import es.logongas.ix3.persistence.services.constraints.Date;
+import es.logongas.ix3.persistence.services.constraints.Time;
+import es.logongas.ix3.persistence.services.dao.Caption;
+import es.logongas.ix3.persistence.services.metadata.Format;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaType;
+import es.logongas.ix3.util.ReflectionAnnotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
@@ -29,6 +39,10 @@ import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.Type;
+import org.hibernate.validator.constraints.Email;
+import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.URL;
 
 /**
  *
@@ -36,25 +50,40 @@ import org.hibernate.type.Type;
  */
 public class MetaDataImplHibernate implements MetaData {
 
-    private static Map<Type, MetaData> cache = new ConcurrentHashMap<Type, MetaData>();
-    private SessionFactory sessionFactory;
-    private Class entityType = null;
-    private Type type = null;
-
     //No usar directamente esta propiedad sino usar el método getPropertiesMetaData()
     private Map<String, MetaData> metaDatas = null;
+    
+    private final SessionFactory sessionFactory;
+    private final Class entityType;
+    private final Type type;
+    private final String propertyName;
+    private final MetaData parentMetaData;
 
-    protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory) {
+    private boolean required;
+    private String caption;
+    private long minimum;
+    private long maximum;
+    private int minLength;
+    private int maxLength;
+    private String pattern;
+    private Format format;
+
+    protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory, String propertyName,MetaData parentMetaData) {
         this.sessionFactory = sessionFactory;
         this.entityType = entityType;
         this.type = null;
-
+        this.propertyName = propertyName;
+        this.parentMetaData=parentMetaData;
+        analizeAnotations();
     }
 
-    protected MetaDataImplHibernate(Type type, SessionFactory sessionFactory) {
+    protected MetaDataImplHibernate(Type type, SessionFactory sessionFactory, String propertyName,MetaData parentMetaData) {
         this.sessionFactory = sessionFactory;
         this.entityType = null;
         this.type = type;
+        this.propertyName = propertyName;
+        this.parentMetaData=parentMetaData;
+        analizeAnotations();
     }
 
     @Override
@@ -86,8 +115,8 @@ public class MetaDataImplHibernate implements MetaData {
         }
 
         org.hibernate.type.CollectionType collectionType = (org.hibernate.type.CollectionType) type;
-        String role=collectionType.getRole();
-        CollectionMetadata collectionMetadata=sessionFactory.getCollectionMetadata(role);
+        String role = collectionType.getRole();
+        CollectionMetadata collectionMetadata = sessionFactory.getCollectionMetadata(role);
 
         return collectionMetadata.isLazy();
     }
@@ -103,23 +132,22 @@ public class MetaDataImplHibernate implements MetaData {
         }
     }
 
-
     @Override
     public es.logongas.ix3.persistence.services.metadata.CollectionType getCollectionType() {
-            ClassMetadata classMetadata = getClassMetadata();
-            if (classMetadata == null) {
-                throw new RuntimeException("No existen los metadatos");
-            }
+        ClassMetadata classMetadata = getClassMetadata();
+        if (classMetadata == null) {
+            throw new RuntimeException("No existen los metadatos");
+        }
 
-            if (type instanceof SetType) {
-                return es.logongas.ix3.persistence.services.metadata.CollectionType.Set;
-            } else if (type instanceof ListType) {
-                return es.logongas.ix3.persistence.services.metadata.CollectionType.List;
-            } else if (type instanceof MapType) {
-                return es.logongas.ix3.persistence.services.metadata.CollectionType.Map;
-            } else {
-                return null;
-            }
+        if (type instanceof SetType) {
+            return es.logongas.ix3.persistence.services.metadata.CollectionType.Set;
+        } else if (type instanceof ListType) {
+            return es.logongas.ix3.persistence.services.metadata.CollectionType.List;
+        } else if (type instanceof MapType) {
+            return es.logongas.ix3.persistence.services.metadata.CollectionType.Map;
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -133,24 +161,16 @@ public class MetaDataImplHibernate implements MetaData {
             if (classMetadata != null) {
                 //Añadimos la clave primaria al Map
                 if (classMetadata.hasIdentifierProperty() == true) {
+                    String propertyName = classMetadata.getIdentifierPropertyName();
                     Type propertyType = classMetadata.getIdentifierType();
-                    MetaData metaData = cache.get(propertyType);
-                    if (cache.get(propertyType) == null) {
-                        metaData = new MetaDataImplHibernate(propertyType, sessionFactory);
-                        cache.put(propertyType, metaData);
-                    }
-                    metaDatas.put(classMetadata.getIdentifierPropertyName(), metaData);
+                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName,this);
+                    metaDatas.put(propertyName, metaData);
                 }
 
                 String[] propertyNames = classMetadata.getPropertyNames();
                 for (String propertyName : propertyNames) {
                     Type propertyType = classMetadata.getPropertyType(propertyName);
-
-                    MetaData metaData = cache.get(propertyType);
-                    if (cache.get(propertyType) == null) {
-                        metaData = new MetaDataImplHibernate(propertyType, sessionFactory);
-                        cache.put(propertyType, metaData);
-                    }
+                    MetaData metaData =new MetaDataImplHibernate(propertyType, sessionFactory, propertyName,this);
                     metaDatas.put(propertyName, metaData);
                 }
             }
@@ -181,11 +201,9 @@ public class MetaDataImplHibernate implements MetaData {
                 naturalKeyPropertiesName.add(naturalKeyPropertyName);
             }
 
-
         } else {
             //Si no hay clave natural, la lista no tendrá ningún elemento
         }
-
 
         return naturalKeyPropertiesName;
     }
@@ -206,5 +224,147 @@ public class MetaDataImplHibernate implements MetaData {
 
     private ClassMetadata getClassMetadata() {
         return sessionFactory.getClassMetadata(this.getType());
+    }
+
+    @Override
+    public String getCaption() {
+        return this.caption;
+    }
+
+    @Override
+    public boolean isRequired() {
+        return this.required;
+    }
+
+    @Override
+    public long getMinimum() {
+        return this.minimum;
+    }
+
+    @Override
+    public long getMaximum() {
+        return this.maximum;
+    }
+
+    @Override
+    public int getMinLength() {
+        return this.minLength;
+    }
+
+    @Override
+    public int getMaxLength() {
+        return this.maxLength;
+    }
+
+    @Override
+    public String getPattern() {
+        return this.pattern;
+    }
+
+    @Override
+    public String getPropertyName() {
+        return this.propertyName;
+    }
+
+    @Override
+    public Format getFormat() {
+        return this.format;
+    }
+
+    private void analizeAnotations() {
+        Class clazz;
+        if (parentMetaData!=null) {
+            clazz=parentMetaData.getType();
+        } else {
+            clazz=null;
+        }
+        
+        Caption captionAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Caption.class);
+        if (captionAnnotation!=null) {
+            caption=captionAnnotation.value();
+        } else {
+            caption=getPropertyName();
+        }
+        
+        format=null;
+        
+        Email emailAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Email.class);
+        if (emailAnnotation!=null) {
+            if (format!=null) {
+                throw new RuntimeException("No se puede incluir la anotación Email porque ya tiene el formato:"+format);
+            }            
+            
+            format=Format.EMAIL;
+        }
+        
+        URL urlAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), URL.class);
+        if (urlAnnotation!=null) {
+            if (format!=null) {
+                throw new RuntimeException("No se puede incluir la anotación URL porque ya tiene el formato:"+format);
+            }
+            
+            format=Format.URL;
+        }        
+        
+        Date dateAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Date.class);
+        if (dateAnnotation!=null) {
+            if (format!=null) {
+                throw new RuntimeException("No se puede incluir la anotación Date porque ya tiene el formato:"+format);
+            }
+            
+            format=Format.DATE;
+        }         
+        
+        Time timeAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Time.class);
+        if (timeAnnotation!=null) {
+            if (format!=null) {
+                throw new RuntimeException("No se puede incluir la anotación Time porque ya tiene el formato:"+format);
+            }
+            
+            format=Format.TIME;
+        }        
+        
+        
+        Min minAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Min.class);
+        if (minAnnotation!=null) {
+            minimum=minAnnotation.value();
+        } else {
+            minimum=0;
+        }
+        
+        Max maxAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Max.class);
+        if (maxAnnotation!=null) {
+            maximum=maxAnnotation.value();
+        } else {
+            maximum=Long.MAX_VALUE;
+        }       
+        
+        Size sizeAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Size.class);
+        if (sizeAnnotation!=null) {
+            minLength=sizeAnnotation.min();
+            maxLength=sizeAnnotation.max();
+            
+        } else {
+            minLength=0;
+            maxLength=Integer.MAX_VALUE;
+            
+        }
+       
+        Pattern patternAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Pattern.class);
+        if (patternAnnotation!=null) {
+            pattern=patternAnnotation.regexp();
+        } else {
+            pattern=null;
+        }
+        
+        NotBlank notBlankAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotBlank.class);
+        NotEmpty notEmptyAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotEmpty.class);
+        NotNull notNullAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotNull.class);
+        if ((notBlankAnnotation!=null) || (notEmptyAnnotation!=null) || (notNullAnnotation!=null)) {
+            required=true;
+        } else {
+            required=false;
+        }
+        
     }
 }

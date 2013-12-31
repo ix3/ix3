@@ -19,7 +19,6 @@ import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import java.util.Map;
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,7 @@ public class MetaDataFactoryImplHibernate implements MetaDataFactory {
         if (classMetadata==null) {
             return null;
         } else {
-            return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory);
+            return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory,null,null);
         }
     }
     
@@ -54,7 +53,7 @@ public class MetaDataFactoryImplHibernate implements MetaDataFactory {
         if (classMetadata==null) {
             return null;
         } else {
-            return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory);
+            return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory,null,null);
         }
     }
 
