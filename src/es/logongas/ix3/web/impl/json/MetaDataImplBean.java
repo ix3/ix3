@@ -54,6 +54,8 @@ public class MetaDataImplBean implements MetaData {
             return MetaType.Scalar;
         } else if ((clazz == Object.class) || (clazz == Byte.class) || (clazz == Short.class) || (clazz == Integer.class) || (clazz == Long.class) || (clazz == Float.class) || (clazz == Double.class) || (clazz == Boolean.class) || (clazz == Character.class) || (clazz == BigDecimal.class) || (clazz == BigInteger.class) || (clazz == Date.class) || (clazz == String.class)) {
             return MetaType.Scalar;
+        } else if (clazz.isEnum() == true) {
+            return MetaType.Scalar;
         } else {
             return MetaType.Component;
         }
@@ -80,7 +82,7 @@ public class MetaDataImplBean implements MetaData {
                 if (metaData == null) {
                     CollectionType newCollectionType;
                     Class realPropertyClass;
-                    
+
                     if (propertyClass.isAssignableFrom(Set.class)) {
                         newCollectionType = CollectionType.Set;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
