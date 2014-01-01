@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package es.logongas.ix3.persistence.services.constraints;
+package es.logongas.ix3.persistence.services.annotations;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -22,7 +21,7 @@ import java.lang.annotation.Target;
 import javax.validation.Constraint;
 import javax.validation.Payload;
 
-import es.logongas.ix3.persistence.impl.constraints.TimeValidator;
+import es.logongas.ix3.persistence.impl.annotations.DateValidator;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
@@ -32,30 +31,29 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Valida que el Date esté en la época 0 , es decir el 1 de Enero de 1970
- * Es decir que solo haya columnas de "Tiempo".
- * Además comprueba que los milisegundos sean 0.Para de esa forma comparar mejor las fechas.
+ * Valida que un objeto Date no tenga nada mas que los datos de fecha y el tiempo esté a 00:00:00
  * @author Lorenzo
  */
 @Documented
-@Constraint(validatedBy = TimeValidator.class)
+@Constraint(validatedBy = DateValidator.class)
 @Target({METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER})
 @Retention(RUNTIME)
-public @interface Time {
+public @interface Date {
 
-    String message() default "{es.logongas.ix3.persistence.services.constraints.Time.message}";
+    String message() default "{es.logongas.ix3.persistence.services.constraints.Date.message}";
 
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
 
     /**
-     * Defines several {@code @Time} annotations on the same element.
+     * Defines several {@code @Date} annotations on the same element.
      */
     @Target({METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER})
     @Retention(RUNTIME)
     @Documented
     public @interface List {
+
         Date[] value();
     }
 }

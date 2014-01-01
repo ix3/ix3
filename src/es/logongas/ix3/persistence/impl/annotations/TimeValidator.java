@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package es.logongas.ix3.persistence.impl.constraints;
+package es.logongas.ix3.persistence.impl.annotations;
 
-import es.logongas.ix3.persistence.services.constraints.Time;
+import es.logongas.ix3.persistence.services.annotations.Time;
 import java.util.GregorianCalendar;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
