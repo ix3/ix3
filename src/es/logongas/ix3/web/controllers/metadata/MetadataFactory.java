@@ -71,13 +71,13 @@ public class MetadataFactory {
         }
         
 
-        property.setRequired(metaData.isRequired());
-        property.setMinimum(metaData.getMinimum());
-        property.setMaximum(metaData.getMaximum());
-        property.setMinLength(metaData.getMinLength());
-        property.setMaxLength(metaData.getMaxLength());
-        property.setPattern(metaData.getPattern());
-        property.setFormat(metaData.getFormat());
+        property.setRequired(metaData.getConstraints().isRequired());
+        property.setMinimum(metaData.getConstraints().getMinimum());
+        property.setMaximum(metaData.getConstraints().getMaximum());
+        property.setMinLength(metaData.getConstraints().getMinLength());
+        property.setMaxLength(metaData.getConstraints().getMaxLength());
+        property.setPattern(metaData.getConstraints().getPattern());
+        property.setFormat(metaData.getConstraints().getFormat());
         //property.urlValues; //las propiedades values o urlValues son excluyentes
         //property.dependProperties = new ArrayList<String>(); //Solo está este valor si urlValues!=null
         //property.setKey(metadata.);
