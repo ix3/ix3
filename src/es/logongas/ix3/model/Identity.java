@@ -15,7 +15,7 @@
  */
 package es.logongas.ix3.model;
 
-import es.logongas.ix3.persistence.services.dao.Caption;
+import es.logongas.ix3.persistence.services.annotations.Caption;
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
 import java.io.Serializable;
 import java.util.Set;
