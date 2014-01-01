@@ -17,7 +17,7 @@ package es.logongas.ix3.persistence.impl.hibernate.metadata;
 
 import es.logongas.ix3.persistence.services.annotations.Date;
 import es.logongas.ix3.persistence.services.annotations.Time;
-import es.logongas.ix3.persistence.services.dao.Caption;
+import es.logongas.ix3.persistence.services.annotations.Caption;
 import es.logongas.ix3.persistence.services.metadata.Format;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaType;

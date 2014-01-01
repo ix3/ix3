@@ -15,6 +15,7 @@
  */
 package es.logongas.ix3.persistence.services.dao;
 
+import es.logongas.ix3.persistence.services.annotations.Caption;
 import es.logongas.ix3.persistence.impl.database.mysql.ConstraintViolationTranslatorImplMySQL;
 import es.logongas.ix3.persistence.services.dao.database.ConstraintViolationTranslator;
 import java.lang.reflect.Field;

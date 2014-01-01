@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistence.services.dao;
+package es.logongas.ix3.persistence.services.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
