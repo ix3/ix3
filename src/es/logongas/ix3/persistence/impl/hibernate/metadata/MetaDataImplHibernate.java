@@ -18,6 +18,7 @@ package es.logongas.ix3.persistence.impl.hibernate.metadata;
 import es.logongas.ix3.persistence.services.annotations.Date;
 import es.logongas.ix3.persistence.services.annotations.Time;
 import es.logongas.ix3.persistence.services.annotations.Caption;
+import es.logongas.ix3.persistence.services.metadata.Constraints;
 import es.logongas.ix3.persistence.services.metadata.Format;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaType;
@@ -25,6 +26,7 @@ import es.logongas.ix3.util.ReflectionAnnotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.validation.Constraint;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -51,37 +53,31 @@ public class MetaDataImplHibernate implements MetaData {
 
     //No usar directamente esta propiedad sino usar el método getPropertiesMetaData()
     private Map<String, MetaData> metaDatas = null;
-    
+
     private final SessionFactory sessionFactory;
     private final Class entityType;
     private final Type type;
     private final String propertyName;
     private final MetaData parentMetaData;
-
-    private boolean required;
     private String caption;
-    private long minimum;
-    private long maximum;
-    private int minLength;
-    private int maxLength;
-    private String pattern;
-    private Format format;
+    private final ContraintsImpl constraints=new ContraintsImpl();
 
-    protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory, String propertyName,MetaData parentMetaData) {
+
+    protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory, String propertyName, MetaData parentMetaData) {
         this.sessionFactory = sessionFactory;
         this.entityType = entityType;
         this.type = null;
         this.propertyName = propertyName;
-        this.parentMetaData=parentMetaData;
+        this.parentMetaData = parentMetaData;
         analizeAnotations();
     }
 
-    protected MetaDataImplHibernate(Type type, SessionFactory sessionFactory, String propertyName,MetaData parentMetaData) {
+    protected MetaDataImplHibernate(Type type, SessionFactory sessionFactory, String propertyName, MetaData parentMetaData) {
         this.sessionFactory = sessionFactory;
         this.entityType = null;
         this.type = type;
         this.propertyName = propertyName;
-        this.parentMetaData=parentMetaData;
+        this.parentMetaData = parentMetaData;
         analizeAnotations();
     }
 
@@ -162,14 +158,14 @@ public class MetaDataImplHibernate implements MetaData {
                 if (classMetadata.hasIdentifierProperty() == true) {
                     String propertyName = classMetadata.getIdentifierPropertyName();
                     Type propertyType = classMetadata.getIdentifierType();
-                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName,this);
+                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName, this);
                     metaDatas.put(propertyName, metaData);
                 }
 
                 String[] propertyNames = classMetadata.getPropertyNames();
                 for (String propertyName : propertyNames) {
                     Type propertyType = classMetadata.getPropertyType(propertyName);
-                    MetaData metaData =new MetaDataImplHibernate(propertyType, sessionFactory, propertyName,this);
+                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName, this);
                     metaDatas.put(propertyName, metaData);
                 }
             }
@@ -231,139 +227,156 @@ public class MetaDataImplHibernate implements MetaData {
     }
 
     @Override
-    public boolean isRequired() {
-        return this.required;
-    }
-
-    @Override
-    public long getMinimum() {
-        return this.minimum;
-    }
-
-    @Override
-    public long getMaximum() {
-        return this.maximum;
-    }
-
-    @Override
-    public int getMinLength() {
-        return this.minLength;
-    }
-
-    @Override
-    public int getMaxLength() {
-        return this.maxLength;
-    }
-
-    @Override
-    public String getPattern() {
-        return this.pattern;
-    }
-
-    @Override
     public String getPropertyName() {
         return this.propertyName;
     }
 
     @Override
-    public Format getFormat() {
-        return this.format;
-    }
-
+    public Constraints getConstraints() {
+        return constraints;
+    }    
+    
     private void analizeAnotations() {
         Class clazz;
-        if (parentMetaData!=null) {
-            clazz=parentMetaData.getType();
+        if (parentMetaData != null) {
+            clazz = parentMetaData.getType();
         } else {
-            clazz=null;
+            clazz = null;
         }
-        
-        Caption captionAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Caption.class);
-        if (captionAnnotation!=null) {
-            caption=captionAnnotation.value();
+
+        Caption captionAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Caption.class);
+        if (captionAnnotation != null) {
+            caption = captionAnnotation.value();
         } else {
-            caption=getPropertyName();
+            caption = getPropertyName();
         }
-        
-        format=null;
-        
-        Email emailAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Email.class);
-        if (emailAnnotation!=null) {
-            if (format!=null) {
-                throw new RuntimeException("No se puede incluir la anotación Email porque ya tiene el formato:"+format);
-            }            
-            
-            format=Format.EMAIL;
-        }
-        
-        URL urlAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), URL.class);
-        if (urlAnnotation!=null) {
-            if (format!=null) {
-                throw new RuntimeException("No se puede incluir la anotación URL porque ya tiene el formato:"+format);
+
+        constraints.format = null;
+
+        Email emailAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Email.class);
+        if (emailAnnotation != null) {
+            if (constraints.format != null) {
+                throw new RuntimeException("No se puede incluir la anotación Email porque ya tiene el formato:" + constraints.format);
             }
-            
-            format=Format.URL;
-        }        
-        
-        Date dateAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Date.class);
-        if (dateAnnotation!=null) {
-            if (format!=null) {
-                throw new RuntimeException("No se puede incluir la anotación Date porque ya tiene el formato:"+format);
+
+            constraints.format = Format.EMAIL;
+        }
+
+        URL urlAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), URL.class);
+        if (urlAnnotation != null) {
+            if (constraints.format != null) {
+                throw new RuntimeException("No se puede incluir la anotación URL porque ya tiene el formato:" + constraints.format);
             }
-            
-            format=Format.DATE;
-        }         
-        
-        Time timeAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Time.class);
-        if (timeAnnotation!=null) {
-            if (format!=null) {
-                throw new RuntimeException("No se puede incluir la anotación Time porque ya tiene el formato:"+format);
+
+            constraints.format = Format.URL;
+        }
+
+        Date dateAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Date.class);
+        if (dateAnnotation != null) {
+            if (constraints.format != null) {
+                throw new RuntimeException("No se puede incluir la anotación Date porque ya tiene el formato:" + constraints.format);
             }
-            
-            format=Format.TIME;
-        }        
-        
-        
-        Min minAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Min.class);
-        if (minAnnotation!=null) {
-            minimum=minAnnotation.value();
-        } else {
-            minimum=Long.MIN_VALUE;
+
+            constraints.format = Format.DATE;
         }
-        
-        Max maxAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Max.class);
-        if (maxAnnotation!=null) {
-            maximum=maxAnnotation.value();
-        } else {
-            maximum=Long.MAX_VALUE;
-        }       
-        
-        Size sizeAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Size.class);
-        if (sizeAnnotation!=null) {
-            minLength=sizeAnnotation.min();
-            maxLength=sizeAnnotation.max();
-            
-        } else {
-            minLength=0;
-            maxLength=Integer.MAX_VALUE;
-            
+
+        Time timeAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Time.class);
+        if (timeAnnotation != null) {
+            if (constraints.format != null) {
+                throw new RuntimeException("No se puede incluir la anotación Time porque ya tiene el formato:" + constraints.format);
+            }
+
+            constraints.format = Format.TIME;
         }
-       
-        Pattern patternAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Pattern.class);
-        if (patternAnnotation!=null) {
-            pattern=patternAnnotation.regexp();
+
+        Min minAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Min.class);
+        if (minAnnotation != null) {
+            constraints.minimum = minAnnotation.value();
         } else {
-            pattern=null;
+            constraints.minimum = Long.MIN_VALUE;
         }
-        
-        NotBlank notBlankAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotBlank.class);
-        NotEmpty notEmptyAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotEmpty.class);
-        NotNull notNullAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotNull.class);
-        if ((notBlankAnnotation!=null) || (notEmptyAnnotation!=null) || (notNullAnnotation!=null)) {
-            required=true;
+
+        Max maxAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Max.class);
+        if (maxAnnotation != null) {
+            constraints.maximum = maxAnnotation.value();
         } else {
-            required=false;
+            constraints.maximum = Long.MAX_VALUE;
         }
-        
+
+        Size sizeAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Size.class);
+        if (sizeAnnotation != null) {
+            constraints.minLength = sizeAnnotation.min();
+            constraints.maxLength = sizeAnnotation.max();
+
+        } else {
+            constraints.minLength = 0;
+            constraints.maxLength = Integer.MAX_VALUE;
+
+        }
+
+        Pattern patternAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Pattern.class);
+        if (patternAnnotation != null) {
+            constraints.pattern = patternAnnotation.regexp();
+        } else {
+            constraints.pattern = null;
+        }
+
+        NotBlank notBlankAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotBlank.class);
+        NotEmpty notEmptyAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotEmpty.class);
+        NotNull notNullAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotNull.class);
+        if ((notBlankAnnotation != null) || (notEmptyAnnotation != null) || (notNullAnnotation != null)) {
+            constraints.required = true;
+        } else {
+            constraints.required = false;
+        }
+
     }
+
+    class ContraintsImpl implements Constraints {
+
+        public boolean required;
+        public long minimum;
+        public long maximum;
+        public int minLength;
+        public int maxLength;
+        public String pattern;
+        public Format format;
+
+        @Override
+        public boolean isRequired() {
+            return this.required;
+        }
+
+        @Override
+        public long getMinimum() {
+            return this.minimum;
+        }
+
+        @Override
+        public long getMaximum() {
+            return this.maximum;
+        }
+
+        @Override
+        public int getMinLength() {
+            return this.minLength;
+        }
+
+        @Override
+        public int getMaxLength() {
+            return this.maxLength;
+        }
+
+        @Override
+        public String getPattern() {
+            return this.pattern;
+        }
+
+        @Override
+        public Format getFormat() {
+            return this.format;
+        }
+
+    }
+
 }
