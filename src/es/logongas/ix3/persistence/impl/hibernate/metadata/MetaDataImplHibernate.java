@@ -328,7 +328,7 @@ public class MetaDataImplHibernate implements MetaData {
         if (minAnnotation!=null) {
             minimum=minAnnotation.value();
         } else {
-            minimum=0;
+            minimum=Long.MIN_VALUE;
         }
         
         Max maxAnnotation=ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Max.class);
