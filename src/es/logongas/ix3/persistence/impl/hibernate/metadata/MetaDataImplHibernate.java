@@ -22,7 +22,8 @@ import es.logongas.ix3.persistence.services.metadata.Constraints;
 import es.logongas.ix3.persistence.services.metadata.Format;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaType;
-import es.logongas.ix3.util.ReflectionAnnotation;
+import es.logongas.ix3.persistence.services.metadata.ValuesList;
+import es.logongas.ix3.util.ReflectionUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -244,7 +245,7 @@ public class MetaDataImplHibernate implements MetaData {
             clazz = null;
         }
 
-        Caption captionAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Caption.class);
+        Caption captionAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Caption.class);
         if (captionAnnotation != null) {
             caption = captionAnnotation.value();
         } else {
@@ -253,7 +254,7 @@ public class MetaDataImplHibernate implements MetaData {
 
         constraints.format = null;
 
-        Email emailAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Email.class);
+        Email emailAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Email.class);
         if (emailAnnotation != null) {
             if (constraints.format != null) {
                 throw new RuntimeException("No se puede incluir la anotación Email porque ya tiene el formato:" + constraints.format);
@@ -262,7 +263,7 @@ public class MetaDataImplHibernate implements MetaData {
             constraints.format = Format.EMAIL;
         }
 
-        URL urlAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), URL.class);
+        URL urlAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), URL.class);
         if (urlAnnotation != null) {
             if (constraints.format != null) {
                 throw new RuntimeException("No se puede incluir la anotación URL porque ya tiene el formato:" + constraints.format);
@@ -271,7 +272,7 @@ public class MetaDataImplHibernate implements MetaData {
             constraints.format = Format.URL;
         }
 
-        Date dateAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Date.class);
+        Date dateAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Date.class);
         if (dateAnnotation != null) {
             if (constraints.format != null) {
                 throw new RuntimeException("No se puede incluir la anotación Date porque ya tiene el formato:" + constraints.format);
@@ -280,7 +281,7 @@ public class MetaDataImplHibernate implements MetaData {
             constraints.format = Format.DATE;
         }
 
-        Time timeAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Time.class);
+        Time timeAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Time.class);
         if (timeAnnotation != null) {
             if (constraints.format != null) {
                 throw new RuntimeException("No se puede incluir la anotación Time porque ya tiene el formato:" + constraints.format);
@@ -289,21 +290,21 @@ public class MetaDataImplHibernate implements MetaData {
             constraints.format = Format.TIME;
         }
 
-        Min minAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Min.class);
+        Min minAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Min.class);
         if (minAnnotation != null) {
             constraints.minimum = minAnnotation.value();
         } else {
             constraints.minimum = Long.MIN_VALUE;
         }
 
-        Max maxAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Max.class);
+        Max maxAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Max.class);
         if (maxAnnotation != null) {
             constraints.maximum = maxAnnotation.value();
         } else {
             constraints.maximum = Long.MAX_VALUE;
         }
 
-        Size sizeAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Size.class);
+        Size sizeAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Size.class);
         if (sizeAnnotation != null) {
             constraints.minLength = sizeAnnotation.min();
             constraints.maxLength = sizeAnnotation.max();
@@ -314,22 +315,38 @@ public class MetaDataImplHibernate implements MetaData {
 
         }
 
-        Pattern patternAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), Pattern.class);
+        Pattern patternAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Pattern.class);
         if (patternAnnotation != null) {
             constraints.pattern = patternAnnotation.regexp();
         } else {
             constraints.pattern = null;
         }
 
-        NotBlank notBlankAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotBlank.class);
-        NotEmpty notEmptyAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotEmpty.class);
-        NotNull notNullAnnotation = ReflectionAnnotation.getAnnotation(clazz, getPropertyName(), NotNull.class);
+        NotBlank notBlankAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), NotBlank.class);
+        NotEmpty notEmptyAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), NotEmpty.class);
+        NotNull notNullAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), NotNull.class);
         if ((notBlankAnnotation != null) || (notEmptyAnnotation != null) || (notNullAnnotation != null)) {
             constraints.required = true;
         } else {
             constraints.required = false;
         }
 
+        
+        es.logongas.ix3.persistence.services.annotations.ValuesList valuesList=ReflectionUtil.getAnnotation(clazz, getPropertyName(), es.logongas.ix3.persistence.services.annotations.ValuesList.class);
+        if (valuesList!=null) {
+            ValuesListImpl valuesListImpl=new ValuesListImpl();
+            valuesListImpl.dependProperties=valuesList.dependProperties();
+            valuesListImpl.shortLength=valuesList.shortLength();
+            valuesListImpl.namedSearch=valuesList.namedSearch();
+            valuesListImpl.entity=valuesList.entity();
+            if (valuesListImpl.entity==es.logongas.ix3.persistence.services.annotations.ValuesList.DEFAULT.class) {
+                valuesListImpl.entity=this.getType();
+            }
+            constraints.valuesList=valuesListImpl;
+        } else {
+            constraints.valuesList=null;
+        }
+        
     }
 
     class ContraintsImpl implements Constraints {
@@ -341,7 +358,9 @@ public class MetaDataImplHibernate implements MetaData {
         public int maxLength;
         public String pattern;
         public Format format;
-
+        public ValuesList valuesList;
+        
+        
         @Override
         public boolean isRequired() {
             return this.required;
@@ -377,6 +396,41 @@ public class MetaDataImplHibernate implements MetaData {
             return this.format;
         }
 
+        @Override
+        public ValuesList getValuesList() {
+            return valuesList;
+        }
+
     }
 
+    
+    class ValuesListImpl implements ValuesList {
+
+        boolean shortLength;
+        Class entity;
+        String[] dependProperties;
+        String namedSearch;
+        
+        @Override
+        public boolean shortLength() {
+            return shortLength;
+        }
+
+        @Override
+        public Class entity() {
+            return entity;
+        }
+
+        @Override
+        public String[] dependProperties() {
+            return dependProperties;
+        }
+
+        @Override
+        public String namedSearch() {
+            return namedSearch;
+        }
+        
+    }
+    
 }

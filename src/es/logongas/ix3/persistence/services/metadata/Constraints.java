@@ -62,5 +62,8 @@ public interface Constraints {
      * Para valores de tipo String, indica un formato especifico que debe cumplir el campo.Por defecto vale null si no se indica ningún valor.
      * @return El formato especifico
      */
-    Format getFormat();    
+    Format getFormat();  
+
+    ValuesList getValuesList();
+
 }
