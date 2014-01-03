@@ -23,6 +23,7 @@ import es.logongas.ix3.persistence.services.dao.OrderDirection;
 import es.logongas.ix3.persistence.services.dao.Order;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
+import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.controllers.metadata.Metadata;
 import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
 import es.logongas.ix3.web.services.json.JsonFactory;
@@ -77,7 +78,7 @@ public class RESTController {
                 throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
             
-            Metadata metadata=(new MetadataFactory()).getMetadata(metaData);
+            Metadata metadata=(new MetadataFactory()).getMetadata(metaData,metaDataFactory,daoFactory,httpRequest.getContextPath());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter();
 
             String jsonOut = jsonWriter.toJson(metadata);
@@ -318,7 +319,7 @@ public class RESTController {
             Object entity = genericDAO.read(id);
             Object childData;
             if (entity!=null) {
-                childData=getValueFromBean(entity,child);
+                childData=ReflectionUtil.getValueFromBean(entity,child);
             } else {
                 //Si no hay datos , retornamos una lista vacia
                 childData=new ArrayList();
@@ -584,33 +585,5 @@ public class RESTController {
         return orders;
     }
     
-    /**
-     * Obtiene el valor de la propiedad de un Bean
-     *
-     * @param obj El objeto Bean
-     * @param propertyName El nombre de la propiedad
-     * @return El valor de la propiedad
-     */
-    private Object getValueFromBean(Object obj, String propertyName) {
-        try {
-            BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
-            PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
-
-            Method readMethod = null;
-            for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-                if (propertyDescriptor.getName().equals(propertyName)) {
-                    readMethod = propertyDescriptor.getReadMethod();
-                }
-            }
-
-            if (readMethod == null) {
-                throw new RuntimeException("No existe la propiedad:" + propertyName);
-            }
-
-            return readMethod.invoke(obj);
-
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }    
+ 
 }
