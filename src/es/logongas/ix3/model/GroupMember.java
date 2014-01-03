@@ -15,13 +15,17 @@
  */
 package es.logongas.ix3.model;
 
+import es.logongas.ix3.persistence.services.annotations.ValuesList;
+
 /**
  * Relación entre los "Identity" que están incluidos en un grupo
  * @author Lorenzo González
  */
 public class GroupMember {
     private int idGroupMember;
+    @ValuesList
     private Group group;
+    @ValuesList
     private Identity identity;
     private Integer priority;
 

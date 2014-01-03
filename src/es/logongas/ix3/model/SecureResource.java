@@ -15,6 +15,8 @@
  */
 package es.logongas.ix3.model;
 
+import es.logongas.ix3.persistence.services.annotations.ValuesList;
+
 /**
  * Un recurso que puede ser "securizado"
  * @author Lorenzo González
@@ -23,6 +25,7 @@ public class SecureResource {
     private int idSecureResource;
     private String name;
     private String description;
+    @ValuesList(shortLength = true)
     private SecureResourceType secureResourceType;
 
     public SecureResource() {

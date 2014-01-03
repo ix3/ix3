@@ -15,6 +15,7 @@
  */
 package es.logongas.ix3.model;
 
+import es.logongas.ix3.persistence.services.annotations.ValuesList;
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
 import es.logongas.ix3.util.ScriptEvaluator;
 import javax.script.ScriptEngine;
@@ -30,7 +31,9 @@ public class ACE {
 
     private int idACE;
     private ACEType aceType;
+    @ValuesList(dependProperties = "aceType")
     private Permission permission;
+    @ValuesList()
     private Identity identity;
     private String secureResourceRegExp;
     private String conditionalScript;
