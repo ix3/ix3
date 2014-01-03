@@ -10,6 +10,7 @@ import es.logongas.ix3.persistence.services.metadata.Format;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.persistence.services.metadata.MetaType;
+import es.logongas.ix3.persistence.services.metadata.ValuesList;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -251,6 +252,15 @@ public class MetaDataImplBean implements MetaData {
         public Format getFormat() {
             return null;
         }
+
+        @Override
+        public ValuesList getValuesList() {
+            //En un Bean nunca hay ValueList así que siempre será null.
+            return null;
+        }
+
     }
+    
+    
 
 }

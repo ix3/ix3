@@ -15,8 +15,16 @@
  */
 package es.logongas.ix3.web.controllers.metadata;
 
+import es.logongas.ix3.persistence.services.dao.BusinessException;
+import es.logongas.ix3.persistence.services.dao.DAOFactory;
+import es.logongas.ix3.persistence.services.dao.GenericDAO;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
+import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
+import es.logongas.ix3.persistence.services.metadata.ValuesList;
+import es.logongas.ix3.util.ReflectionUtil;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,7 +33,7 @@ import java.util.Map;
  */
 public class MetadataFactory {
 
-    public Metadata getMetadata(es.logongas.ix3.persistence.services.metadata.MetaData metaData) {
+    public Metadata getMetadata(es.logongas.ix3.persistence.services.metadata.MetaData metaData, MetaDataFactory metaDataFactory, DAOFactory daoFactory, String basePath) throws BusinessException {
         Metadata metadata = new Metadata();
 
         metadata.setClassName(metaData.getType().getSimpleName());
@@ -36,7 +44,7 @@ public class MetadataFactory {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
             if (propertyMetaData.isCollection() == false) {
-                Property property = getPropertyFromMetaData(propertyMetaData);
+                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, daoFactory, basePath);
 
                 metadata.getProperties().put(propertyName, property);
             }
@@ -45,7 +53,7 @@ public class MetadataFactory {
         return metadata;
     }
 
-    private Property getPropertyFromMetaData(MetaData metaData) {
+    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, DAOFactory daoFactory, String basePath) throws BusinessException {
         Property property = new Property();
         property.setType(Type.getTypeFromClass(metaData.getType()));
 
@@ -56,7 +64,7 @@ public class MetadataFactory {
                 MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
                 if (propertyMetaData.isCollection() == false) {
-                    Property subproperty = getPropertyFromMetaData(propertyMetaData);
+                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, daoFactory, basePath);
 
                     property.getProperties().put(propertyName, subproperty);
                 }
@@ -68,8 +76,29 @@ public class MetadataFactory {
 
         if (metaData.getType().isEnum() == true) {
             property.setValues(getValuesFromEnum(metaData.getType()));
+        } else if (metaData.getConstraints().getValuesList() != null) {
+            ValuesList valuesList = metaData.getConstraints().getValuesList();
+
+            property.setDependProperties(Arrays.asList(valuesList.dependProperties()));
+            if ((valuesList.shortLength() == true) && ((valuesList.dependProperties() == null) || (valuesList.dependProperties().length == 0))) {
+                if ((valuesList.namedSearch() != null) && (valuesList.namedSearch().trim().length() > 0)) {
+                    //
+                } else {
+                    GenericDAO genericDAOEntityValuesList=daoFactory.getDAO(valuesList.entity());
+                    MetaData metaDataEntityValuesList=metaDataFactory.getMetaData(valuesList.entity());
+                    String primaryKeyName = metaDataEntityValuesList.getPrimaryKeyPropertyName();
+                    List < Object > data = genericDAOEntityValuesList.search(null);
+                    property.setValues(getValuesFromData(data, primaryKeyName));
+                }
+            } else {
+                if ((valuesList.namedSearch() != null) && (valuesList.namedSearch().trim().length() > 0)) {
+                    property.setUrlValues(basePath + "/" + valuesList.entity().getSimpleName() + "/namedsearch?name=" + valuesList.namedSearch());
+                } else {
+                    property.setUrlValues(basePath + "/" + valuesList.entity().getSimpleName());
+                }
+            }
+
         }
-        
 
         property.setRequired(metaData.getConstraints().isRequired());
         property.setMinimum(metaData.getConstraints().getMinimum());
@@ -78,15 +107,12 @@ public class MetadataFactory {
         property.setMaxLength(metaData.getConstraints().getMaxLength());
         property.setPattern(metaData.getConstraints().getPattern());
         property.setFormat(metaData.getConstraints().getFormat());
-        //property.urlValues; //las propiedades values o urlValues son excluyentes
-        //property.dependProperties = new ArrayList<String>(); //Solo está este valor si urlValues!=null
         //property.setKey(metadata.);
         //property.setNaturalKey(metadata.);
-        
+
         property.setLabel(metaData.getCaption());
         property.setDescription(metaData.getCaption());
 
-        
         return property;
     }
 
@@ -103,6 +129,23 @@ public class MetadataFactory {
             Enum enumConstant = enumConstants[i];
 
             values.put(enumConstant.name(), enumConstant.toString());
+        }
+
+        return values;
+    }
+
+    private Map<Object, String> getValuesFromData(List<Object> data, String primaryKeyName) {
+        Map<Object, String> values = new LinkedHashMap<Object, String>();
+
+        if (data == null) {
+            throw new RuntimeException("El argumento data no puede ser null");
+        }
+        if ((primaryKeyName == null) || (primaryKeyName.trim().length() == 0)) {
+            throw new RuntimeException("El argumento primaryKeyName no puede estar vacio");
+        }
+
+        for (Object obj : data) {
+            values.put(ReflectionUtil.getValueFromBean(obj, primaryKeyName), obj.toString());
         }
 
         return values;
