@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package es.logongas.ix3.util;
 
 import java.beans.BeanInfo;
@@ -22,78 +21,114 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * Utilidades para obtener anotaciones de clases
+ *
  * @author Lorenzo
  */
 public class ReflectionUtil {
-    
+
     /**
-     * Obtiene una anotación de una clase. La anotación se obtiene de la propiedad o del método
+     * Obtiene una anotación de una clase. La anotación se obtiene de la
+     * propiedad o del método
+     *
      * @param <T>
      * @param baseClass La clase en la que se busca la anotación
-     * @param propertyName El nombre de la propiedad sobre la que se busca la anotación
+     * @param propertyName El nombre de la propiedad sobre la que se busca la
+     * anotación
      * @param annotationClass El tipo de anotación a buscar
-     * @return Retorna la anotación.Si la anotación existe tanto en la propiedad como en el método se retorna solo el de la propiedad.
+     * @return Retorna la anotación.Si la anotación existe tanto en la propiedad
+     * como en el método se retorna solo el de la propiedad.
      */
-    static public <T extends Annotation> T getAnnotation(Class baseClass,String propertyName,Class<T> annotationClass) {      
-        if (annotationClass==null) {
+    static public <T extends Annotation> T getAnnotation(Class baseClass, String propertyName, Class<T> annotationClass) {
+        if (annotationClass == null) {
             throw new IllegalArgumentException("El argumento annotationClass no puede ser null");
         }
-        
-        if (baseClass==null) {
+
+        if (baseClass == null) {
             return null;
         }
-        
+
         if ((propertyName == null) || (propertyName.trim().equals(""))) {
             throw new IllegalArgumentException("El argumento propertyName no puede ser null");
         }
-        
 
-        T annotationField = getFieldAnnotation(baseClass, propertyName,annotationClass);
+        T annotationField = getFieldAnnotation(baseClass, propertyName, annotationClass);
         if (annotationField != null) {
             return annotationField;
         }
 
-        T annotationMethod = getMethodAnnotation(baseClass, propertyName,annotationClass);
+        T annotationMethod = getMethodAnnotation(baseClass, propertyName, annotationClass);
         if (annotationMethod != null) {
             return annotationMethod;
         }
 
         //No hemos encontrado la anotación
         return null;
-        
+
     }
 
-    static private <T extends Annotation> T getFieldAnnotation(Class baseClass,String propertyName,Class<T> annotationClass) {
-        Field field = ReflectionUtils.findField(baseClass, propertyName);
+    static private <T extends Annotation> T getFieldAnnotation(Class baseClass, String propertyName, Class<T> annotationClass) {
+        Field field = getField(baseClass, propertyName);
         if (field == null) {
             return null;
         }
 
-        T annotation=field.getAnnotation(annotationClass);
-        
+        T annotation = field.getAnnotation(annotationClass);
+
         return annotation;
-    }    
-    
-    static private <T extends Annotation> T getMethodAnnotation(Class baseClass,String propertyName,Class<T> annotationClass) {
-        String suffixMethodName = StringUtils.capitalize(propertyName);
-        Method method = ReflectionUtils.findMethod(baseClass, "get" + suffixMethodName);
+    }
+
+    static private <T extends Annotation> T getMethodAnnotation(Class baseClass, String methodName, Class<T> annotationClass) {
+        String suffixMethodName = StringUtils.capitalize(methodName);
+        Method method = getMethod(baseClass, "get" + suffixMethodName);
         if (method == null) {
-            method = ReflectionUtils.findMethod(baseClass, "is" + suffixMethodName);
+            method = getMethod(baseClass, "is" + suffixMethodName);
             if (method == null) {
-                return null;
+                method = getMethod(baseClass, methodName);
+                if (method == null) {
+                    
+                    return null;
+                }
             }
         }
-
-        T annotation=method.getAnnotation(annotationClass);
+        T annotation = method.getAnnotation(annotationClass);
         
-        return  annotation;
+        return annotation;
     }
-   /**
+
+    static public Field  getField(Class clazz,String propertyName) {
+        try {
+            return clazz.getField(propertyName);
+        } catch (NoSuchFieldException ex) {
+            return null;
+        }
+    }    
+    
+    
+    static public Method getMethod(Class clazz,String methodName) {
+        Method[] methods=clazz.getMethods();
+        
+        Method method=null;
+        for(int i=0;i<methods.length;i++) {
+            if (methods[i].getName().equals(methodName)) {
+                
+                if (method!=null) {
+                    throw new RuntimeException("Existen dos o mas metodos llamados '" + methodName +"' en '" + clazz.getName() + "'");
+                }
+                
+                method=methods[i];
+            }
+        }
+        
+        return method;
+        
+    }
+    
+    
+    /**
      * Obtiene el valor de la propiedad de un Bean
      *
      * @param obj El objeto Bean
@@ -121,6 +156,6 @@ public class ReflectionUtil {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }    
-    
+    }
+
 }

@@ -16,13 +16,18 @@
 package es.logongas.ix3.persistence.impl.hibernate.dao;
 
 import es.logongas.ix3.persistence.services.dao.BusinessException;
+import es.logongas.ix3.persistence.services.dao.BusinessMessage;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
+import es.logongas.ix3.persistence.services.dao.NamedSearch;
 import es.logongas.ix3.persistence.services.dao.Order;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
+import es.logongas.ix3.util.ReflectionUtil;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.logging.Log;
@@ -49,7 +54,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     public GenericDAOImplHibernate(Class<EntityType> entityType) {
-        this.entityType=entityType;
+        this.entityType = entityType;
     }
 
     @Override
@@ -267,11 +272,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     @Override
     public List<EntityType> search(Map<String, Object> filter) throws BusinessException {
-        return search(filter,new ArrayList<Order>());
+        return search(filter, null);
     }
 
     @Override
-    public List<EntityType> search(Map<String, Object> filter,List<Order> orders) throws BusinessException {
+    public List<EntityType> search(Map<String, Object> filter, List<Order> orders) throws BusinessException {
+
+        if (orders == null) {
+            orders = new ArrayList<Order>();
+        }
+
         Session session = sessionFactory.getCurrentSession();
         try {
             Criteria criteria = session.createCriteria(getEntityMetaData().getType());
@@ -291,24 +301,23 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 }
             }
 
-            if (orders!=null) {
-                for(Order order:orders) {
+            if (orders != null) {
+                for (Order order : orders) {
                     org.hibernate.criterion.Order criteriaOrder;
 
-                    switch(order.getOrderDirection()) {
+                    switch (order.getOrderDirection()) {
                         case Ascending:
-                            criteriaOrder=org.hibernate.criterion.Order.asc(order.getFieldName());
+                            criteriaOrder = org.hibernate.criterion.Order.asc(order.getFieldName());
                             break;
                         case Descending:
-                            criteriaOrder=org.hibernate.criterion.Order.desc(order.getFieldName());
+                            criteriaOrder = org.hibernate.criterion.Order.desc(order.getFieldName());
                             break;
                         default:
-                            throw new RuntimeException("orderField.getOrder() desconocido"+order.getOrderDirection());
+                            throw new RuntimeException("orderField.getOrder() desconocido" + order.getOrderDirection());
                     }
                     criteria.addOrder(criteriaOrder);
                 }
             }
-
 
             List<EntityType> entities = criteria.list();
 
@@ -348,6 +357,53 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public Object namedSearch(String namedSearch, Map<String, Object> filter) throws BusinessException {
+        try {
+            if (filter==null) {
+                filter=new HashMap<String, Object>();
+            }
+            
+            
+            Method method = ReflectionUtil.getMethod(this.getClass(), namedSearch);
+            if (method == null) {
+                throw new BusinessException(new BusinessMessage(null, "No existe el método " + namedSearch + " en la clase DAO: " + this.getClass().getName()));
+            }
+
+            NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(this.getClass(), namedSearch, NamedSearch.class);
+            if (namedSearchAnnotation == null) {
+                throw new RuntimeException("No es posible llamar al método '" + this.getClass().getName() + "." + namedSearch + "' si no contiene la anotacion NamedSearch");
+            }
+
+            String[] parameterNames = namedSearchAnnotation.parameterNames();
+            if ((parameterNames == null) && (method.getParameterTypes().length > 0)) {
+                throw new RuntimeException("Es necesario la lista de nombre de parametros para la anotación NameSearch del método:" + this.getClass().getName() + "." + namedSearch);
+            }
+
+            if (method.getParameterTypes().length != parameterNames.length) {
+                throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + this.getClass().getName() + "." + namedSearch);
+            }
+
+            List args = new ArrayList();
+            for (int i = 0; i < method.getParameterTypes().length; i++) {
+                Object parameterValue = filter.get(parameterNames[i]);
+
+                args.add(parameterValue);
+            }
+
+            Object result = method.invoke(this, args.toArray());
+
+            return result;
+
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -403,4 +459,5 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     public MetaData getEntityMetaData() {
         return metaDataFactory.getMetaData(entityType);
     }
+
 }
