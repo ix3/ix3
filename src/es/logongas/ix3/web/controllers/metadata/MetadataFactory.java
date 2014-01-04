@@ -81,18 +81,21 @@ public class MetadataFactory {
 
             property.setDependProperties(Arrays.asList(valuesList.dependProperties()));
             if ((valuesList.shortLength() == true) && ((valuesList.dependProperties() == null) || (valuesList.dependProperties().length == 0))) {
+                //Los valores no dependen de nada , así que podemos leer los valores directamente
+                GenericDAO genericDAOEntityValuesList = daoFactory.getDAO(valuesList.entity());
+                MetaData metaDataEntityValuesList = metaDataFactory.getMetaData(valuesList.entity());
+                String primaryKeyName = metaDataEntityValuesList.getPrimaryKeyPropertyName();
+                List<Object> data;
                 if ((valuesList.namedSearch() != null) && (valuesList.namedSearch().trim().length() > 0)) {
-                    //
+                    data = (List<Object>) genericDAOEntityValuesList.namedSearch(valuesList.namedSearch(), null);
                 } else {
-                    GenericDAO genericDAOEntityValuesList=daoFactory.getDAO(valuesList.entity());
-                    MetaData metaDataEntityValuesList=metaDataFactory.getMetaData(valuesList.entity());
-                    String primaryKeyName = metaDataEntityValuesList.getPrimaryKeyPropertyName();
-                    List < Object > data = genericDAOEntityValuesList.search(null);
-                    property.setValues(getValuesFromData(data, primaryKeyName));
+                    data = genericDAOEntityValuesList.search(null);
                 }
+                property.setValues(getValuesFromData(data, primaryKeyName));
             } else {
+                //Los valores dependen de otra/s columnas o son muy "grandes" para poder leerlos
                 if ((valuesList.namedSearch() != null) && (valuesList.namedSearch().trim().length() > 0)) {
-                    property.setUrlValues(basePath + "/" + valuesList.entity().getSimpleName() + "/namedsearch?name=" + valuesList.namedSearch());
+                    property.setUrlValues(basePath + "/" + valuesList.entity().getSimpleName() + "/namedsearch/" + valuesList.namedSearch());
                 } else {
                     property.setUrlValues(basePath + "/" + valuesList.entity().getSimpleName());
                 }

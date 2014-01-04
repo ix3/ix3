@@ -19,6 +19,7 @@ import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.BusinessMessage;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
+import es.logongas.ix3.persistence.services.dao.NamedSearch;
 import es.logongas.ix3.persistence.services.dao.OrderDirection;
 import es.logongas.ix3.persistence.services.dao.Order;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
@@ -77,8 +78,8 @@ public class RESTController {
             if (metaData == null) {
                 throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
-            
-            Metadata metadata=(new MetadataFactory()).getMetadata(metaData,metaDataFactory,daoFactory,httpRequest.getContextPath());
+
+            Metadata metadata = (new MetadataFactory()).getMetadata(metaData, metaDataFactory, daoFactory, httpRequest.getContextPath());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter();
 
             String jsonOut = jsonWriter.toJson(metadata);
@@ -121,7 +122,7 @@ public class RESTController {
                 }
             }
 
-            List<Order> orders = getOrders(metaData,httpRequest.getParameter("orderBy"));
+            List<Order> orders = getOrders(metaData, httpRequest.getParameter("orderBy"));
 
             Object entity = genericDAO.search(filter, orders);
             String jsonOut = jsonWriter.toJson(entity);
@@ -156,8 +157,8 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/namedsearch"}, method = RequestMethod.GET, produces = "application/json")
-    public void namedSearch(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
+    @RequestMapping(value = {"/{entityName}/namedsearch/{namedSearch}"}, method = RequestMethod.GET, produces = "application/json")
+    public void namedSearch(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("namedSearch") String namedSearch) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
             if (metaData == null) {
@@ -166,59 +167,9 @@ public class RESTController {
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter;
 
-            String namedSearch = httpRequest.getParameter("name");
+            Map<String,Object> filter=getFilterFromParameters(genericDAO,namedSearch, httpRequest.getParameterMap());
+            Object result = genericDAO.namedSearch(namedSearch, filter);
 
-            Method method = null;
-            Method[] methods = genericDAO.getClass().getMethods();
-            for (int i = 0; i < methods.length; i++) {
-                Method currentMethod = methods[i];
-                if (currentMethod.getName().equals(namedSearch)) {
-                    method = currentMethod;
-                    break;
-                }
-            }
-
-            if (method == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe el método " + namedSearch + " en la entidad " + entityName));
-            }
-
-            List args = new ArrayList();
-            for (int i = 0; i < method.getParameterTypes().length; i++) {
-                Class parameterType = method.getParameterTypes()[i];
-                Object parameterValue;
-
-                MetaData metaDataParameter = metaDataFactory.getMetaData(parameterType);
-                if (metaDataParameter != null) {
-                    //El parámetro es una Entidad de negocio pero solo nos han pasado la clave primaria.
-
-                    //Vamos a obtener el tipo de la clave primaria
-                    Class primaryKeyType = metaDataParameter.getPropertiesMetaData().get(metaDataParameter.getPrimaryKeyPropertyName()).getType();
-
-                    //Ahora vamos a obtener el valor de la clave primaria
-                    Serializable primaryKey;
-                    try {
-                        primaryKey = (Serializable) conversionService.convert(httpRequest.getParameter("parameter" + i), primaryKeyType);
-                    } catch (Exception ex) {
-                        throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro no tiene el formato adecuado para ser una PK:" + httpRequest.getParameter("parameter" + i)));
-                    }
-
-                    //Y finalmente Leemos la entidad en función de la clave primaria
-                    GenericDAO genericDAOParameter = daoFactory.getDAO(parameterType);
-                    parameterValue = genericDAOParameter.read(primaryKey);
-                    if (parameterValue == null) {
-                        throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro con valor '" + httpRequest.getParameter("parameter" + i) + "' no es de ninguna entidad."));
-                    }
-                } else {
-                    try {
-                        parameterValue = conversionService.convert(httpRequest.getParameter("parameter" + i), parameterType);
-                    } catch (Exception ex) {
-                        throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro no tiene el formato adecuado:" + httpRequest.getParameter("parameter" + i)));
-                    }
-                }
-                args.add(parameterValue);
-            }
-
-            Object result = method.invoke(genericDAO, args.toArray());
             if (result != null) {
                 jsonWriter = jsonFactory.getJsonWriter(null);
             } else {
@@ -256,7 +207,7 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET,  produces = "application/json")
+    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, produces = "application/json")
     public void read(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -299,30 +250,30 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}/{child}"}, method = RequestMethod.GET,  produces = "application/json")
+    @RequestMapping(value = {"/{entityName}/{id}/{child}"}, method = RequestMethod.GET, produces = "application/json")
     public void readChild(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @PathVariable("child") String child) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
             if (metaData == null) {
                 throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
-            if (metaData.getPropertiesMetaData().get(child)==null) {
-                throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "' no existe la propiedad '" + child +"'"));
+            if (metaData.getPropertiesMetaData().get(child) == null) {
+                throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "' no existe la propiedad '" + child + "'"));
             }
-            if (metaData.getPropertiesMetaData().get(child).isCollection()==false) {
+            if (metaData.getPropertiesMetaData().get(child).isCollection() == false) {
                 throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "'  la propiedad '" + child + "' no es una colección"));
             }
-            
+
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
             Object entity = genericDAO.read(id);
             Object childData;
-            if (entity!=null) {
-                childData=ReflectionUtil.getValueFromBean(entity,child);
+            if (entity != null) {
+                childData = ReflectionUtil.getValueFromBean(entity, child);
             } else {
                 //Si no hay datos , retornamos una lista vacia
-                childData=new ArrayList();
+                childData = new ArrayList();
             }
             String jsonOut = jsonWriter.toJson(childData);
 
@@ -355,9 +306,7 @@ public class RESTController {
             }
         }
     }
-    
-    
-    
+
     @RequestMapping(value = {"/{entityName}/create"}, method = RequestMethod.GET, produces = "application/json")
     public void create(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
@@ -402,7 +351,7 @@ public class RESTController {
 
     }
 
-    @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.POST, consumes = "application/json",produces = "application/json")
+    @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public void insert(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @RequestBody String jsonIn) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -554,7 +503,7 @@ public class RESTController {
             for (String s : splitOrderFields) {
                 Matcher matcher = pattern.matcher(s);
                 if (matcher.matches() == false) {
-                    throw new RuntimeException("El campo orderBy no tiene el formato adecuado:" + s + " en "+orderBy);
+                    throw new RuntimeException("El campo orderBy no tiene el formato adecuado:" + s + " en " + orderBy);
                 }
 
                 String fieldName = matcher.group(1);
@@ -584,6 +533,83 @@ public class RESTController {
 
         return orders;
     }
-    
- 
+
+    private Map<String, Object> getFilterFromParameters(GenericDAO genericDAO, String methodName, Map<String, String[]> parametersMap) throws BusinessException {
+        Map<String, Object> filter = new HashMap<String, Object>();
+        
+        Method method = ReflectionUtil.getMethod(genericDAO.getClass(), methodName);
+        if (method == null) {
+            throw new BusinessException(new BusinessMessage(null, "No existe el método " + methodName + " en la clase " + genericDAO.getClass().getName()));
+        }
+
+        NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(genericDAO.getClass(), methodName, NamedSearch.class);
+        if (namedSearchAnnotation == null) {
+            throw new RuntimeException("No es posible llamar al método '" + genericDAO.getClass().getName() + "." + methodName + "' si no contiene la anotacion NamedSearch");
+        }
+
+        String[] parameterNames = namedSearchAnnotation.parameterNames();
+        if ((parameterNames == null) && (method.getParameterTypes().length > 0)) {
+            throw new RuntimeException("Es necesario la lista de nombre de parametros para la anotación NameSearch del método:" + genericDAO.getClass().getName() + "." + methodName);
+        }
+
+        if (method.getParameterTypes().length != parameterNames.length) {
+            throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + genericDAO.getClass().getName() + "." + methodName);
+        }
+
+
+        for (int i = 0; i < method.getParameterTypes().length; i++) {
+            String parameterName = parameterNames[i];
+            Class parameterType = method.getParameterTypes()[i];
+            String stringParameterValue;
+            Object parameterValue;
+
+            
+            if (parametersMap.get(parameterName)==null) {
+                stringParameterValue="";
+            } else {
+                
+                if (parametersMap.get(parameterName).length!=1) {
+                    throw new RuntimeException("El parametro de la petición http '" + parameterName + "' solo puede teenr un único valor pero tiene:"+parametersMap.get(parameterName).length);
+                }
+                
+                stringParameterValue=parametersMap.get(parameterName)[0];
+            }
+            
+            
+            MetaData metaDataParameter = metaDataFactory.getMetaData(parameterType);
+            if (metaDataParameter != null) {
+                //El parámetro es una Entidad de negocio pero solo nos han pasado la clave primaria.
+
+                //Vamos a obtener el tipo de la clave primaria
+                Class primaryKeyType = metaDataParameter.getPropertiesMetaData().get(metaDataParameter.getPrimaryKeyPropertyName()).getType();
+
+                //Ahora vamos a obtener el valor de la clave primaria
+                Serializable primaryKey;
+                try {
+                    primaryKey = (Serializable) conversionService.convert(stringParameterValue, primaryKeyType);
+                } catch (Exception ex) {
+                    throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro no tiene el formato adecuado para ser una PK:" + stringParameterValue));
+                }
+
+                //Y finalmente Leemos la entidad en función de la clave primaria
+                GenericDAO genericDAOParameter = daoFactory.getDAO(parameterType);
+                parameterValue = genericDAOParameter.read(primaryKey);
+                if (parameterValue == null) {
+                    throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro con valor '" + stringParameterValue + "' no es de ninguna entidad."));
+                }
+            } else {
+                try {
+                    parameterValue = conversionService.convert(stringParameterValue, parameterType);
+                } catch (Exception ex) {
+                    throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro no tiene el formato adecuado:" + stringParameterValue));
+                }
+            }
+
+            filter.put(parameterName, parameterValue);
+
+        }
+
+        return filter;
+    }
+
 }
