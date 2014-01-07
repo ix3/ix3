@@ -291,7 +291,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
                     if (getEntityMetaData().getPropertiesMetaData().get(propertyName).getType().isAssignableFrom(String.class)) {
                         if ((value != null) && (((String) value).trim().equals("") == false)) {
-                            criteria.add(Restrictions.like(propertyName, value));
+                            criteria.add(Restrictions.like(propertyName, "%"+value+"%"));
                         }
                     } else {
                         if (value != null) {
