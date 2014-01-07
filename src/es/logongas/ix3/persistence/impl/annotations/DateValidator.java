@@ -34,6 +34,11 @@ public class DateValidator implements ConstraintValidator<Date, java.util.Date> 
 
     @Override
     public boolean isValid(java.util.Date date, ConstraintValidatorContext cvc) {
+        
+        if (date==null) {
+            return true;
+        }
+        
         GregorianCalendar gc=new GregorianCalendar();
         gc.setTime(date);
         
