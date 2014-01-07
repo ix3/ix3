@@ -84,6 +84,7 @@ public class RESTController {
 
             String jsonOut = jsonWriter.toJson(metadata);
 
+            cache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
@@ -127,6 +128,7 @@ public class RESTController {
             Object entity = genericDAO.search(filter, orders);
             String jsonOut = jsonWriter.toJson(entity);
 
+            noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
@@ -177,6 +179,7 @@ public class RESTController {
             }
             String jsonOut = jsonWriter.toJson(result);
 
+            noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
@@ -220,6 +223,7 @@ public class RESTController {
             Object entity = genericDAO.read(id);
             String jsonOut = jsonWriter.toJson(entity);
 
+            noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
@@ -277,6 +281,7 @@ public class RESTController {
             }
             String jsonOut = jsonWriter.toJson(childData);
 
+            noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
@@ -320,6 +325,7 @@ public class RESTController {
             Object entity = genericDAO.create();
             String jsonOut = jsonWriter.toJson(entity);
 
+            noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
@@ -366,7 +372,8 @@ public class RESTController {
             genericDAO.insert(entity);
             String jsonOut = jsonWriter.toJson(entity);
 
-            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+            noCache(httpServletResponse);
+            httpServletResponse.setStatus(HttpServletResponse.SC_CREATED);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
         } catch (BusinessException ex) {
@@ -411,6 +418,7 @@ public class RESTController {
             genericDAO.update(entity);
             String jsonOut = jsonWriter.toJson(entity);
 
+            noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
             httpServletResponse.getWriter().println(jsonOut);
@@ -456,6 +464,7 @@ public class RESTController {
                 throw new BusinessException(new BusinessMessage(null, "No existe la entidad a borrar"));
             }
 
+            noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } catch (BusinessException ex) {
 
@@ -485,6 +494,17 @@ public class RESTController {
         }
     }
 
+    private void noCache(HttpServletResponse httpServletResponse) {
+        httpServletResponse.setHeader("Cache-Control", "no-cache");
+    }
+    private void cache(HttpServletResponse httpServletResponse) {
+        cache(httpServletResponse, 60);
+    }     
+    private void cache(HttpServletResponse httpServletResponse,long expireSeconds) {
+        httpServletResponse.setHeader("Cache-Control", "private, no-transform, max-age="+expireSeconds);
+    } 
+    
+    
     /**
      * Como se ordenan los datos
      *
