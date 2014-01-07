@@ -496,7 +496,7 @@ public class RESTController {
     private List<Order> getOrders(MetaData metaData, String orderBy) {
         List<Order> orders = new ArrayList<Order>();
 
-        if (orderBy != null) {
+        if ((orderBy != null) && (orderBy.trim().isEmpty()==false)) {
             String[] splitOrderFields = orderBy.split(",");
 
             Pattern pattern = Pattern.compile("\\s*([^\\s]*)\\s*([^\\s]*)?\\s*");
