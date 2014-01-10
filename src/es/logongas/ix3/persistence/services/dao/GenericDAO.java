@@ -22,8 +22,8 @@ import java.util.Map;
 /**
  * Interfaz generico para todos los DAO
  * @author Lorenzo González
- * @param EntityType Tipo de la propia entidad
- * @param PrimaryKeyType Tipo de la clave primaria de la entidad
+ * @param <EntityType> Tipo de la propia entidad
+ * @param <PrimaryKeyType> Tipo de la clave primaria de la entidad
  */
 public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable> {
     EntityType create() throws BusinessException;
