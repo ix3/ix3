@@ -58,9 +58,14 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public EntityType create() throws BusinessException {
+    final public EntityType create() throws BusinessException {
+        Session session = sessionFactory.getCurrentSession();
+
         try {
-            return (EntityType) getEntityMetaData().getType().newInstance();
+            EntityType entity;
+            entity = (EntityType) getEntityMetaData().getType().newInstance();
+            this.postCreate(session, entity);
+            return entity;
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -69,12 +74,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public void insert(EntityType entity) throws BusinessException {
+    final public void insert(EntityType entity) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
+            this.preInsertBeforeTransaction(session, entity);
             session.beginTransaction();
+            this.preInsertInTransaction(session, entity);
             session.save(entity);
+            this.postInsertInTransaction(session, entity);
             session.getTransaction().commit();
+            this.postInsertAfterTransaction(session, entity);
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -115,21 +124,31 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public boolean update(EntityType entity) throws BusinessException {
+    final public boolean update(EntityType entity) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
+        boolean exists;
         try {
+            this.preUpdateBeforeTransaction(session, entity);
             session.beginTransaction();
 
             EntityType entity2 = (EntityType) session.get(getEntityMetaData().getType(), session.getIdentifier(entity));
+
             if (entity == null) {
+                exists = false;
+                this.preUpdateInTransaction(session, entity, exists);
+                this.postUpdateInTransaction(session, entity, exists);
                 session.getTransaction().commit();
-                return false;
             } else {
+                exists = true;
+                this.preUpdateInTransaction(session, entity, exists);
                 session.evict(entity2);
                 session.update(entity);
+                this.postUpdateInTransaction(session, entity, exists);
                 session.getTransaction().commit();
-                return true;
+
             }
+            this.postUpdateAfterTransaction(session, entity, exists);
+            return exists;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -170,13 +189,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public EntityType read(PrimaryKeyType id) throws BusinessException {
+    final public EntityType read(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
+            this.preReadBeforeTransaction(session, id);
             session.beginTransaction();
+            this.preReadInTransaction(session, id);
             EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
+            this.postReadInTransaction(session, id, entity);
             session.getTransaction().commit();
-
+            this.postReadAfterTransaction(session, id, entity);
             return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
@@ -218,19 +240,28 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public boolean delete(PrimaryKeyType id) throws BusinessException {
+    final public boolean delete(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
+        boolean exists;
+        EntityType entity = null;
         try {
+            this.preDeleteBeforeTransaction(session, id);
             session.beginTransaction();
-            EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
+            entity = (EntityType) session.get(getEntityMetaData().getType(), id);
+            this.preDeleteInTransaction(session, id, entity);
             if (entity == null) {
+                exists = false;
+                this.postDeleteInTransaction(session, id, exists);
                 session.getTransaction().commit();
-                return false;
             } else {
                 session.delete(entity);
+                exists = true;
+                this.postDeleteInTransaction(session, id, exists);
                 session.getTransaction().commit();
-                return true;
             }
+
+            this.postDeleteAfterTransaction(session, id, exists);
+            return exists;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -271,12 +302,12 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public List<EntityType> search(Map<String, Object> filter) throws BusinessException {
+    final public List<EntityType> search(Map<String, Object> filter) throws BusinessException {
         return search(filter, null);
     }
 
     @Override
-    public List<EntityType> search(Map<String, Object> filter, List<Order> orders) throws BusinessException {
+    final public List<EntityType> search(Map<String, Object> filter, List<Order> orders) throws BusinessException {
 
         if (orders == null) {
             orders = new ArrayList<Order>();
@@ -291,7 +322,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
                     if (getEntityMetaData().getPropertiesMetaData().get(propertyName).getType().isAssignableFrom(String.class)) {
                         if ((value != null) && (((String) value).trim().equals("") == false)) {
-                            criteria.add(Restrictions.like(propertyName, "%"+value+"%"));
+                            criteria.add(Restrictions.like(propertyName, "%" + value + "%"));
                         }
                     } else {
                         if (value != null) {
@@ -362,13 +393,12 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public Object namedSearch(String namedSearch, Map<String, Object> filter) throws BusinessException {
+    final public Object namedSearch(String namedSearch, Map<String, Object> filter) throws BusinessException {
         try {
-            if (filter==null) {
-                filter=new HashMap<String, Object>();
+            if (filter == null) {
+                filter = new HashMap<String, Object>();
             }
-            
-            
+
             Method method = ReflectionUtil.getMethod(this.getClass(), namedSearch);
             if (method == null) {
                 throw new BusinessException(new BusinessMessage(null, "No existe el método " + namedSearch + " en la clase DAO: " + this.getClass().getName()));
@@ -409,12 +439,17 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    public EntityType readByNaturalKey(Object value) throws BusinessException {
+    final public EntityType readByNaturalKey(Object naturalKey) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
+
+            this.preReadByNaturalKeyBeforeTransaction(session, naturalKey);
             session.beginTransaction();
-            EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(value);
+            this.preReadByNaturalKeyInTransaction(session, naturalKey);
+            EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(naturalKey);
+            this.postReadByNaturalKeyInTransaction(session, naturalKey, entity);
             session.getTransaction().commit();
+            this.postReadByNaturalKeyAfterTransaction(session, naturalKey, entity);
             return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
@@ -456,8 +491,63 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     }
 
-    public MetaData getEntityMetaData() {
+    final private MetaData getEntityMetaData() {
         return metaDataFactory.getMetaData(entityType);
     }
+
+    
+    protected void postCreate(Session session, EntityType entity) {
+    }    
+    
+    protected void preInsertBeforeTransaction(Session session, EntityType entity) {
+    }
+    protected void preInsertInTransaction(Session session, EntityType entity) {
+    }
+    protected void postInsertInTransaction(Session session, EntityType entity) {
+    }
+    protected void postInsertAfterTransaction(Session session, EntityType entity) {
+    }
+
+    protected void preReadBeforeTransaction(Session session, PrimaryKeyType id) {
+    }
+    protected void preReadInTransaction(Session session, PrimaryKeyType id) {
+    }
+    protected void postReadInTransaction(Session session, PrimaryKeyType id, EntityType entity) {
+    }
+    protected void postReadAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) {
+    }
+
+    protected void preReadByNaturalKeyBeforeTransaction(Session session, Object naturalKey) {
+    }
+    protected void preReadByNaturalKeyInTransaction(Session session, Object naturalKey) {
+    }
+    protected void postReadByNaturalKeyInTransaction(Session session, Object naturalKey, EntityType entity) {
+    }
+    protected void postReadByNaturalKeyAfterTransaction(Session session, Object naturalKey, EntityType entity) {  
+    }    
+
+    protected void preUpdateBeforeTransaction(Session session, EntityType entity) {
+    }
+    protected void preUpdateInTransaction(Session session, EntityType entity, boolean exists) {
+    }
+    protected void postUpdateInTransaction(Session session, EntityType entity, boolean exists) {
+    }
+    protected void postUpdateAfterTransaction(Session session, EntityType entity, boolean exists) {
+    }
+    
+    
+    protected void preDeleteBeforeTransaction(Session session, PrimaryKeyType id) {
+    }
+    protected void preDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) {
+    }
+    protected void postDeleteInTransaction(Session session, PrimaryKeyType id, boolean exists) {
+    }
+    protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, boolean exists) {
+    }
+
+
+
+
+
 
 }
