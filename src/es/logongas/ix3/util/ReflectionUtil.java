@@ -21,6 +21,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -72,7 +73,11 @@ public class ReflectionUtil {
 
     static private <T extends Annotation> T getFieldAnnotation(Class baseClass, String propertyName, Class<T> annotationClass) {
         Field field = getField(baseClass, propertyName);
+        if (propertyName.equals("listaValores")) {
+            System.out.println("La propiedad=" + field);
+        }
         if (field == null) {
+
             return null;
         }
 
@@ -89,45 +94,39 @@ public class ReflectionUtil {
             if (method == null) {
                 method = getMethod(baseClass, methodName);
                 if (method == null) {
-                    
+
                     return null;
                 }
             }
         }
         T annotation = method.getAnnotation(annotationClass);
-        
+
         return annotation;
     }
 
-    static public Field  getField(Class clazz,String propertyName) {
-        try {
-            return clazz.getField(propertyName);
-        } catch (NoSuchFieldException ex) {
-            return null;
-        }
-    }    
-    
-    
-    static public Method getMethod(Class clazz,String methodName) {
-        Method[] methods=clazz.getMethods();
-        
-        Method method=null;
-        for(int i=0;i<methods.length;i++) {
+    static public Field getField(Class clazz, String propertyName) {
+        return ReflectionUtils.findField(clazz, propertyName);
+    }
+
+    static public Method getMethod(Class clazz, String methodName) {
+        Method[] methods = clazz.getMethods();
+
+        Method method = null;
+        for (int i = 0; i < methods.length; i++) {
             if (methods[i].getName().equals(methodName)) {
-                
-                if (method!=null) {
-                    throw new RuntimeException("Existen dos o mas metodos llamados '" + methodName +"' en '" + clazz.getName() + "'");
+
+                if (method != null) {
+                    throw new RuntimeException("Existen dos o mas metodos llamados '" + methodName + "' en '" + clazz.getName() + "'");
                 }
-                
-                method=methods[i];
+
+                method = methods[i];
             }
         }
-        
+
         return method;
-        
+
     }
-    
-    
+
     /**
      * Obtiene el valor de la propiedad de un Bean
      *

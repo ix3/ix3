@@ -251,16 +251,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             this.preDeleteInTransaction(session, id, entity);
             if (entity == null) {
                 exists = false;
-                this.postDeleteInTransaction(session, id, exists);
+                this.postDeleteInTransaction(session, id, entity);
                 session.getTransaction().commit();
             } else {
                 session.delete(entity);
                 exists = true;
-                this.postDeleteInTransaction(session, id, exists);
+                this.postDeleteInTransaction(session, id, entity);
                 session.getTransaction().commit();
             }
 
-            this.postDeleteAfterTransaction(session, id, exists);
+            this.postDeleteAfterTransaction(session, id, entity);
             return exists;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
@@ -491,63 +491,81 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     }
 
-    final private MetaData getEntityMetaData() {
+    private MetaData getEntityMetaData() {
         return metaDataFactory.getMetaData(entityType);
     }
 
-    
     protected void postCreate(Session session, EntityType entity) {
-    }    
+    }
+
+    
     
     protected void preInsertBeforeTransaction(Session session, EntityType entity) {
     }
+
     protected void preInsertInTransaction(Session session, EntityType entity) {
     }
+
     protected void postInsertInTransaction(Session session, EntityType entity) {
     }
+
     protected void postInsertAfterTransaction(Session session, EntityType entity) {
     }
 
+    
+    
     protected void preReadBeforeTransaction(Session session, PrimaryKeyType id) {
     }
+
     protected void preReadInTransaction(Session session, PrimaryKeyType id) {
     }
+
     protected void postReadInTransaction(Session session, PrimaryKeyType id, EntityType entity) {
     }
+
     protected void postReadAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) {
     }
 
+    
+    
     protected void preReadByNaturalKeyBeforeTransaction(Session session, Object naturalKey) {
     }
+
     protected void preReadByNaturalKeyInTransaction(Session session, Object naturalKey) {
     }
+
     protected void postReadByNaturalKeyInTransaction(Session session, Object naturalKey, EntityType entity) {
     }
-    protected void postReadByNaturalKeyAfterTransaction(Session session, Object naturalKey, EntityType entity) {  
-    }    
 
+    protected void postReadByNaturalKeyAfterTransaction(Session session, Object naturalKey, EntityType entity) {
+    }
+
+    
+    
     protected void preUpdateBeforeTransaction(Session session, EntityType entity) {
     }
+
     protected void preUpdateInTransaction(Session session, EntityType entity, boolean exists) {
     }
+
     protected void postUpdateInTransaction(Session session, EntityType entity, boolean exists) {
     }
+
     protected void postUpdateAfterTransaction(Session session, EntityType entity, boolean exists) {
     }
+
     
     
     protected void preDeleteBeforeTransaction(Session session, PrimaryKeyType id) {
     }
+
     protected void preDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) {
     }
-    protected void postDeleteInTransaction(Session session, PrimaryKeyType id, boolean exists) {
+
+    protected void postDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) {
     }
-    protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, boolean exists) {
+
+    protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) {
     }
-
-
-
-
-
 
 }
