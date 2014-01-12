@@ -15,10 +15,13 @@
  */
 package es.logongas.ix3.web.services.json;
 
+import java.util.List;
+
 /**
  * Transforma un Objeto Java en un String JSON
  * @author Lorenzo González
  */
 public interface JsonWriter {
     String toJson(Object obj);
+    String toJson(Object obj,List<String> expand);
 }

@@ -30,12 +30,10 @@ import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
 import es.logongas.ix3.web.services.json.JsonFactory;
 import es.logongas.ix3.web.services.json.JsonReader;
 import es.logongas.ix3.web.services.json.JsonWriter;
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +67,7 @@ public class RESTController {
     ConversionService conversionService;
     @Autowired
     JsonFactory jsonFactory;
-    private static Log log = LogFactory.getLog(RESTController.class);
+    private static final Log log = LogFactory.getLog(RESTController.class);
 
     @RequestMapping(value = {"/{entityName}/metadata"}, method = RequestMethod.GET, produces = "application/json")
     public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
@@ -109,6 +107,8 @@ public class RESTController {
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
+            List<String> expand=getExpand(httpRequest.getParameter("$expand")); 
+            
             Map<String, Object> filter = new HashMap<String, Object>();
             Enumeration<String> enumeration = httpRequest.getParameterNames();
             while (enumeration.hasMoreElements()) {
@@ -126,7 +126,7 @@ public class RESTController {
             List<Order> orders = getOrders(metaData, httpRequest.getParameter("orderBy"));
 
             Object entity = genericDAO.search(filter, orders);
-            String jsonOut = jsonWriter.toJson(entity);
+            String jsonOut = jsonWriter.toJson(entity,expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -169,6 +169,9 @@ public class RESTController {
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter;
 
+            //Entidades a expandir
+            List<String> expand=getExpand(httpRequest.getParameter("$expand"));            
+            
             Map<String,Object> filter=getFilterFromParameters(genericDAO,namedSearch, httpRequest.getParameterMap());
             Object result = genericDAO.namedSearch(namedSearch, filter);
 
@@ -177,7 +180,7 @@ public class RESTController {
             } else {
                 jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
             }
-            String jsonOut = jsonWriter.toJson(result);
+            String jsonOut = jsonWriter.toJson(result,expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -220,8 +223,11 @@ public class RESTController {
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
+            //Entidades a expandir
+            List<String> expand=getExpand(httpRequest.getParameter("$expand")); 
+            
             Object entity = genericDAO.read(id);
-            String jsonOut = jsonWriter.toJson(entity);
+            String jsonOut = jsonWriter.toJson(entity,expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -271,6 +277,9 @@ public class RESTController {
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
+            //Entidades a expandir
+            List<String> expand=getExpand(httpRequest.getParameter("$expand"));                 
+            
             Object entity = genericDAO.read(id);
             Object childData;
             if (entity != null) {
@@ -279,7 +288,7 @@ public class RESTController {
                 //Si no hay datos , retornamos una lista vacia
                 childData = new ArrayList();
             }
-            String jsonOut = jsonWriter.toJson(childData);
+            String jsonOut = jsonWriter.toJson(childData,expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -554,6 +563,19 @@ public class RESTController {
         return orders;
     }
 
+    /**
+     * Transforma el parámetro "expand" que viene por la petición http en una array
+     * @param expand El String con varios expand separados por comas
+     * @return El array con cada uno de ello.
+     */
+    private List<String> getExpand(String expand) {
+        if ((expand==null) || (expand.trim().isEmpty())) {
+            return new ArrayList<String>();
+        } else {
+            return Arrays.asList(expand.split(",")); 
+        }
+    }
+    
     private Map<String, Object> getFilterFromParameters(GenericDAO genericDAO, String methodName, Map<String, String[]> parametersMap) throws BusinessException {
         Map<String, Object> filter = new HashMap<String, Object>();
         

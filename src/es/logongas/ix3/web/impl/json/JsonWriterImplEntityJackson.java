@@ -52,23 +52,31 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
     @Override
     public String toJson(Object obj) {
+        return toJson(obj,null);
+    }
+    
+    @Override
+    public String toJson(Object obj,List<String> expand) {
         try {
-            Object jsonValue = getJsonObjectFromObject(obj);
+            if (expand==null) {
+                expand=new ArrayList<String>();;
+            }
+            Object jsonValue = getJsonObjectFromObject(obj,expand,"");
             return objectMapper.writeValueAsString(jsonValue);
         } catch (JsonProcessingException ex) {
             throw new RuntimeException(ex);
         }
 
-    }
-
-    private Object getJsonObjectFromObject(Object obj) {
+    }    
+    
+    private Object getJsonObjectFromObject(Object obj,List<String> expand,String path) {
         if (obj == null) {
             return null;
         } else if (obj instanceof Collection) {
             Collection collection = (Collection) obj;
             List jsonList = new ArrayList();
             for (Object element : collection) {
-                jsonList.add(getJsonObjectFromObject(element));
+                jsonList.add(getJsonObjectFromObject(element,expand,path));
             }
 
             return jsonList;
@@ -78,7 +86,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             for (Object key : map.keySet()) {
                 Object value = map.get(key);
 
-                jsonMap.put(key, getJsonObjectFromObject(value));
+                jsonMap.put(key, getJsonObjectFromObject(value,expand,path));
             }
 
             return jsonMap;
@@ -87,7 +95,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             MetaData metaData = metaDataFactory.getMetaData(obj);
 
             if (metaData != null) {
-                Map<String, Object> jsonMap = getMapFromEntity(obj, metaData);
+                Map<String, Object> jsonMap = getMapFromEntity(obj, metaData,expand,path);
 
                 return jsonMap;
             } else {
@@ -98,7 +106,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 if (metaData.getMetaType() == MetaType.Scalar) {
                     jsonValue = obj;
                 } else {
-                    jsonValue = getMapFromEntity(obj, metaData);
+                    jsonValue = getMapFromEntity(obj, metaData,expand,path);
                 }
 
                 return jsonValue;
@@ -106,7 +114,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         }
     }
 
-    private Map<String, Object> getMapFromEntity(Object obj, MetaData metaData) {
+    private Map<String, Object> getMapFromEntity(Object obj, MetaData metaData,List<String> expand,String path) {
         Map<String, Object> values = new LinkedHashMap<String, Object>();
 
         if (obj == null) {
@@ -130,7 +138,12 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                     case Entity: {
                         Object rawValue = getValueFromBean(obj, propertyName);
                         if (rawValue != null) {
-                            value = getMapFromForeingEntity(rawValue, propertyMetaData);
+                            if (expandMath(expand,path+"."+propertyName)==true) {
+                                //En vez de poner solo la clave primaria , expandimos la entidad
+                                value = getMapFromEntity(rawValue, propertyMetaData,expand,path+"."+propertyName);
+                            } else {
+                                value = getMapFromForeingEntity(rawValue, propertyMetaData);
+                            }
                         } else {
                             value = null;
                         }
@@ -139,7 +152,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                     case Component: {
                         Object rawValue = getValueFromBean(obj, propertyName);
                         if (rawValue != null) {
-                            value = getMapFromEntity(rawValue, propertyMetaData);
+                            value = getMapFromEntity(rawValue, propertyMetaData,expand,path+"."+propertyName);
                         } else {
                             value = null;
                         }
@@ -153,12 +166,12 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             } else {
                 switch (propertyMetaData.getCollectionType()) {
                     case List: {
-                        if (propertyMetaData.isCollectionLazy() == false) {
+                        if ((propertyMetaData.isCollectionLazy() == false) || (expandMath(expand,path+"."+propertyName))) {
                             Object rawValue = getValueFromBean(obj, propertyName);
                             List list = (List) rawValue;
                             List jsonList = new ArrayList();
                             for (Object element : list) {
-                                jsonList.add(getJsonObjectFromObjectFromCollection(element,propertyMetaData));
+                                jsonList.add(getJsonObjectFromObjectFromCollection(element,propertyMetaData,expand,path+"."+propertyName));
                             }
 
                             value = jsonList;
@@ -169,12 +182,12 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         break;
                     }
                     case Set: {
-                        if (propertyMetaData.isCollectionLazy() == false) {
+                        if ((propertyMetaData.isCollectionLazy() == false) || (expandMath(expand,path+"."+propertyName))) {
                             Object rawValue = getValueFromBean(obj, propertyName);
                             Set set = (Set) rawValue;
                             Set jsonSet = new HashSet();
                             for (Object element : set) {
-                                jsonSet.add(getJsonObjectFromObjectFromCollection(element,propertyMetaData));
+                                jsonSet.add(getJsonObjectFromObjectFromCollection(element,propertyMetaData,expand,path+"."+propertyName));
                             }
 
                             value = jsonSet;
@@ -185,7 +198,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         break;
                     }
                     case Map: {
-                        if (propertyMetaData.isCollectionLazy() == false) {
+                        if ((propertyMetaData.isCollectionLazy() == false) || (expandMath(expand,path+"."+propertyName))) {
                             Object rawValue = getValueFromBean(obj, propertyName);
 
                             Map map = (Map) rawValue;
@@ -193,7 +206,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                             for (Object key : map.keySet()) {
                                 Object valueMap = map.get(key);
 
-                                jsonMap.put(key, getJsonObjectFromObjectFromCollection(valueMap,propertyMetaData));
+                                jsonMap.put(key, getJsonObjectFromObjectFromCollection(valueMap,propertyMetaData,expand,path+"."+propertyName));
                             }
 
                             value = jsonMap;
@@ -217,7 +230,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         return values;
     }
 
-    private Object getJsonObjectFromObjectFromCollection(Object obj, MetaData metaData) {
+    private Object getJsonObjectFromObjectFromCollection(Object obj, MetaData metaData,List<String> expand,String path) {
         if (obj == null) {
             return null;
         }
@@ -232,7 +245,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 return obj;
             case Entity:
             case Component:
-                Map<String, Object> jsonMap = getMapFromEntity(obj, metaData);
+                Map<String, Object> jsonMap = getMapFromEntity(obj, metaData,expand,path);
 
                 return jsonMap;
             default:
@@ -307,4 +320,16 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             throw new RuntimeException(ex);
         }
     }
+    
+    private boolean expandMath(List<String> expands,String propertyPath) {
+        for(String expandProperty:expands) {
+            if (("."+expandProperty).startsWith(propertyPath)) {
+                return true;
+            }
+        }
+        
+        return false;
+        
+    }
+    
 }

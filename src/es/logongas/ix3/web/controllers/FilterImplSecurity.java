@@ -15,15 +15,12 @@
  */
 package es.logongas.ix3.web.controllers;
 
-import es.logongas.ix3.model.User;
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.security.services.authentication.AuthenticationManager;
 import es.logongas.ix3.security.services.authentication.Principal;
 import es.logongas.ix3.security.services.authorization.AuthorizationManager;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
