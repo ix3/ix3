@@ -69,7 +69,14 @@ public class RESTController {
     JsonFactory jsonFactory;
     private static final Log log = LogFactory.getLog(RESTController.class);
 
-    @RequestMapping(value = {"/{entityName}/metadata"}, method = RequestMethod.GET, produces = "application/json")
+    private final String PARAMETER_EXPAND="$expand";
+    private final String PARAMETER_ORDERBY="$orderby";
+    private final String PATH_METADATA="$metadata";
+    private final String PATH_NAMEDSEARCH="$namedsearch";
+    private final String PATH_CREATE="$create";
+    
+    
+    @RequestMapping(value = {"/{entityName}/" + PATH_METADATA}, method = RequestMethod.GET, produces = "application/json")
     public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -107,7 +114,7 @@ public class RESTController {
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
-            List<String> expand=getExpand(httpRequest.getParameter("$expand")); 
+            List<String> expand=getExpand(httpRequest.getParameter(PARAMETER_EXPAND)); 
             
             Map<String, Object> filter = new HashMap<String, Object>();
             Enumeration<String> enumeration = httpRequest.getParameterNames();
@@ -123,7 +130,7 @@ public class RESTController {
                 }
             }
 
-            List<Order> orders = getOrders(metaData, httpRequest.getParameter("orderBy"));
+            List<Order> orders = getOrders(metaData, httpRequest.getParameter(PARAMETER_ORDERBY));
 
             Object entity = genericDAO.search(filter, orders);
             String jsonOut = jsonWriter.toJson(entity,expand);
@@ -159,7 +166,7 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/namedsearch/{namedSearch}"}, method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = {"/{entityName}/" + PATH_NAMEDSEARCH + "/{namedSearch}"}, method = RequestMethod.GET, produces = "application/json")
     public void namedSearch(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("namedSearch") String namedSearch) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
@@ -170,7 +177,7 @@ public class RESTController {
             JsonWriter jsonWriter;
 
             //Entidades a expandir
-            List<String> expand=getExpand(httpRequest.getParameter("$expand"));            
+            List<String> expand=getExpand(httpRequest.getParameter(PARAMETER_EXPAND));            
             
             Map<String,Object> filter=getFilterFromParameters(genericDAO,namedSearch, httpRequest.getParameterMap());
             Object result = genericDAO.namedSearch(namedSearch, filter);
@@ -224,7 +231,7 @@ public class RESTController {
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
             //Entidades a expandir
-            List<String> expand=getExpand(httpRequest.getParameter("$expand")); 
+            List<String> expand=getExpand(httpRequest.getParameter(PARAMETER_EXPAND)); 
             
             Object entity = genericDAO.read(id);
             String jsonOut = jsonWriter.toJson(entity,expand);
@@ -278,7 +285,7 @@ public class RESTController {
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
             //Entidades a expandir
-            List<String> expand=getExpand(httpRequest.getParameter("$expand"));                 
+            List<String> expand=getExpand(httpRequest.getParameter(PARAMETER_EXPAND));                 
             
             Object entity = genericDAO.read(id);
             Object childData;
@@ -321,7 +328,7 @@ public class RESTController {
         }
     }
 
-    @RequestMapping(value = {"/{entityName}/create"}, method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = {"/{entityName}/" + PATH_CREATE}, method = RequestMethod.GET, produces = "application/json")
     public void create(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
             MetaData metaData = metaDataFactory.getMetaData(entityName);
