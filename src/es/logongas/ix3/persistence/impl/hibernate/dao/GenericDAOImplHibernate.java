@@ -20,6 +20,7 @@ import es.logongas.ix3.persistence.services.dao.BusinessMessage;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
 import es.logongas.ix3.persistence.services.dao.NamedSearch;
 import es.logongas.ix3.persistence.services.dao.Order;
+import es.logongas.ix3.persistence.services.dao.Page;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.util.ReflectionUtil;
@@ -33,9 +34,14 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Projection;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.internal.CriteriaImpl;
+import org.hibernate.transform.ResultTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializable> implements GenericDAO<EntityType, PrimaryKeyType> {
@@ -308,11 +314,31 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     @Override
     final public List<EntityType> search(Map<String, Object> filter, List<Order> orders) throws BusinessException {
+        return pageableSearch(filter, orders, 0, Integer.MAX_VALUE).getContent();
+    }
+    
+    @Override
+    public Page<EntityType> pageableSearch(Map<String, Object> filter, int pageNumber, int pageSize) throws BusinessException {
+        return pageableSearch(filter, null, pageNumber, pageSize);
+    }
+    
 
+
+    @Override
+    public Page<EntityType> pageableSearch(Map<String, Object> filter, List<Order> orders, int pageNumber, int pageSize) throws BusinessException {
+
+        if (pageNumber<0) {
+            throw new RuntimeException("El agumento pageNumber no pude ser negativo");
+        }
+        if (pageSize<1) {
+            throw new RuntimeException("El agumento pageNumber debe ser mayor que 0");
+        }        
         if (orders == null) {
             orders = new ArrayList<Order>();
         }
 
+        
+        
         Session session = sessionFactory.getCurrentSession();
         try {
             Criteria criteria = session.createCriteria(getEntityMetaData().getType());
@@ -350,9 +376,39 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 }
             }
 
-            List<EntityType> entities = criteria.list();
+            List results;
+            int totalPages;
+            if ((pageSize == Integer.MAX_VALUE) && (pageNumber == 0)) {
+                //Si el tamaño de página es tan gande (el máximo), seguro que no hace falta paginar
+                results = criteria.list();
+                totalPages = 1;
+            } else {
+                CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
+                
+                Projection originalProjection = criteriaImpl.getProjection();
+                ResultTransformer originalResultTransformer = criteriaImpl.getResultTransformer();                
+                
+                criteria.setProjection(Projections.rowCount());
+                Long totalCount = (Long) criteria.uniqueResult();
 
-            return entities;
+                criteria.setProjection(originalProjection);
+                criteria.setResultTransformer(originalResultTransformer);
+
+                criteria.setMaxResults(pageSize);
+                criteria.setFirstResult(pageSize * pageNumber);
+
+                results = criteria.list();
+
+                if (totalCount == 0) {
+                    totalPages = 0;
+                } else {
+                    totalPages = (int) (Math.ceil(((double) totalCount) / ((double) pageSize)));
+                }
+            }
+
+            Page page = new PageImpl(results, pageSize, pageNumber, totalPages);
+
+            return page;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -390,8 +446,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             }
             throw new RuntimeException(ex);
         }
-    }
 
+    }    
+    
     @Override
     final public Object namedSearch(String namedSearch, Map<String, Object> filter) throws BusinessException {
         try {
@@ -498,8 +555,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected void postCreate(Session session, EntityType entity) {
     }
 
-    
-    
     protected void preInsertBeforeTransaction(Session session, EntityType entity) {
     }
 
@@ -512,8 +567,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected void postInsertAfterTransaction(Session session, EntityType entity) {
     }
 
-    
-    
     protected void preReadBeforeTransaction(Session session, PrimaryKeyType id) {
     }
 
@@ -526,8 +579,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected void postReadAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) {
     }
 
-    
-    
     protected void preReadByNaturalKeyBeforeTransaction(Session session, Object naturalKey) {
     }
 
@@ -540,8 +591,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected void postReadByNaturalKeyAfterTransaction(Session session, Object naturalKey, EntityType entity) {
     }
 
-    
-    
     protected void preUpdateBeforeTransaction(Session session, EntityType entity) {
     }
 
@@ -554,8 +603,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected void postUpdateAfterTransaction(Session session, EntityType entity, boolean exists) {
     }
 
-    
-    
     protected void preDeleteBeforeTransaction(Session session, PrimaryKeyType id) {
     }
 
