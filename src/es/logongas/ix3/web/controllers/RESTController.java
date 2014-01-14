@@ -71,6 +71,8 @@ public class RESTController {
 
     private final String PARAMETER_EXPAND="$expand";
     private final String PARAMETER_ORDERBY="$orderby";
+    private final String PARAMETER_PAGENUMBER="$pagenumber";
+    private final String PARAMETER_PAGESIZE="$pagesize";    
     private final String PATH_METADATA="$metadata";
     private final String PATH_NAMEDSEARCH="$namedsearch";
     private final String PATH_CREATE="$create";
@@ -131,8 +133,19 @@ public class RESTController {
             }
 
             List<Order> orders = getOrders(metaData, httpRequest.getParameter(PARAMETER_ORDERBY));
-
-            Object entity = genericDAO.search(filter, orders);
+            Integer pageSize=getPageSize(httpRequest.getParameter(PARAMETER_PAGESIZE));
+            Integer pageNumber=getPageNumber(httpRequest.getParameter(PARAMETER_PAGENUMBER));
+            
+            Object entity;
+            if ((pageSize==null) && (pageNumber==null)) {
+                entity = genericDAO.search(filter, orders);
+            } else if ((pageSize!=null) && (pageNumber!=null)) {
+                entity = genericDAO.pageableSearch(filter, orders, pageNumber, pageSize);
+            } else {
+                throw new RuntimeException("Los datos de la paginacion no son correctos, es necesario los 2 datos:" + PARAMETER_PAGENUMBER + " y " + PARAMETER_PAGESIZE);
+            }
+            
+            
             String jsonOut = jsonWriter.toJson(entity,expand);
 
             noCache(httpServletResponse);
@@ -659,6 +672,22 @@ public class RESTController {
         }
 
         return filter;
+    }
+
+    private Integer getPageSize(String pageSize) {
+        if (pageSize==null) {
+            return null;
+        }else {
+            return Integer.parseInt(pageSize);
+        }
+    }
+
+    private Integer getPageNumber(String pageNumber) {
+        if (pageNumber==null) {
+            return null;
+        }else {
+            return Integer.parseInt(pageNumber);
+        }
     }
 
 }

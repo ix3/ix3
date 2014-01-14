@@ -181,7 +181,11 @@ public class MetaDataImplBean implements MetaData {
                 if (returnType instanceof ParameterizedType) {
                     ParameterizedType paramType = (ParameterizedType) returnType;
                     Type[] argTypes = paramType.getActualTypeArguments();
-                    collectionClass = (Class) argTypes[0];
+                    if (argTypes[0] instanceof Class) {
+                        collectionClass = (Class) argTypes[0];
+                    } else {
+                        collectionClass = Object.class;
+                    }
                 } else {
                     collectionClass = Object.class;
                 }
@@ -190,7 +194,11 @@ public class MetaDataImplBean implements MetaData {
                 if (returnType instanceof ParameterizedType) {
                     ParameterizedType paramType = (ParameterizedType) returnType;
                     Type[] argTypes = paramType.getActualTypeArguments();
-                    collectionClass = (Class) argTypes[1];
+                    if (argTypes[1] instanceof Class) {
+                        collectionClass = (Class) argTypes[1];
+                    } else {
+                        collectionClass = Object.class;
+                    }
                 } else {
                     collectionClass = Object.class;
                 }
@@ -260,7 +268,5 @@ public class MetaDataImplBean implements MetaData {
         }
 
     }
-    
-    
 
 }

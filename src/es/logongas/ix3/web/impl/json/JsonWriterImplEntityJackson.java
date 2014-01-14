@@ -18,6 +18,7 @@ package es.logongas.ix3.web.impl.json;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import es.logongas.ix3.persistence.services.dao.Page;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.persistence.services.metadata.MetaType;
@@ -90,6 +91,14 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             }
 
             return jsonMap;
+        } else if (obj instanceof Page) {
+            Page page = (Page) obj;
+            Map jsonMap = new LinkedHashMap();
+            jsonMap.put("pageSize",page.getPageSize());
+            jsonMap.put("pageNumber",page.getPageNumber());
+            jsonMap.put("totalPages",page.getTotalPages());
+            jsonMap.put("content",getJsonObjectFromObject(page.getContent(),expand,path));
+            return jsonMap;            
         } else {
             //Es simplemente un objeto "simple"
             MetaData metaData = metaDataFactory.getMetaData(obj);
