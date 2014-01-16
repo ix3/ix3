@@ -73,9 +73,6 @@ public class ReflectionUtil {
 
     static private <T extends Annotation> T getFieldAnnotation(Class baseClass, String propertyName, Class<T> annotationClass) {
         Field field = getField(baseClass, propertyName);
-        if (propertyName.equals("listaValores")) {
-            System.out.println("La propiedad=" + field);
-        }
         if (field == null) {
 
             return null;

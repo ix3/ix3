@@ -343,11 +343,7 @@ public class MetaDataImplHibernate implements MetaData {
                 valuesListImpl.entity=this.getType();
             }
             constraints.valuesList=valuesListImpl;
-            if (clazz!=null)
-            System.out.println("***********"+clazz.getName()+"."+getPropertyName());
         } else {
-            if (clazz!=null)
-            System.out.println("!"+clazz.getName()+"."+getPropertyName());
             constraints.valuesList=null;
         }
         
