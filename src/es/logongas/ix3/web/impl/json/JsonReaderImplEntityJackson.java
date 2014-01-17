@@ -55,7 +55,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-        objectMapper.setTimeZone(TimeZone.getTimeZone("Europe/Madrid"));
+        objectMapper.setTimeZone(TimeZone.getTimeZone("GMT+01:00"));
     }
 
     @Override
