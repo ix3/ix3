@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.DateFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -55,6 +56,8 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        objectMapper.setDateFormat(dateFormat);
         objectMapper.setTimeZone(TimeZone.getTimeZone("Europe/Madrid"));
     }
 
