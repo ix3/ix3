@@ -45,8 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class JsonReaderImplEntityJackson implements JsonReader {
 
-    private Class clazz;
-    private ObjectMapper objectMapper;
+    private final Class clazz;
+    private final ObjectMapper objectMapper;
     @Autowired
     private DAOFactory daoFactory;
     @Autowired
@@ -57,9 +57,9 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
-        objectMapper.setDateFormat(dateFormat);
-        objectMapper.setTimeZone(TimeZone.getTimeZone("Europe/Madrid"));
+        //DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.XXX'Z'");
+        //objectMapper.setDateFormat(dateFormat);
+        //objectMapper.setTimeZone(TimeZone.getTimeZone("Europe/Madrid"));
     }
 
     @Override
