@@ -33,7 +33,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone
+import java.util.TimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -55,7 +55,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-        objectMapper.setTimeZone(TimeZone.getTimeZone("GMT+01:00"));
+        objectMapper.setTimeZone(TimeZone.getTimeZone("Europe/Madrid"));
     }
 
     @Override
