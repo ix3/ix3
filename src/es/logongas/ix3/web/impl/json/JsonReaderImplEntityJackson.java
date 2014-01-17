@@ -34,7 +34,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.DateFormat;
+import java.text.DateFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
