@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
-import es.logongas.ix3.persistence.services.metadata.CollectionType;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.web.services.json.JsonReader;
@@ -33,9 +32,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -57,9 +53,6 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-        //DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.XXX'Z'");
-        //objectMapper.setDateFormat(dateFormat);
-        //objectMapper.setTimeZone(TimeZone.getTimeZone("Europe/Madrid"));
     }
 
     @Override

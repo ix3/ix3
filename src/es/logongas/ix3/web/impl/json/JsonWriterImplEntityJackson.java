@@ -44,11 +44,11 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
     @Autowired
     private MetaDataFactory metaDataFactory;
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     public JsonWriterImplEntityJackson() {
         objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);       
     }
 
     @Override
@@ -60,7 +60,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
     public String toJson(Object obj,List<String> expand) {
         try {
             if (expand==null) {
-                expand=new ArrayList<String>();;
+                expand=new ArrayList<String>();
             }
             Object jsonValue = getJsonObjectFromObject(obj,expand,"");
             return objectMapper.writeValueAsString(jsonValue);
