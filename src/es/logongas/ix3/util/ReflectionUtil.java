@@ -128,26 +128,109 @@ public class ReflectionUtil {
      * Obtiene el valor de la propiedad de un Bean
      *
      * @param obj El objeto Bean
-     * @param propertyName El nombre de la propiedad
+     * @param propertyName El nombre de la propiedad. Se permiten "subpropiedades" separadas por "."
      * @return El valor de la propiedad
      */
     static public Object getValueFromBean(Object obj, String propertyName) {
         try {
+            Object value;
+
             BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
 
+            if ((propertyName==null) || (propertyName.trim().isEmpty())) {
+                throw new RuntimeException("El parametro propertyName no puede ser null o estar vacio");
+            }               
+            
+            String leftPropertyName; //El nombre de la propiedad antes del primer punto
+            String rigthPropertyName; //El nombre de la propiedad antes del primer punto
+
+            int indexPoint=propertyName.indexOf(".");
+            if (indexPoint<0) {
+                leftPropertyName=propertyName;
+                rigthPropertyName=null;
+            } else if ((indexPoint>0) && (indexPoint<(propertyName.length()-1))) {
+                leftPropertyName=propertyName.substring(0, indexPoint);
+                rigthPropertyName=propertyName.substring(indexPoint+1);
+            } else {
+                throw new RuntimeException("El punto no puede estar ni al principio ni al final");
+            }            
+            
             Method readMethod = null;
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-                if (propertyDescriptor.getName().equals(propertyName)) {
+                if (propertyDescriptor.getName().equals(leftPropertyName)) {
                     readMethod = propertyDescriptor.getReadMethod();
                 }
             }
 
             if (readMethod == null) {
-                throw new RuntimeException("No existe la propiedad:" + propertyName);
+                throw new RuntimeException("No existe la propiedad:" + leftPropertyName);
             }
 
-            return readMethod.invoke(obj);
+            if (rigthPropertyName != null) {
+                Object valueProperty=readMethod.invoke(obj);
+                value=getValueFromBean(valueProperty,rigthPropertyName);
+            } else {
+                value=readMethod.invoke(obj);
+            }
+
+            return value;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Establecer el valor en un bena
+     * @param obj El objeto al que se establece el valor
+     * @param propertyName El nombre de la propieda a establecer el valor. Se permiten "subpropiedades" separadas por "."
+     * @param value El valor a establecer.
+     */
+    static public void setValueToBean(Object obj, String propertyName, Object value) {
+        try {
+            BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
+            PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+            if ((propertyName==null) || (propertyName.trim().isEmpty())) {
+                throw new RuntimeException("El parametro propertyName no puede ser null o estar vacio");
+            }            
+            
+            String leftPropertyName; //El nombre de la propiedad antes del primer punto
+            String rigthPropertyName; //El nombre de la propiedad antes del primer punto
+
+            int indexPoint=propertyName.indexOf(".");
+            if (indexPoint<0) {
+                leftPropertyName=propertyName;
+                rigthPropertyName=null;
+            } else if ((indexPoint>0) && (indexPoint<(propertyName.length()-1))) {
+                leftPropertyName=propertyName.substring(0, indexPoint);
+                rigthPropertyName=propertyName.substring(indexPoint+1);
+            } else {
+                throw new RuntimeException("El punto no puede estar ni al principio ni al final");
+            }
+            
+            
+            Method readMethod = null;
+            Method writeMethod = null;
+            for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                if (propertyDescriptor.getName().equals(leftPropertyName)) {
+                    readMethod = propertyDescriptor.getReadMethod();
+                    writeMethod = propertyDescriptor.getWriteMethod();
+                }
+            }
+
+            if (rigthPropertyName != null) {
+                if (readMethod == null) {
+                    throw new RuntimeException("No existe la propiedad de lectura:" + leftPropertyName);
+                }
+                Object valueProperty=readMethod.invoke(obj);
+                setValueToBean(valueProperty,rigthPropertyName,value);
+            } else {
+                if (writeMethod == null) {
+                    throw new RuntimeException("No existe la propiedad de escritura:" + leftPropertyName);
+                }
+                writeMethod.invoke(obj, new Object[]{value});
+            }
 
         } catch (Exception ex) {
             throw new RuntimeException(ex);
