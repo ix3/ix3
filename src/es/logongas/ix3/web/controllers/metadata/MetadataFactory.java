@@ -33,9 +33,10 @@ import java.util.Map;
  */
 public class MetadataFactory {
 
-    public Metadata getMetadata(es.logongas.ix3.persistence.services.metadata.MetaData metaData, MetaDataFactory metaDataFactory, DAOFactory daoFactory, String basePath) throws BusinessException {
+    public Metadata getMetadata(es.logongas.ix3.persistence.services.metadata.MetaData metaData, MetaDataFactory metaDataFactory, DAOFactory daoFactory, String basePath,List<String> expand) throws BusinessException {
         Metadata metadata = new Metadata();
-
+        String propertyPath="";
+        
         metadata.setClassName(metaData.getType().getSimpleName());
         metadata.setDescription(metadata.getClassName());
         metadata.setTitle(metadata.getClassName());
@@ -43,8 +44,8 @@ public class MetadataFactory {
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
-            if (propertyMetaData.isCollection() == false) {
-                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, daoFactory, basePath);
+            if ((propertyMetaData.isCollection() == false) || (expandMath(expand, propertyPath+"."+propertyName))) {
+                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, daoFactory, basePath,expand,propertyPath+"."+propertyName);
 
                 metadata.getProperties().put(propertyName, property);
             }
@@ -53,7 +54,7 @@ public class MetadataFactory {
         return metadata;
     }
 
-    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, DAOFactory daoFactory, String basePath) throws BusinessException {
+    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, DAOFactory daoFactory, String basePath,List<String> expand,String propertyPath) throws BusinessException {
         Property property = new Property();
         property.setType(Type.getTypeFromClass(metaData.getType()));
 
@@ -63,8 +64,8 @@ public class MetadataFactory {
             for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
                 MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
-                if (propertyMetaData.isCollection() == false) {
-                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, daoFactory, basePath);
+                if ((propertyMetaData.isCollection() == false) || (expandMath(expand, propertyPath+"."+propertyName))) {
+                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, daoFactory, basePath,expand,propertyPath+"."+propertyName);
 
                     property.getProperties().put(propertyName, subproperty);
                 }
@@ -153,5 +154,15 @@ public class MetadataFactory {
 
         return values;
     }
-
+    
+    private boolean expandMath(List<String> expands,String propertyPath) {
+        for(String expandProperty:expands) {
+            if (("."+expandProperty).startsWith(propertyPath)) {
+                return true;
+            }
+        }
+        
+        return false;
+        
+    }
 }
