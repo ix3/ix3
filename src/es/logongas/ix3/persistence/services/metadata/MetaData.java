@@ -45,6 +45,14 @@ public interface MetaData {
      * @return Map con el nombre de cada propiedad y sus metadatos
      */
     Map<String, MetaData> getPropertiesMetaData();
+    
+    /**
+     * La Metadatas de todas las propiedades de esta entidad
+     *
+     * @param propertyName El nombre de la propiedad de la que se obtiene los metadatos
+     * @return Map con el nombre de cada propiedad y sus metadatos
+     */
+    MetaData getPropertyMetaData(String propertyName);    
 
     /**
      * El nombre de la clave primaria de la entidad

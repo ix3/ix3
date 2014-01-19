@@ -27,7 +27,6 @@ import es.logongas.ix3.util.ReflectionUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.validation.Constraint;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -61,8 +60,7 @@ public class MetaDataImplHibernate implements MetaData {
     private final String propertyName;
     private final MetaData parentMetaData;
     private String caption;
-    private final ContraintsImpl constraints=new ContraintsImpl();
-
+    private final ContraintsImpl constraints = new ContraintsImpl();
 
     protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory, String propertyName, MetaData parentMetaData) {
         this.sessionFactory = sessionFactory;
@@ -176,6 +174,38 @@ public class MetaDataImplHibernate implements MetaData {
     }
 
     @Override
+    public MetaData getPropertyMetaData(String propertyName) {
+        MetaData metaData;
+        
+        if ((propertyName == null) || (propertyName.trim().isEmpty())) {
+            throw new RuntimeException("El parametro propertyName no puede ser null o estar vacio");
+        }
+
+        String leftPropertyName; //El nombre de la propiedad antes del primer punto
+        String rigthPropertyName; //El nombre de la propiedad antes del primer punto
+
+        int indexPoint = propertyName.indexOf(".");
+        if (indexPoint < 0) {
+            leftPropertyName = propertyName;
+            rigthPropertyName = null;
+        } else if ((indexPoint > 0) && (indexPoint < (propertyName.length() - 1))) {
+            leftPropertyName = propertyName.substring(0, indexPoint);
+            rigthPropertyName = propertyName.substring(indexPoint + 1);
+        } else {
+            throw new RuntimeException("El punto no puede estar ni al principio ni al final");
+        }
+
+        if (rigthPropertyName != null) {
+            metaData=getPropertiesMetaData().get(leftPropertyName).getPropertyMetaData(rigthPropertyName);
+        } else {
+            metaData=getPropertiesMetaData().get(leftPropertyName);
+        }
+
+        
+        return metaData;
+    }
+
+    @Override
     public List<String> getNaturalKeyPropertiesName() {
 
         List<String> naturalKeyPropertiesName = new ArrayList<String>();
@@ -235,8 +265,8 @@ public class MetaDataImplHibernate implements MetaData {
     @Override
     public Constraints getConstraints() {
         return constraints;
-    }    
-    
+    }
+
     private void analizeAnotations() {
         Class clazz;
         if (parentMetaData != null) {
@@ -331,22 +361,21 @@ public class MetaDataImplHibernate implements MetaData {
             constraints.required = false;
         }
 
-        
-        es.logongas.ix3.persistence.services.annotations.ValuesList valuesList=ReflectionUtil.getAnnotation(clazz, getPropertyName(), es.logongas.ix3.persistence.services.annotations.ValuesList.class);
-        if (valuesList!=null) {
-            ValuesListImpl valuesListImpl=new ValuesListImpl();
-            valuesListImpl.dependProperties=valuesList.dependProperties();
-            valuesListImpl.shortLength=valuesList.shortLength();
-            valuesListImpl.namedSearch=valuesList.namedSearch();
-            valuesListImpl.entity=valuesList.entity();
-            if (valuesListImpl.entity==es.logongas.ix3.persistence.services.annotations.ValuesList.DEFAULT.class) {
-                valuesListImpl.entity=this.getType();
+        es.logongas.ix3.persistence.services.annotations.ValuesList valuesList = ReflectionUtil.getAnnotation(clazz, getPropertyName(), es.logongas.ix3.persistence.services.annotations.ValuesList.class);
+        if (valuesList != null) {
+            ValuesListImpl valuesListImpl = new ValuesListImpl();
+            valuesListImpl.dependProperties = valuesList.dependProperties();
+            valuesListImpl.shortLength = valuesList.shortLength();
+            valuesListImpl.namedSearch = valuesList.namedSearch();
+            valuesListImpl.entity = valuesList.entity();
+            if (valuesListImpl.entity == es.logongas.ix3.persistence.services.annotations.ValuesList.DEFAULT.class) {
+                valuesListImpl.entity = this.getType();
             }
-            constraints.valuesList=valuesListImpl;
+            constraints.valuesList = valuesListImpl;
         } else {
-            constraints.valuesList=null;
+            constraints.valuesList = null;
         }
-        
+
     }
 
     class ContraintsImpl implements Constraints {
@@ -359,8 +388,7 @@ public class MetaDataImplHibernate implements MetaData {
         public String pattern;
         public Format format;
         public ValuesList valuesList;
-        
-        
+
         @Override
         public boolean isRequired() {
             return this.required;
@@ -403,14 +431,13 @@ public class MetaDataImplHibernate implements MetaData {
 
     }
 
-    
     class ValuesListImpl implements ValuesList {
 
         boolean shortLength;
         Class entity;
         String[] dependProperties;
         String namedSearch;
-        
+
         @Override
         public boolean shortLength() {
             return shortLength;
@@ -430,7 +457,7 @@ public class MetaDataImplHibernate implements MetaData {
         public String namedSearch() {
             return namedSearch;
         }
-        
+
     }
-    
+
 }
