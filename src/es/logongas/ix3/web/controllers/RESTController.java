@@ -23,6 +23,7 @@ import es.logongas.ix3.persistence.services.dao.NamedSearch;
 import es.logongas.ix3.persistence.services.dao.OrderDirection;
 import es.logongas.ix3.persistence.services.dao.Order;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
+import es.logongas.ix3.persistence.services.metadata.MetaType;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.controllers.metadata.Metadata;
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -69,15 +71,14 @@ public class RESTController {
     JsonFactory jsonFactory;
     private static final Log log = LogFactory.getLog(RESTController.class);
 
-    private final String PARAMETER_EXPAND="$expand";
-    private final String PARAMETER_ORDERBY="$orderby";
-    private final String PARAMETER_PAGENUMBER="$pagenumber";
-    private final String PARAMETER_PAGESIZE="$pagesize";    
-    private final String PATH_METADATA="$metadata";
-    private final String PATH_NAMEDSEARCH="$namedsearch";
-    private final String PATH_CREATE="$create";
-    
-    
+    private final String PARAMETER_EXPAND = "$expand";
+    private final String PARAMETER_ORDERBY = "$orderby";
+    private final String PARAMETER_PAGENUMBER = "$pagenumber";
+    private final String PARAMETER_PAGESIZE = "$pagesize";
+    private final String PATH_METADATA = "$metadata";
+    private final String PATH_NAMEDSEARCH = "$namedsearch";
+    private final String PATH_CREATE = "$create";
+
     @RequestMapping(value = {"/{entityName}/" + PATH_METADATA}, method = RequestMethod.GET, produces = "application/json")
     public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
         try {
@@ -86,7 +87,10 @@ public class RESTController {
                 throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
             }
 
-            Metadata metadata = (new MetadataFactory()).getMetadata(metaData, metaDataFactory, daoFactory, httpRequest.getContextPath());
+            //Entidades a expandir
+            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+
+            Metadata metadata = (new MetadataFactory()).getMetadata(metaData, metaDataFactory, daoFactory, httpRequest.getContextPath(), expand);
             JsonWriter jsonWriter = jsonFactory.getJsonWriter();
 
             String jsonOut = jsonWriter.toJson(metadata);
@@ -116,8 +120,8 @@ public class RESTController {
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
-            List<String> expand=getExpand(httpRequest.getParameter(PARAMETER_EXPAND)); 
-            
+            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+
             Map<String, Object> filter = new HashMap<String, Object>();
             Enumeration<String> enumeration = httpRequest.getParameterNames();
             while (enumeration.hasMoreElements()) {
@@ -133,20 +137,19 @@ public class RESTController {
             }
 
             List<Order> orders = getOrders(metaData, httpRequest.getParameter(PARAMETER_ORDERBY));
-            Integer pageSize=getPageSize(httpRequest.getParameter(PARAMETER_PAGESIZE));
-            Integer pageNumber=getPageNumber(httpRequest.getParameter(PARAMETER_PAGENUMBER));
-            
+            Integer pageSize = getIntegerFromString(httpRequest.getParameter(PARAMETER_PAGESIZE));
+            Integer pageNumber = getIntegerFromString(httpRequest.getParameter(PARAMETER_PAGENUMBER));
+
             Object entity;
-            if ((pageSize==null) && (pageNumber==null)) {
+            if ((pageSize == null) && (pageNumber == null)) {
                 entity = genericDAO.search(filter, orders);
-            } else if ((pageSize!=null) && (pageNumber!=null)) {
+            } else if ((pageSize != null) && (pageNumber != null)) {
                 entity = genericDAO.pageableSearch(filter, orders, pageNumber, pageSize);
             } else {
                 throw new RuntimeException("Los datos de la paginacion no son correctos, es necesario los 2 datos:" + PARAMETER_PAGENUMBER + " y " + PARAMETER_PAGESIZE);
             }
-            
-            
-            String jsonOut = jsonWriter.toJson(entity,expand);
+
+            String jsonOut = jsonWriter.toJson(entity, expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -190,9 +193,9 @@ public class RESTController {
             JsonWriter jsonWriter;
 
             //Entidades a expandir
-            List<String> expand=getExpand(httpRequest.getParameter(PARAMETER_EXPAND));            
-            
-            Map<String,Object> filter=getFilterFromParameters(genericDAO,namedSearch, httpRequest.getParameterMap());
+            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+
+            Map<String, Object> filter = getFilterFromParameters(genericDAO, namedSearch, removeDollarParameters(httpRequest.getParameterMap()));
             Object result = genericDAO.namedSearch(namedSearch, filter);
 
             if (result != null) {
@@ -200,7 +203,7 @@ public class RESTController {
             } else {
                 jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
             }
-            String jsonOut = jsonWriter.toJson(result,expand);
+            String jsonOut = jsonWriter.toJson(result, expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -244,10 +247,10 @@ public class RESTController {
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
             //Entidades a expandir
-            List<String> expand=getExpand(httpRequest.getParameter(PARAMETER_EXPAND)); 
-            
+            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+
             Object entity = genericDAO.read(id);
-            String jsonOut = jsonWriter.toJson(entity,expand);
+            String jsonOut = jsonWriter.toJson(entity, expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -298,8 +301,8 @@ public class RESTController {
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
             //Entidades a expandir
-            List<String> expand=getExpand(httpRequest.getParameter(PARAMETER_EXPAND));                 
-            
+            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+
             Object entity = genericDAO.read(id);
             Object childData;
             if (entity != null) {
@@ -308,7 +311,7 @@ public class RESTController {
                 //Si no hay datos , retornamos una lista vacia
                 childData = new ArrayList();
             }
-            String jsonOut = jsonWriter.toJson(childData,expand);
+            String jsonOut = jsonWriter.toJson(childData, expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -351,8 +354,13 @@ public class RESTController {
             GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
 
-            Object entity = genericDAO.create();
-            String jsonOut = jsonWriter.toJson(entity);
+            //Entidades a expandir
+            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+
+            Map<String, Object> initialProperties = getPropertiesFromParameters(metaData, removeDollarParameters(httpRequest.getParameterMap()));
+
+            Object entity = genericDAO.create(initialProperties);
+            String jsonOut = jsonWriter.toJson(entity, expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -526,14 +534,15 @@ public class RESTController {
     private void noCache(HttpServletResponse httpServletResponse) {
         httpServletResponse.setHeader("Cache-Control", "no-cache");
     }
+
     private void cache(HttpServletResponse httpServletResponse) {
         cache(httpServletResponse, 60);
-    }     
-    private void cache(HttpServletResponse httpServletResponse,long expireSeconds) {
-        httpServletResponse.setHeader("Cache-Control", "private, no-transform, max-age="+expireSeconds);
-    } 
-    
-    
+    }
+
+    private void cache(HttpServletResponse httpServletResponse, long expireSeconds) {
+        httpServletResponse.setHeader("Cache-Control", "private, no-transform, max-age=" + expireSeconds);
+    }
+
     /**
      * Como se ordenan los datos
      *
@@ -545,7 +554,7 @@ public class RESTController {
     private List<Order> getOrders(MetaData metaData, String orderBy) {
         List<Order> orders = new ArrayList<Order>();
 
-        if ((orderBy != null) && (orderBy.trim().isEmpty()==false)) {
+        if ((orderBy != null) && (orderBy.trim().isEmpty() == false)) {
             String[] splitOrderFields = orderBy.split(",");
 
             Pattern pattern = Pattern.compile("\\s*([^\\s]*)\\s*([^\\s]*)?\\s*");
@@ -584,21 +593,23 @@ public class RESTController {
     }
 
     /**
-     * Transforma el parámetro "expand" que viene por la petición http en una array
+     * Transforma el parámetro "expand" que viene por la petición http en una
+     * array
+     *
      * @param expand El String con varios expand separados por comas
      * @return El array con cada uno de ello.
      */
     private List<String> getExpand(String expand) {
-        if ((expand==null) || (expand.trim().isEmpty())) {
+        if ((expand == null) || (expand.trim().isEmpty())) {
             return new ArrayList<String>();
         } else {
-            return Arrays.asList(expand.split(",")); 
+            return Arrays.asList(expand.split(","));
         }
     }
-    
+
     private Map<String, Object> getFilterFromParameters(GenericDAO genericDAO, String methodName, Map<String, String[]> parametersMap) throws BusinessException {
         Map<String, Object> filter = new HashMap<String, Object>();
-        
+
         Method method = ReflectionUtil.getMethod(genericDAO.getClass(), methodName);
         if (method == null) {
             throw new BusinessException(new BusinessMessage(null, "No existe el método " + methodName + " en la clase " + genericDAO.getClass().getName()));
@@ -618,26 +629,23 @@ public class RESTController {
             throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + genericDAO.getClass().getName() + "." + methodName);
         }
 
-
         for (int i = 0; i < method.getParameterTypes().length; i++) {
             String parameterName = parameterNames[i];
             Class parameterType = method.getParameterTypes()[i];
             String stringParameterValue;
             Object parameterValue;
 
-            
-            if (parametersMap.get(parameterName)==null) {
-                stringParameterValue="";
+            if (parametersMap.get(parameterName) == null) {
+                stringParameterValue = "";
             } else {
-                
-                if (parametersMap.get(parameterName).length!=1) {
-                    throw new RuntimeException("El parametro de la petición http '" + parameterName + "' solo puede teenr un único valor pero tiene:"+parametersMap.get(parameterName).length);
+
+                if (parametersMap.get(parameterName).length != 1) {
+                    throw new RuntimeException("El parametro de la petición http '" + parameterName + "' solo puede teenr un único valor pero tiene:" + parametersMap.get(parameterName).length);
                 }
-                
-                stringParameterValue=parametersMap.get(parameterName)[0];
+
+                stringParameterValue = parametersMap.get(parameterName)[0];
             }
-            
-            
+
             MetaData metaDataParameter = metaDataFactory.getMetaData(parameterType);
             if (metaDataParameter != null) {
                 //El parámetro es una Entidad de negocio pero solo nos han pasado la clave primaria.
@@ -674,20 +682,135 @@ public class RESTController {
         return filter;
     }
 
-    private Integer getPageSize(String pageSize) {
-        if (pageSize==null) {
+    /**
+     * Obtiene un integer a partir de un null
+     *
+     * @param s El String que se transforma en un Integer
+     * @return Si el string es null se retornará null, sino se retornará el
+     * Integer
+     */
+    private Integer getIntegerFromString(String s) {
+        if (s == null) {
             return null;
-        }else {
-            return Integer.parseInt(pageSize);
+        } else {
+            return Integer.parseInt(s);
         }
     }
 
-    private Integer getPageNumber(String pageNumber) {
-        if (pageNumber==null) {
-            return null;
-        }else {
-            return Integer.parseInt(pageNumber);
+    /**
+     * Esta función quita aquellos parametros que viene nen la petición http que
+     * empiezan por "$" pq esos parámetros tienen un significado especial y no
+     * son "normales" para el modelo de negocio.
+     *
+     * @param parameterMap El map con los parametros
+     * @return Otro map con los mismos valores excepto los que empiezan por "$"
+     */
+    private Map<String, String[]> removeDollarParameters(Map<String, String[]> parameterMap) {
+        Map<String, String[]> cleanParameterMap = new LinkedHashMap<String, String[]>();
+
+        for (String key : parameterMap.keySet()) {
+            if ((key != null) && (key.trim().startsWith("$") == false)) {
+                cleanParameterMap.put(key, parameterMap.get(key));
+            }
         }
+
+        return cleanParameterMap;
+    }
+
+    /**
+     * Esta funcion transforma los valores iniciales de la petición HTTP en una serie de objetos.
+     * Si las propiedaes hacen referencia a una propiedad de una entida o a una clave primaria de una entidad se leerá dicha entidad
+     * Sino simplemente se pondrá el valor de la entidad.
+     * @param metaData Metada desde la que se quiere 
+     * @param parameters
+     * @return
+     * @throws BusinessException 
+     */
+    private Map<String, Object> getPropertiesFromParameters(MetaData metaData, Map<String, String[]> parameters) throws BusinessException {
+        Map<String, Object> newParameters = new LinkedHashMap<String, Object>();
+
+        for (String propertyName : parameters.keySet()) {
+            String[] rawValues = parameters.get(propertyName);
+            String realPropertyName;
+
+            if (rawValues.length != 1) {
+                throw new RuntimeException("Solo se permite un valor en cada parametro:" + propertyName);
+            }
+            String rawValue = rawValues[0];
+            Object value;
+            MetaData initialValueMetaData = metaData.getPropertyMetaData(propertyName);
+
+            if (initialValueMetaData==null) {
+                throw new RuntimeException("No existe la propiedad:" + propertyName);
+            }
+            
+            if (initialValueMetaData.isCollection()) {
+                throw new RuntimeException("No se permite como valor inicial una coleccion:" + propertyName);
+            }
+
+            switch (initialValueMetaData.getMetaType()) {
+                case Scalar:
+                    String leftPropertyName; //El nombre de la propiedad antes del primer punto
+                    String rigthPropertyName; //El nombre de la propiedad antes del primer punto
+
+                    int indexPoint = propertyName.lastIndexOf(".");
+                    if (indexPoint < 0) {
+                        leftPropertyName = null;
+                        rigthPropertyName = propertyName;
+                    } else if ((indexPoint > 0) && (indexPoint < (propertyName.length() - 1))) {
+                        leftPropertyName = propertyName.substring(0, indexPoint);
+                        rigthPropertyName = propertyName.substring(indexPoint + 1);
+                    } else {
+                        throw new RuntimeException("El punto no puede estar ni al principio ni al final");
+                    }
+
+                    //Nos han pasado un valor directamente
+                    if (leftPropertyName == null) {
+                        realPropertyName = rigthPropertyName;
+                        value = conversionService.convert(rawValue, initialValueMetaData.getType());
+                    } else {
+                        MetaData leftPropertyMetaData = metaData.getPropertyMetaData(leftPropertyName);
+                        if (leftPropertyMetaData.getMetaType() == MetaType.Entity) {
+                            if (rigthPropertyName.equals(leftPropertyMetaData.getPrimaryKeyPropertyName())) {
+                                //nos ham pasado la clave primaria de una entidad ,así que leemos la entidad
+                                //y el valor inicial será el de la entidad ya leida y no el de la clave primaria.
+                                GenericDAO genericDAO = daoFactory.getDAO(leftPropertyMetaData.getType());
+                                Class primaryKeyType = leftPropertyMetaData.getPropertyMetaData(leftPropertyMetaData.getPrimaryKeyPropertyName()).getType();
+                                Serializable primaryKey = (Serializable) conversionService.convert(rawValue, primaryKeyType);
+
+                                realPropertyName = leftPropertyName;
+                                value = genericDAO.read(primaryKey);
+                            } else {
+                                throw new RuntimeException("No se puede pasar una propiedad de una entidad, solo se permite la clave primaria:" + propertyName);
+                            }
+                        } else {
+                            //Como la propieda anterior no era una entidad no era nada "raro" y nos habian pasado simplemente el valor
+                            realPropertyName = propertyName;
+                            value = conversionService.convert(rawValue, initialValueMetaData.getType());
+                        }
+                    }
+
+                    break;
+                case Component:
+                    throw new RuntimeException("No se permite como valor inicial un componente:" + propertyName);
+                case Entity:
+                    //La propiedad corresponde a una entidad , así que se supondrá que el valor era la clave primaria de dicha entidad
+                    GenericDAO genericDAO = daoFactory.getDAO(initialValueMetaData.getType());
+                    Class primaryKeyType = initialValueMetaData.getPropertyMetaData(initialValueMetaData.getPrimaryKeyPropertyName()).getType();
+                    Serializable primaryKey = (Serializable) conversionService.convert(rawValue, primaryKeyType);
+
+                    realPropertyName = propertyName;
+                    value = genericDAO.read(primaryKey);
+
+                    break;
+                default:
+                    throw new RuntimeException("El meta tipo es desconocido:" + initialValueMetaData.getMetaType());
+            }
+
+            newParameters.put(realPropertyName, value);
+        }
+
+        return newParameters;
     }
 
 }
