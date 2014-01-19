@@ -34,7 +34,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projection;
@@ -65,11 +64,21 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     @Override
     final public EntityType create() throws BusinessException {
+        return create(null);
+    }
+
+    @Override
+    final public EntityType create(Map<String,Object> initialProperties) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
 
         try {
             EntityType entity;
             entity = (EntityType) getEntityMetaData().getType().newInstance();
+            if (initialProperties!=null) {
+                for(String key:initialProperties.keySet()) {
+                    ReflectionUtil.setValueToBean(entity, key,initialProperties.get(key));
+                }
+            }            
             this.postCreate(session, entity);
             return entity;
         } catch (RuntimeException ex) {
@@ -77,8 +86,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }
-
+    }    
+    
     @Override
     final public void insert(EntityType entity) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();

@@ -27,6 +27,7 @@ import java.util.Map;
  */
 public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable> {
     EntityType create() throws BusinessException;
+    EntityType create(Map<String,Object> initialProperties) throws BusinessException;
     void insert(EntityType entity) throws BusinessException;
     EntityType read(PrimaryKeyType primaryKey) throws BusinessException;
     boolean update(EntityType entity) throws BusinessException;
