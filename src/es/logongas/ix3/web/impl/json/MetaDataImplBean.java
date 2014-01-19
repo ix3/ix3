@@ -136,7 +136,39 @@ public class MetaDataImplBean implements MetaData {
             throw new RuntimeException(ex);
         }
     }
+    
+    @Override
+    public MetaData getPropertyMetaData(String propertyName) {
+        MetaData metaData;
+        
+        if ((propertyName == null) || (propertyName.trim().isEmpty())) {
+            throw new RuntimeException("El parametro propertyName no puede ser null o estar vacio");
+        }
 
+        String leftPropertyName; //El nombre de la propiedad antes del primer punto
+        String rigthPropertyName; //El nombre de la propiedad antes del primer punto
+
+        int indexPoint = propertyName.indexOf(".");
+        if (indexPoint < 0) {
+            leftPropertyName = propertyName;
+            rigthPropertyName = null;
+        } else if ((indexPoint > 0) && (indexPoint < (propertyName.length() - 1))) {
+            leftPropertyName = propertyName.substring(0, indexPoint);
+            rigthPropertyName = propertyName.substring(indexPoint + 1);
+        } else {
+            throw new RuntimeException("El punto no puede estar ni al principio ni al final");
+        }
+
+        if (rigthPropertyName != null) {
+            metaData=getPropertiesMetaData().get(leftPropertyName).getPropertyMetaData(rigthPropertyName);
+        } else {
+            metaData=getPropertiesMetaData().get(leftPropertyName);
+        }
+
+        
+        return metaData;
+    }
+    
     @Override
     public String getPrimaryKeyPropertyName() {
         return null;
