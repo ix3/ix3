@@ -405,9 +405,14 @@ public class RESTController {
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
             JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
 
+            //Entidades a expandir
+            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));            
+            
             Object entity = jsonReader.fromJson(jsonIn);
             genericDAO.insert(entity);
-            String jsonOut = jsonWriter.toJson(entity);
+            
+            
+            String jsonOut = jsonWriter.toJson(entity,expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_CREATED);
@@ -451,9 +456,13 @@ public class RESTController {
             JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
             JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
 
+            //Entidades a expandir
+            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));            
+            
             Object entity = jsonReader.fromJson(jsonIn);
             genericDAO.update(entity);
-            String jsonOut = jsonWriter.toJson(entity);
+            
+            String jsonOut = jsonWriter.toJson(entity,expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
