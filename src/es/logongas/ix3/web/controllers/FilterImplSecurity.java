@@ -29,10 +29,12 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Filtro web para controlar las peteciones en función del sistema de seguridad
+ *
  * @author Lorenzo González
  */
 public class FilterImplSecurity implements Filter {
@@ -52,11 +54,13 @@ public class FilterImplSecurity implements Filter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
 
-            String uri = httpServletRequest.getRequestURI();
-            String method = httpServletRequest.getMethod();
+        String uri = httpServletRequest.getRequestURI();
+        String method = httpServletRequest.getMethod();
 
-            Principal principal;
-            Serializable sid = (Serializable) httpServletRequest.getSession().getAttribute("sid");
+        Principal principal;
+        HttpSession httpSession = httpServletRequest.getSession();
+        if (httpSession != null) {
+            Serializable sid = (Serializable) httpSession.getAttribute("sid");
             if (sid == null) {
                 principal = null;
             } else {
@@ -67,15 +71,15 @@ public class FilterImplSecurity implements Filter {
                     return;
                 }
             }
+        } else {
+            principal = null;
+        }
 
-
-
-
-            if (authorizationManager.authorized(principal,"URL", getSecureURI(uri,httpServletRequest.getContextPath()), method, httpServletRequest.getParameterMap())==true) {
-                filterChain.doFilter(servletRequest, servletResponse);
-            } else {
-                httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            }
+        if (authorizationManager.authorized(principal, "URL", getSecureURI(uri, httpServletRequest.getContextPath()), method, httpServletRequest.getParameterMap()) == true) {
+            filterChain.doFilter(servletRequest, servletResponse);
+        } else {
+            httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        }
     }
 
     @Override
@@ -83,29 +87,29 @@ public class FilterImplSecurity implements Filter {
     }
 
     /**
-     * Obtiene la URL pero si la parte del ContextPath
-     * De esa forma al establecer la seguridad no tenemos que saber donde está desplegada la aplicación
+     * Obtiene la URL pero si la parte del ContextPath De esa forma al
+     * establecer la seguridad no tenemos que saber donde está desplegada la
+     * aplicación
+     *
      * @param uri
      * @param contextPath
      * @return
      */
-    private String getSecureURI(String uri,String contextPath) {
+    private String getSecureURI(String uri, String contextPath) {
         int beginIndex;
-        if (contextPath==null) {
-            beginIndex=0;
+        if (contextPath == null) {
+            beginIndex = 0;
         } else {
-            beginIndex=contextPath.length();
-            if (uri.startsWith(contextPath)==false) {
-                throw new RuntimeException("uri no empieza por '" + contextPath + "':"+uri);
+            beginIndex = contextPath.length();
+            if (uri.startsWith(contextPath) == false) {
+                throw new RuntimeException("uri no empieza por '" + contextPath + "':" + uri);
             }
         }
 
+        String secureURI = uri.substring(beginIndex);
 
-
-        String secureURI=uri.substring(beginIndex);
-
-        if (secureURI.startsWith("/")==false) {
-            throw new RuntimeException("secureURI no empieza por '/':"+secureURI);
+        if (secureURI.startsWith("/") == false) {
+            throw new RuntimeException("secureURI no empieza por '/':" + secureURI);
         }
 
         return secureURI;
