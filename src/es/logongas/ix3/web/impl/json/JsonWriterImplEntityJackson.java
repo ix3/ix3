@@ -18,6 +18,7 @@ package es.logongas.ix3.web.impl.json;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import es.logongas.ix3.persistence.services.dao.Page;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
@@ -34,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -48,7 +50,9 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
     public JsonWriterImplEntityJackson() {
         objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(java.util.Date.class, new DateSerializer());
+        objectMapper.registerModule(module);
     }
 
     @Override

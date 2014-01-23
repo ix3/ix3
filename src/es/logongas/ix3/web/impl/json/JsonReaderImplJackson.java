@@ -15,23 +15,26 @@
  */
 package es.logongas.ix3.web.impl.json;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import es.logongas.ix3.web.services.json.JsonReader;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author Lorenzo González
  */
 public class JsonReaderImplJackson implements JsonReader {
-    private Class clazz;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final Class clazz;
+    private final ObjectMapper objectMapper;
 
     public JsonReaderImplJackson(Class clazz) {
+        objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(java.util.Date.class, new DateDeserializer());
+        objectMapper.registerModule(module);  
         this.clazz = clazz;
     }
 

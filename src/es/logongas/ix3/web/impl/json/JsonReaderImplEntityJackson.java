@@ -17,6 +17,7 @@ package es.logongas.ix3.web.impl.json;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
@@ -53,6 +54,9 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(java.util.Date.class, new DateDeserializer());
+        objectMapper.registerModule(module);   
     }
 
     @Override
