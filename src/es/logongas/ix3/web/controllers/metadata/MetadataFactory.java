@@ -105,10 +105,30 @@ public class MetadataFactory {
         }
 
         property.setRequired(metaData.getConstraints().isRequired());
-        property.setMinimum(metaData.getConstraints().getMinimum());
-        property.setMaximum(metaData.getConstraints().getMaximum());
-        property.setMinLength(metaData.getConstraints().getMinLength());
-        property.setMaxLength(metaData.getConstraints().getMaxLength());
+        
+        if (metaData.getConstraints().getMinimum()==Long.MIN_VALUE) {
+            property.setMinimum(null);
+        } else {
+            property.setMinimum(metaData.getConstraints().getMinimum());
+        }
+        
+        if (metaData.getConstraints().getMaximum()==Long.MAX_VALUE) {
+            property.setMaximum(null);
+        } else {
+            property.setMaximum(metaData.getConstraints().getMaximum());
+        }
+        
+        if (metaData.getConstraints().getMinLength()==0) {
+            property.setMinLength(null);
+        } else {
+            property.setMinLength(metaData.getConstraints().getMinLength());
+        }
+        if (metaData.getConstraints().getMaxLength()==Integer.MAX_VALUE) {
+            property.setMaxLength(null);
+        } else {
+            property.setMaxLength(metaData.getConstraints().getMaxLength());
+        }
+        
         property.setPattern(metaData.getConstraints().getPattern());
         property.setFormat(metaData.getConstraints().getFormat());
         //property.setKey(metadata.);

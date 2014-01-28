@@ -36,8 +36,8 @@ public class Property {
     private Map<String,Property> properties=new LinkedHashMap<String, Property>(); //Solo hay valor aqui si type==OBJECT
     private Long minimum;
     private Long maximum ;
-    private int minLength;
-    private int maxLength;
+    private Integer minLength;
+    private Integer maxLength;
     private String pattern;
     private Format format; //Para los Strings si es una URL o un EMAIL, etc.
     private Map<Object,String> values=new LinkedHashMap<Object,String>(); //las propiedades values o urlValues son excluyentes
@@ -162,28 +162,28 @@ public class Property {
     /**
      * @return the minLength
      */
-    public int getMinLength() {
+    public Integer getMinLength() {
         return minLength;
     }
 
     /**
      * @param minLength the minLength to set
      */
-    public void setMinLength(int minLength) {
+    public void setMinLength(Integer minLength) {
         this.minLength = minLength;
     }
 
     /**
      * @return the maxLength
      */
-    public int getMaxLength() {
+    public Integer getMaxLength() {
         return maxLength;
     }
 
     /**
      * @param maxLength the maxLength to set
      */
-    public void setMaxLength(int maxLength) {
+    public void setMaxLength(Integer maxLength) {
         this.maxLength = maxLength;
     }
 
