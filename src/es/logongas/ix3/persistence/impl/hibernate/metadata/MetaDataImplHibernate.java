@@ -36,6 +36,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
@@ -153,6 +154,8 @@ public class MetaDataImplHibernate implements MetaData {
             ClassMetadata classMetadata = getClassMetadata();
 
             if (classMetadata != null) {
+                //Es una entidad
+                
                 //Añadimos la clave primaria al Map
                 if (classMetadata.hasIdentifierProperty() == true) {
                     String propertyName = classMetadata.getIdentifierPropertyName();
@@ -164,6 +167,21 @@ public class MetaDataImplHibernate implements MetaData {
                 String[] propertyNames = classMetadata.getPropertyNames();
                 for (String propertyName : propertyNames) {
                     Type propertyType = classMetadata.getPropertyType(propertyName);
+                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName, this);
+                    metaDatas.put(propertyName, metaData);
+                }
+            } else if (this.type instanceof ComponentType) {
+                //Es un componente
+                String[] propertyNames = ((ComponentType)this.type).getPropertyNames();
+                Type[] propertyTypes = ((ComponentType)this.type).getSubtypes();
+                
+                if (propertyNames.length!=propertyTypes.length) {
+                    throw new RuntimeException("No coinciden el nº de propiedades y el de subtipos:" +propertyNames.length + "," + propertyTypes.length );
+                }
+                
+                for (int i=0;i<propertyNames.length;i++) {
+                    String propertyName=propertyNames[i];
+                    Type propertyType = propertyTypes[i];
                     MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName, this);
                     metaDatas.put(propertyName, metaData);
                 }
