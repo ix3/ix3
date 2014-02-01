@@ -33,6 +33,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -56,7 +58,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
         SimpleModule module = new SimpleModule();
         module.addDeserializer(java.util.Date.class, new DateDeserializer());
-        objectMapper.registerModule(module);   
+        objectMapper.registerModule(module);
     }
 
     @Override
@@ -76,7 +78,9 @@ public class JsonReaderImplEntityJackson implements JsonReader {
     }
 
     /**
-     * Crea una entidad completa en base a la clave primaria y a los datos que vienen desde JSON
+     * Crea una entidad completa en base a la clave primaria y a los datos que
+     * vienen desde JSON
+     *
      * @param jsonObj Los datos JSON
      * @param metaData Los metadatos de la entidad a tranformar
      * @return El Objeto Entidad
@@ -155,7 +159,6 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                 sb.append(getValueFromBean(propertyValue, propertyMetaData.getPrimaryKeyPropertyName()));
                 sb.append(",");
 
-
                 for (String naturalKeyPropertyName : propertyMetaData.getNaturalKeyPropertiesName()) {
                     sb.append(naturalKeyPropertyName);
                     sb.append(":");
@@ -174,12 +177,10 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                 return null;
             }
 
-
         } catch (BusinessException be) {
             throw new RuntimeException(be);
         }
     }
-
 
     private void populateEntity(Object entity, Object jsonObj, MetaData metaData) throws BusinessException {
 
@@ -204,7 +205,18 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                     case Component: {
                         //Es un componente, así que hacemos la llamada recursiva
                         Object rawValue = getValueFromBean(jsonObj, propertyName);
-                        populateEntity(entity, rawValue, propertyMetaData);
+                        Object component = getValueFromBean(entity, propertyName);
+                        if (component == null) {
+                            try {
+                                component = propertyMetaData.getType().newInstance();
+                                setValueToBean(entity, component, propertyName);
+                            } catch (InstantiationException ex) {
+                                throw new RuntimeException(ex);
+                            } catch (IllegalAccessException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                        populateEntity(component, rawValue, propertyMetaData);
                         break;
                     }
                     default:
@@ -258,7 +270,6 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         }
     }
 
-
     private boolean emptyKey(Object primaryKey) {
         if (primaryKey == null) {
             return true;
@@ -276,7 +287,6 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                 return true;
             }
         }
-
 
         return false;
     }
@@ -301,7 +311,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
             }
 
             if (readMethod == null) {
-                throw new RuntimeException("No existe la propiedad:" + propertyName);
+                throw new RuntimeException("No existe la propiedad:" + propertyName + " en " + obj.getClass().getName());
             }
 
             return readMethod.invoke(obj);
@@ -331,7 +341,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
             }
 
             if (writeMethod == null) {
-                throw new RuntimeException("No existe la propiedad:" + propertyName);
+                throw new RuntimeException("No existe la propiedad:" + propertyName + " en " + obj.getClass().getName());
             }
 
             writeMethod.invoke(obj, value);
