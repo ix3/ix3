@@ -29,11 +29,11 @@ import java.util.Map;
 public class Property {
     private Type type;
     private String className;//Solo hay valor aqui si type==OBJECT
-
-    private boolean required;
-    private boolean key;
-    private boolean naturalKey;
+    private String primaryKeyPropertyName;//Solo hay valor aqui si type==OBJECT
+    private List<String> naturalKeyPropertiesName;//Solo hay valor aqui si type==OBJECT
     private Map<String,Property> properties=new LinkedHashMap<String, Property>(); //Solo hay valor aqui si type==OBJECT
+    
+    private boolean required;
     private Long minimum;
     private Long maximum ;
     private Integer minLength;
@@ -90,31 +90,31 @@ public class Property {
     }
 
     /**
-     * @return the key
+     * @return El nombre de la propiedas que es la clave primaria
      */
-    public boolean isKey() {
-        return key;
+    public String getPrimaryKeyPropertyName() {
+        return primaryKeyPropertyName;
     }
 
     /**
-     * @param key the key to set
+     * @param primaryKeyPropertyName El nombre de la propiedas que es la clave primaria
      */
-    public void setKey(boolean key) {
-        this.key = key;
+    public void setPrimaryKeyPropertyName(String primaryKeyPropertyName) {
+        this.primaryKeyPropertyName = primaryKeyPropertyName;
     }
 
     /**
-     * @return the naturalKey
+     * @return La  lista de nombres de propiedades que son la clave natural
      */
-    public boolean isNaturalKey() {
-        return naturalKey;
+    public List<String> getNaturalKeyPropertiesName() {
+        return naturalKeyPropertiesName;
     }
 
     /**
-     * @param naturalKey the naturalKey to set
+     * @param naturalKeyPropertiesName La nueva lista de nombres de propiedades que son la clave natural
      */
-    public void setNaturalKey(boolean naturalKey) {
-        this.naturalKey = naturalKey;
+    public void setNaturalKeyPropertiesName(List<String> naturalKeyPropertiesName) {
+        this.naturalKeyPropertiesName = naturalKeyPropertiesName;
     }
 
     /**

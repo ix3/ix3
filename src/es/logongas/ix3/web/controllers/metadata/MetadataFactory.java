@@ -21,13 +21,9 @@ import es.logongas.ix3.persistence.services.dao.GenericDAO;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.persistence.services.metadata.ValuesList;
-import es.logongas.ix3.util.ReflectionUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -62,7 +58,9 @@ public class MetadataFactory {
 
         if (property.getType() == Type.OBJECT) {
             property.setClassName(metaData.getType().getSimpleName());
-
+            property.setPrimaryKeyPropertyName(metaData.getPrimaryKeyPropertyName());
+            property.setNaturalKeyPropertiesName(metaData.getNaturalKeyPropertiesName());
+            
             for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
                 MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
@@ -133,8 +131,6 @@ public class MetadataFactory {
         
         property.setPattern(metaData.getConstraints().getPattern());
         property.setFormat(metaData.getConstraints().getFormat());
-        //property.setKey(metadata.);
-        //property.setNaturalKey(metadata.);
 
         property.setLabel(metaData.getCaption());
         property.setDescription(metaData.getCaption());
@@ -171,10 +167,7 @@ public class MetadataFactory {
         }
 
         for (Object obj : data) {
-            Map<String,Object> key=new HashMap<String,Object>();
-            key.put(primaryKeyName, ReflectionUtil.getValueFromBean(obj, primaryKeyName));
-            key.put("toString", obj.toString());
-            Value value=new Value(key, obj.toString());
+            Value value=new Value(obj, obj.toString());
             values.add(value);
         }
 
