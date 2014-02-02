@@ -17,7 +17,6 @@ package es.logongas.ix3.web.impl.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import es.logongas.ix3.persistence.services.dao.Page;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
@@ -35,7 +34,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -74,6 +72,10 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
     }
 
+    private Object getJsonObjectFromObject(Object obj) {
+        return getJsonObjectFromObject(obj, new ArrayList<String>(), "");
+    }
+    
     private Object getJsonObjectFromObject(Object obj, List<String> expand, String path) {
         if (obj == null) {
             return null;
@@ -91,7 +93,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             for (Object key : map.keySet()) {
                 Object value = map.get(key);
 
-                jsonMap.put(key, getJsonObjectFromObject(value, expand, path));
+                jsonMap.put(getJsonObjectFromObject(key), getJsonObjectFromObject(value, expand, path));
             }
 
             return jsonMap;
@@ -228,7 +230,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                                 for (Object key : map.keySet()) {
                                     Object valueMap = map.get(key);
 
-                                    jsonMap.put(key, getJsonObjectFromObjectFromCollection(valueMap, propertyMetaData, expand, path + "." + propertyName));
+                                    jsonMap.put(getJsonObjectFromObject(key), getJsonObjectFromObjectFromCollection(valueMap, propertyMetaData, expand, path + "." + propertyName));
                                 }
 
                                 value = jsonMap;
