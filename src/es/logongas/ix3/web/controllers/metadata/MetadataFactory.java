@@ -22,7 +22,9 @@ import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.persistence.services.metadata.ValuesList;
 import es.logongas.ix3.util.ReflectionUtil;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,8 +142,8 @@ public class MetadataFactory {
         return property;
     }
 
-    private Map<Object, String> getValuesFromEnum(Class clazz) {
-        Map<Object, String> values = new LinkedHashMap<Object, String>();
+    private List<Value> getValuesFromEnum(Class clazz) {
+        List<Value> values = new ArrayList<Value>();
 
         if (clazz.isEnum() == false) {
             throw new RuntimeException("El argumento clazz debe ser de un enumerado");
@@ -151,15 +153,15 @@ public class MetadataFactory {
 
         for (int i = 0; i < enumConstants.length; i++) {
             Enum enumConstant = enumConstants[i];
-
-            values.put(enumConstant.name(), enumConstant.toString());
+            Value value=new Value(enumConstant.name(),enumConstant.toString());
+            values.add(value);
         }
 
         return values;
     }
 
-    private Map<Object, String> getValuesFromData(List<Object> data, String primaryKeyName) {
-        Map<Object, String> values = new LinkedHashMap<Object, String>();
+    private List<Value> getValuesFromData(List<Object> data, String primaryKeyName) {
+        List<Value> values = new ArrayList<Value>();
 
         if (data == null) {
             throw new RuntimeException("El argumento data no puede ser null");
@@ -169,7 +171,11 @@ public class MetadataFactory {
         }
 
         for (Object obj : data) {
-            values.put(ReflectionUtil.getValueFromBean(obj, primaryKeyName), obj.toString());
+            Map<String,Object> key=new HashMap<String,Object>();
+            key.put(primaryKeyName, ReflectionUtil.getValueFromBean(obj, primaryKeyName));
+            key.put("toString", obj.toString());
+            Value value=new Value(key, obj.toString());
+            values.add(value);
         }
 
         return values;

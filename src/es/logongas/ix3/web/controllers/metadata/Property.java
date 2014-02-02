@@ -40,7 +40,7 @@ public class Property {
     private Integer maxLength;
     private String pattern;
     private Format format; //Para los Strings si es una URL o un EMAIL, etc.
-    private Map<Object,String> values=new LinkedHashMap<Object,String>(); //las propiedades values o urlValues son excluyentes
+    private List<Value> values=new ArrayList<Value>(); //las propiedades values o urlValues son excluyentes
     private String urlValues; //las propiedades values o urlValues son excluyentes
     private List<String> dependProperties=new ArrayList<String>(); //Solo está este valor si urlValues!=null
     
@@ -218,14 +218,14 @@ public class Property {
     /**
      * @return the values
      */
-    public Map<Object,String> getValues() {
+    public List<Value> getValues() {
         return values;
     }
 
     /**
      * @param values the values to set
      */
-    public void setValues(Map<Object,String> values) {
+    public void setValues(List<Value> values) {
         this.values = values;
     }
 
