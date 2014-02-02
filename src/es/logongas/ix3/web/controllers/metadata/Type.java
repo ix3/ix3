@@ -38,15 +38,15 @@ public enum Type {
             throw new RuntimeException("El argumento clazz no puede ser null");
         }
         
-        if (clazz.isAssignableFrom(String.class)) {
+        if (String.class.isAssignableFrom(clazz)) {
             type=Type.STRING;
-        } else if (clazz.isAssignableFrom(Byte.class) || clazz.isAssignableFrom(Short.class) || clazz.isAssignableFrom(Integer.class) || clazz.isAssignableFrom(Long.class) || clazz.isAssignableFrom(byte.class) || clazz.isAssignableFrom(short.class) || clazz.isAssignableFrom(int.class)  || clazz.isAssignableFrom(long.class) ) {
+        } else if (Byte.class.isAssignableFrom(clazz) || Short.class.isAssignableFrom(clazz) || Integer.class.isAssignableFrom(clazz) || Long.class.isAssignableFrom(clazz) || byte.class.isAssignableFrom(clazz) || short.class.isAssignableFrom(clazz) || int.class.isAssignableFrom(clazz)  || long.class.isAssignableFrom(clazz) ) {
             type=Type.INTEGER;
-        } else if (clazz.isAssignableFrom(BigDecimal.class) || clazz.isAssignableFrom(Float.class) || clazz.isAssignableFrom(Short.class) || clazz.isAssignableFrom(Long.class) || clazz.isAssignableFrom(float.class) || clazz.isAssignableFrom(double.class)) {
+        } else if (Number.class.isAssignableFrom(clazz) || BigDecimal.class.isAssignableFrom(clazz) || Float.class.isAssignableFrom(clazz) || Double.class.isAssignableFrom(clazz)  || float.class.isAssignableFrom(clazz) || double.class.isAssignableFrom(clazz)) {
             type=Type.NUMBER;
-        } else if (clazz.isAssignableFrom(Boolean.class) || clazz.isAssignableFrom(boolean.class)) {
+        } else if (Boolean.class.isAssignableFrom(clazz) || boolean.class.isAssignableFrom(clazz)) {
             type=Type.BOOLEAN;
-        } else if (clazz.isAssignableFrom(Date.class)) {
+        } else if (Date.class.isAssignableFrom(clazz)) {
             type=Type.DATE;
         } else if (clazz.isEnum()) {
             //Los Enumerados se generaran como un String

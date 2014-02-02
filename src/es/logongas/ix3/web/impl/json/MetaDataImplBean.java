@@ -88,15 +88,15 @@ public class MetaDataImplBean implements MetaData {
                     CollectionType newCollectionType;
                     Class realPropertyClass;
 
-                    if (propertyClass.isAssignableFrom(Set.class)) {
+                    if (Set.class.isAssignableFrom(propertyClass)) {
                         newCollectionType = CollectionType.Set;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
                         metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName);
-                    } else if (propertyClass.isAssignableFrom(List.class)) {
+                    } else if (List.class.isAssignableFrom(propertyClass)) {
                         newCollectionType = CollectionType.List;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
                         metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName);
-                    } else if (propertyClass.isAssignableFrom(Map.class)) {
+                    } else if (Map.class.isAssignableFrom(propertyClass)) {
                         newCollectionType = CollectionType.Map;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
                         metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName);
@@ -208,7 +208,7 @@ public class MetaDataImplBean implements MetaData {
         } else {
 
             Class returnClass = method.getReturnType();
-            if (returnClass.isAssignableFrom(List.class) || returnClass.isAssignableFrom(Set.class)) {
+            if (List.class.isAssignableFrom(returnClass) || Set.class.isAssignableFrom(returnClass)) {
                 Type returnType = method.getGenericReturnType();
                 if (returnType instanceof ParameterizedType) {
                     ParameterizedType paramType = (ParameterizedType) returnType;
@@ -221,7 +221,7 @@ public class MetaDataImplBean implements MetaData {
                 } else {
                     collectionClass = Object.class;
                 }
-            } else if (returnClass.isAssignableFrom(Map.class)) {
+            } else if (Map.class.isAssignableFrom(returnClass)) {
                 Type returnType = method.getGenericReturnType();
                 if (returnType instanceof ParameterizedType) {
                     ParameterizedType paramType = (ParameterizedType) returnType;
