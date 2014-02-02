@@ -58,7 +58,7 @@ public class InvocationHandlerImplDAO implements InvocationHandler {
         }
 
         for(int i=0;i<realParameterTypes.length;i++) {
-            if (realParameterTypes[i].isAssignableFrom(parameterTypes[i])==false) {
+            if (parameterTypes[i].isAssignableFrom(realParameterTypes[i])==false) {
                 return false;
             }
         }

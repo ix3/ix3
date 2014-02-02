@@ -355,7 +355,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 for (String propertyName : filter.keySet()) {
                     Object value = filter.get(propertyName);
 
-                    if (getEntityMetaData().getPropertiesMetaData().get(propertyName).getType().isAssignableFrom(String.class)) {
+                    if (String.class.isAssignableFrom(getEntityMetaData().getPropertiesMetaData().get(propertyName).getType())) {
                         if ((value != null) && (((String) value).trim().equals("") == false)) {
                             criteria.add(Restrictions.like(propertyName, "%" + value + "%"));
                         }
