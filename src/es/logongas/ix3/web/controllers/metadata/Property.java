@@ -43,6 +43,7 @@ public class Property {
     private List<Value> values=new ArrayList<Value>(); //las propiedades values o urlValues son excluyentes
     private String urlValues; //las propiedades values o urlValues son excluyentes
     private List<String> dependProperties=new ArrayList<String>(); //Solo está este valor si urlValues!=null
+    private boolean shortLength;
     
     private String label;
     private String description;    
@@ -288,6 +289,20 @@ public class Property {
     @Override
     public String toString() {
         return this.getLabel();
+    }
+
+    /**
+     * @return the shortLength
+     */
+    public boolean isShortLength() {
+        return shortLength;
+    }
+
+    /**
+     * @param shortLength the shortLength to set
+     */
+    public void setShortLength(boolean shortLength) {
+        this.shortLength = shortLength;
     }
     
     

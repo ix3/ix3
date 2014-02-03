@@ -81,6 +81,7 @@ public class MetadataFactory {
             ValuesList valuesList = metaData.getConstraints().getValuesList();
 
             property.setDependProperties(Arrays.asList(valuesList.dependProperties()));
+            property.setShortLength(valuesList.shortLength());
             if ((valuesList.shortLength() == true) && ((valuesList.dependProperties() == null) || (valuesList.dependProperties().length == 0))) {
                 //Los valores no dependen de nada , así que podemos leer los valores directamente
                 GenericDAO genericDAOEntityValuesList = daoFactory.getDAO(valuesList.entity());
