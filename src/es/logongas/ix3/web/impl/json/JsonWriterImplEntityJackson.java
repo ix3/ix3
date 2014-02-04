@@ -179,10 +179,10 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         throw new RuntimeException("El MetaType es desconocido:" + propertyMetaData.getMetaType());
                 }
             } else {
+                Object rawValue = getValueFromBean(obj, propertyName);
                 switch (propertyMetaData.getCollectionType()) {
                     case List: {
                         if ((propertyMetaData.isCollectionLazy() == false) || (expandMath(expand, path + "." + propertyName))) {
-                            Object rawValue = getValueFromBean(obj, propertyName);
                             List list = (List) rawValue;
                             List jsonList = new ArrayList();
                             if (list != null) {
@@ -191,18 +191,21 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                                 }
                                 value = jsonList;
                             } else {
-                                value = new ArrayList();
+                                value = null;
                             }
 
                         } else {
                             //Es una colección y Lazy así que añadimos un array vacio
-                            value = new ArrayList();
+                            if (rawValue!=null) {
+                                value = new ArrayList();
+                            } else {
+                                value=null;
+                            }
                         }
                         break;
                     }
                     case Set: {
                         if ((propertyMetaData.isCollectionLazy() == false) || (expandMath(expand, path + "." + propertyName))) {
-                            Object rawValue = getValueFromBean(obj, propertyName);
                             Set set = (Set) rawValue;
                             Set jsonSet = new HashSet();
                             if (set != null) {
@@ -212,18 +215,20 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
                                 value = jsonSet;
                             } else {
-                                value = new ArrayList();
+                                value = null;
                             }
                         } else {
                             //Es una colección y Lazy así que añadimos un array vacio
-                            value = new ArrayList();
+                            if (rawValue!=null) {
+                                value = new ArrayList();
+                            } else {
+                                value=null;
+                            }
                         }
                         break;
                     }
                     case Map: {
                         if ((propertyMetaData.isCollectionLazy() == false) || (expandMath(expand, path + "." + propertyName))) {
-                            Object rawValue = getValueFromBean(obj, propertyName);
-
                             Map map = (Map) rawValue;
                             Map jsonMap = new LinkedHashMap();
                             if (map != null) {
@@ -235,11 +240,15 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
                                 value = jsonMap;
                             } else {
-                                value = new ArrayList();
+                                value = null;
                             }
                         } else {
                             //Es una colección y Lazy así que añadimos un array vacio
-                            value = new ArrayList();
+                            if (rawValue!=null) {
+                                value = new ArrayList();
+                            } else {
+                                value=null;
+                            }
                         }
                         break;
                     }
