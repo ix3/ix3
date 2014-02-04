@@ -61,6 +61,8 @@ public class MetaDataImplBean implements MetaData {
             return MetaType.Scalar;
         } else if (clazz.isEnum() == true) {
             return MetaType.Scalar;
+        } else if (metaDataFactory.getMetaData(clazz)!=null) {
+            return MetaType.Entity;
         } else {
             return MetaType.Component;
         }

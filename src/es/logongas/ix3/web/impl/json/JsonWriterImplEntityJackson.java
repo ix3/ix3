@@ -75,7 +75,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
     private Object getJsonObjectFromObject(Object obj) {
         return getJsonObjectFromObject(obj, new ArrayList<String>(), "");
     }
-    
+
     private Object getJsonObjectFromObject(Object obj, List<String> expand, String path) {
         if (obj == null) {
             return null;
@@ -148,6 +148,21 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 switch (propertyMetaData.getMetaType()) {
                     case Scalar: {
                         value = getValueFromBean(obj, propertyName);
+                        if (value != null) {
+                            if (metaDataFactory.getMetaData(value) != null) {
+                                //Los metadatos decían que es un Scalar pero no es así. Esto ocurre con el tipo "Object"
+                                //En el que realmente no sabemos los tipos
+                                Object rawValue = getValueFromBean(obj, propertyName);
+
+                                if (expandMath(expand, path + "." + propertyName) == true) {
+                                    //En vez de poner solo la clave primaria , expandimos la entidad
+                                    value = getMapFromEntity(rawValue, metaDataFactory.getMetaData(value), expand, path + "." + propertyName);
+                                } else {
+                                    value = getMapFromForeingEntity(rawValue, metaDataFactory.getMetaData(value));
+                                }
+
+                            }
+                        }
                         break;
                     }
                     case Entity: {
@@ -196,10 +211,10 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
                         } else {
                             //Es una colección y Lazy así que añadimos un array vacio
-                            if (rawValue!=null) {
+                            if (rawValue != null) {
                                 value = new ArrayList();
                             } else {
-                                value=null;
+                                value = null;
                             }
                         }
                         break;
@@ -219,10 +234,10 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                             }
                         } else {
                             //Es una colección y Lazy así que añadimos un array vacio
-                            if (rawValue!=null) {
+                            if (rawValue != null) {
                                 value = new ArrayList();
                             } else {
-                                value=null;
+                                value = null;
                             }
                         }
                         break;
@@ -244,10 +259,10 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                             }
                         } else {
                             //Es una colección y Lazy así que añadimos un array vacio
-                            if (rawValue!=null) {
+                            if (rawValue != null) {
                                 value = new ArrayList();
                             } else {
-                                value=null;
+                                value = null;
                             }
                         }
                         break;
@@ -277,7 +292,16 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
         switch (metaData.getMetaType()) {
             case Scalar:
-                return obj;
+                //Los metadatos decían que es un Scalar pero no es así. Esto ocurre con el tipo "Object"
+                //En el que realmente no sabemos los tipos
+                if (metaDataFactory.getMetaData(obj) != null) {
+                    Map<String, Object> jsonMap = getMapFromEntity(obj, metaDataFactory.getMetaData(obj), expand, path);
+                    return jsonMap;
+
+                } else {
+                    return obj;
+                }
+
             case Entity:
             case Component:
                 Map<String, Object> jsonMap = getMapFromEntity(obj, metaData, expand, path);
@@ -346,7 +370,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             }
 
             if (readMethod == null) {
-                throw new RuntimeException("No existe la propiedad:" + propertyName);
+                throw new RuntimeException("No existe la propiedad:" + propertyName + " en la clase " + obj.getClass().getName());
             }
 
             return readMethod.invoke(obj);
