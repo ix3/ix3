@@ -75,6 +75,8 @@ public class MetadataFactory {
             property.setClassName("");
         }
 
+        //Inicialmente no hay Values luego se pondrán si finalmente hay
+        property.setValues(null);
         if (metaData.getType().isEnum() == true) {
             property.setValues(getValuesFromEnum(metaData.getType()));
         } else if (metaData.getConstraints().getValuesList() != null) {
