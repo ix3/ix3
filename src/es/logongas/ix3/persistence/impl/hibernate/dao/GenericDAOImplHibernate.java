@@ -207,49 +207,17 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     final public EntityType read(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
-            this.preReadBeforeTransaction(session, id);
-            session.beginTransaction();
-            this.preReadInTransaction(session, id);
+            this.preRead(session, id);
             EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
-            this.postReadInTransaction(session, id, entity);
-            session.getTransaction().commit();
-            this.postReadAfterTransaction(session, id, entity);
+            this.postRead(session, id, entity);
             return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
-            try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
             throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
-            try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
             throw new BusinessException(cve);
         } catch (RuntimeException ex) {
-            try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
             throw ex;
         } catch (Exception ex) {
-            try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
             throw new RuntimeException(ex);
         }
     }
@@ -509,49 +477,17 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
 
-            this.preReadByNaturalKeyBeforeTransaction(session, naturalKey);
-            session.beginTransaction();
-            this.preReadByNaturalKeyInTransaction(session, naturalKey);
+            this.preReadByNaturalKey(session, naturalKey);
             EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(naturalKey);
-            this.postReadByNaturalKeyInTransaction(session, naturalKey, entity);
-            session.getTransaction().commit();
-            this.postReadByNaturalKeyAfterTransaction(session, naturalKey, entity);
+            this.postReadByNaturalKey(session, naturalKey, entity);
             return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
-            try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
             throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
-            try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
             throw new BusinessException(cve);
         } catch (RuntimeException ex) {
-            try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
             throw ex;
         } catch (Exception ex) {
-            try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
             throw new RuntimeException(ex);
         }
 
@@ -576,28 +512,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected void postInsertAfterTransaction(Session session, EntityType entity) {
     }
 
-    protected void preReadBeforeTransaction(Session session, PrimaryKeyType id) {
+    protected void preRead(Session session, PrimaryKeyType id) {
     }
 
-    protected void preReadInTransaction(Session session, PrimaryKeyType id) {
+    protected void postRead(Session session, PrimaryKeyType id, EntityType entity) {
     }
 
-    protected void postReadInTransaction(Session session, PrimaryKeyType id, EntityType entity) {
+    protected void preReadByNaturalKey(Session session, Object naturalKey) {
     }
 
-    protected void postReadAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) {
-    }
-
-    protected void preReadByNaturalKeyBeforeTransaction(Session session, Object naturalKey) {
-    }
-
-    protected void preReadByNaturalKeyInTransaction(Session session, Object naturalKey) {
-    }
-
-    protected void postReadByNaturalKeyInTransaction(Session session, Object naturalKey, EntityType entity) {
-    }
-
-    protected void postReadByNaturalKeyAfterTransaction(Session session, Object naturalKey, EntityType entity) {
+    protected void postReadByNaturalKey(Session session, Object naturalKey, EntityType entity) {
     }
 
     protected void preUpdateBeforeTransaction(Session session, EntityType entity) {
