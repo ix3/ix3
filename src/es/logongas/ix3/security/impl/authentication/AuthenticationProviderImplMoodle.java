@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -51,11 +53,14 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class AuthenticationProviderImplMoodle implements AuthenticationProvider {
 
-    private String moodleLoginURL = "http://www.fpmislata.com/moodle/login/index.php";
+    private String moodleLoginURL = "https://www.fpmislata.com/moodle/login/index.php";
     private String fqcnIdentity=Identity.class.getName();
     @Autowired
     DAOFactory daoFactory;
 
+    protected final Log log = LogFactory.getLog(getClass());
+    
+    
     @Override
     public Principal authenticate(Credential credential) {
         try {
@@ -101,6 +106,7 @@ public class AuthenticationProviderImplMoodle implements AuthenticationProvider 
         } catch (BusinessException ex) {
             return null;
         } catch (Exception ex) {
+            log.info("Fallo al conectarse al moodle", ex);
             throw new RuntimeException(ex);
         }
     }
