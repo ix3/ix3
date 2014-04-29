@@ -79,12 +79,12 @@ public class HibernateUtil {
 
     public static void closeSessionAndUnbindFromThread() {
         Session session = ThreadLocalSessionContext.unbind(sessionFactory);
-        if (session!=null) {
+        if ((session!=null) && (session.isOpen()==true)) {
             session.close();
         }
 
         Session session2 = ThreadLocalSessionContext.unbind(sessionFactory2);
-        if (session2!=null) {
+        if ((session2!=null) && (session2.isOpen()==true)) {
             session2.close();
         }
     }
