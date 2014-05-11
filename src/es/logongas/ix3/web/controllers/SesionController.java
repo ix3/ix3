@@ -56,6 +56,8 @@ public class SesionController {
     @RequestMapping(value = {"/session"}, method = RequestMethod.POST, headers = "Accept=application/json")
     public void login(HttpServletRequest request, HttpServletResponse httpServletResponse) {
         try {
+            request.setCharacterEncoding("UTF-8");
+            
             String login = request.getParameter("login");
             String password = request.getParameter("password");
 
