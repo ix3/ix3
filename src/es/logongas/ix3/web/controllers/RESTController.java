@@ -250,12 +250,16 @@ public class RESTController {
             List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
 
             Object entity = genericDAO.read(id);
-            String jsonOut = jsonWriter.toJson(entity, expand);
-
             noCache(httpServletResponse);
-            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
-            httpServletResponse.getWriter().println(jsonOut);
+            if (entity!=null) {
+                String jsonOut = jsonWriter.toJson(entity, expand);
+                httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+                httpServletResponse.getWriter().print(jsonOut);
+            }else {
+                httpServletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }
+            
         } catch (BusinessException ex) {
             try {
                 String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
