@@ -27,15 +27,15 @@ import org.hibernate.validator.constraints.NotBlank;
  */
 public class Identity implements es.logongas.ix3.security.services.authentication.Principal {
 
-    private int idIdentity;
+    protected int idIdentity;
     @NotBlank
     @Caption("Identificador")
-    private String login;
+    protected String login;
     @NotBlank
     @Caption("Nombre")
-    private String name;
-    private Set<ACE> acl;
-    private Set<GroupMember> memberOf;
+    protected String name;
+    protected Set<ACE> acl;
+    protected Set<GroupMember> memberOf;
 
     public Identity() {
     }
