@@ -15,11 +15,13 @@
  */
 package es.logongas.ix3.model;
 
+import es.logongas.ix3.security.services.authentication.Principal;
+
 /**
  *
  * @author Lorenzo González
  */
-public class User extends Identity  {
+public class User extends Identity implements Principal  {
 
     public User() {
     }
