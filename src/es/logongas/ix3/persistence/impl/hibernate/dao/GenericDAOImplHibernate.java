@@ -141,29 +141,40 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Override
     final public boolean update(EntityType entity) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
-        boolean exists;
+        MetaData metaData=metaDataFactory.getMetaData(entity);
+        boolean hasUpdate;
         try {
             this.preUpdateBeforeTransaction(session, entity);
             session.beginTransaction();
 
-            EntityType entity2 = (EntityType) session.get(getEntityMetaData().getType(), session.getIdentifier(entity));
+            String idName=metaData.getPrimaryKeyPropertyName();
+            Serializable id=(Serializable)ReflectionUtil.getValueFromBean(entity, idName);
+            EntityType entity2;
+            if (id==null) {
+                entity2=null;
+            }else {
+                entity2 = (EntityType) session.get(getEntityMetaData().getType(), id);
+            }
 
             if (entity == null) {
-                exists = false;
-                this.preUpdateInTransaction(session, entity, exists);
-                this.postUpdateInTransaction(session, entity, exists);
+                this.preInsertBeforeTransaction(session, entity);
+                session.beginTransaction();
+                this.preInsertInTransaction(session, entity);
+                session.save(entity);
+                this.postInsertInTransaction(session, entity);
                 session.getTransaction().commit();
+                this.postInsertAfterTransaction(session, entity);
+                hasUpdate=false;
             } else {
-                exists = true;
-                this.preUpdateInTransaction(session, entity, exists);
+                this.preUpdateInTransaction(session, entity);
                 session.evict(entity2);
                 session.update(entity);
-                this.postUpdateInTransaction(session, entity, exists);
+                this.postUpdateInTransaction(session, entity);
                 session.getTransaction().commit();
-
+                this.postUpdateAfterTransaction(session, entity);
+                hasUpdate = true;
             }
-            this.postUpdateAfterTransaction(session, entity, exists);
-            return exists;
+            return hasUpdate;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
                 if (session.getTransaction().isActive()) {
@@ -527,13 +538,13 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected void preUpdateBeforeTransaction(Session session, EntityType entity) {
     }
 
-    protected void preUpdateInTransaction(Session session, EntityType entity, boolean exists) {
+    protected void preUpdateInTransaction(Session session, EntityType entity) {
     }
 
-    protected void postUpdateInTransaction(Session session, EntityType entity, boolean exists) {
+    protected void postUpdateInTransaction(Session session, EntityType entity) {
     }
 
-    protected void postUpdateAfterTransaction(Session session, EntityType entity, boolean exists) {
+    protected void postUpdateAfterTransaction(Session session, EntityType entity) {
     }
 
     protected void preDeleteBeforeTransaction(Session session, PrimaryKeyType id) {
