@@ -68,7 +68,7 @@ public class BusinessException extends Exception {
         if (constraintViolation == null) {
             throw cve;
         } else {
-            businessMessage = new BusinessMessage(constraintViolation.getPropertyName(), constraintViolation.getMessage());
+            businessMessage = new BusinessMessage(null,constraintViolation.getMessage());
         }
 
         businessMessages.add(businessMessage);
