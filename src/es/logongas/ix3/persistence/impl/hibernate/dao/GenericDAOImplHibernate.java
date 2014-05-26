@@ -68,17 +68,17 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public EntityType create(Map<String,Object> initialProperties) throws BusinessException {
+    final public EntityType create(Map<String, Object> initialProperties) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
 
         try {
             EntityType entity;
             entity = (EntityType) getEntityMetaData().getType().newInstance();
-            if (initialProperties!=null) {
-                for(String key:initialProperties.keySet()) {
-                    ReflectionUtil.setValueToBean(entity, key,initialProperties.get(key));
+            if (initialProperties != null) {
+                for (String key : initialProperties.keySet()) {
+                    ReflectionUtil.setValueToBean(entity, key, initialProperties.get(key));
                 }
-            }            
+            }
             this.postCreate(session, entity);
             return entity;
         } catch (RuntimeException ex) {
@@ -86,8 +86,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }    
-    
+    }
+
     @Override
     final public void insert(EntityType entity) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
@@ -141,22 +141,20 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Override
     final public boolean update(EntityType entity) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
-        MetaData metaData=metaDataFactory.getMetaData(entity);
+        MetaData metaData = metaDataFactory.getMetaData(entity);
         boolean hasUpdate;
         try {
-            this.preUpdateBeforeTransaction(session, entity);
-            session.beginTransaction();
 
-            String idName=metaData.getPrimaryKeyPropertyName();
-            Serializable id=(Serializable)ReflectionUtil.getValueFromBean(entity, idName);
+            String idName = metaData.getPrimaryKeyPropertyName();
+            Serializable id = (Serializable) ReflectionUtil.getValueFromBean(entity, idName);
             EntityType entity2;
-            if (id==null) {
-                entity2=null;
-            }else {
+            if (id == null) {
+                entity2 = null;
+            } else {
                 entity2 = (EntityType) session.get(getEntityMetaData().getType(), id);
             }
 
-            if (entity == null) {
+            if (entity2 == null) {
                 this.preInsertBeforeTransaction(session, entity);
                 session.beginTransaction();
                 this.preInsertInTransaction(session, entity);
@@ -164,8 +162,10 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 this.postInsertInTransaction(session, entity);
                 session.getTransaction().commit();
                 this.postInsertAfterTransaction(session, entity);
-                hasUpdate=false;
+                hasUpdate = false;
             } else {
+                this.preUpdateBeforeTransaction(session, entity);
+                session.beginTransaction();
                 this.preUpdateInTransaction(session, entity);
                 session.evict(entity2);
                 session.update(entity);
@@ -304,29 +304,25 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     final public List<EntityType> search(Map<String, Object> filter, List<Order> orders) throws BusinessException {
         return pageableSearch(filter, orders, 0, Integer.MAX_VALUE).getContent();
     }
-    
+
     @Override
     public Page<EntityType> pageableSearch(Map<String, Object> filter, int pageNumber, int pageSize) throws BusinessException {
         return pageableSearch(filter, null, pageNumber, pageSize);
     }
-    
-
 
     @Override
     public Page<EntityType> pageableSearch(Map<String, Object> filter, List<Order> orders, int pageNumber, int pageSize) throws BusinessException {
 
-        if (pageNumber<0) {
+        if (pageNumber < 0) {
             throw new RuntimeException("El agumento pageNumber no pude ser negativo");
         }
-        if (pageSize<1) {
+        if (pageSize < 1) {
             throw new RuntimeException("El agumento pageNumber debe ser mayor que 0");
-        }        
+        }
         if (orders == null) {
             orders = new ArrayList<Order>();
         }
 
-        
-        
         Session session = sessionFactory.getCurrentSession();
         try {
             Criteria criteria = session.createCriteria(getEntityMetaData().getType());
@@ -372,10 +368,10 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 totalPages = 1;
             } else {
                 CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
-                
+
                 Projection originalProjection = criteriaImpl.getProjection();
-                ResultTransformer originalResultTransformer = criteriaImpl.getResultTransformer();                
-                
+                ResultTransformer originalResultTransformer = criteriaImpl.getResultTransformer();
+
                 criteria.setProjection(Projections.rowCount());
                 Long totalCount = (Long) criteria.uniqueResult();
 
@@ -435,8 +431,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new RuntimeException(ex);
         }
 
-    }    
-    
+    }
+
     @Override
     final public Object namedSearch(String namedSearch, Map<String, Object> filter) throws BusinessException {
         try {
