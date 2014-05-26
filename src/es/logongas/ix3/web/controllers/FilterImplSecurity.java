@@ -19,6 +19,7 @@ import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.security.services.authentication.AuthenticationManager;
 import es.logongas.ix3.security.services.authentication.Principal;
 import es.logongas.ix3.security.services.authorization.AuthorizationManager;
+import es.logongas.ix3.security.util.SecurityUtil;
 import java.io.IOException;
 import java.io.Serializable;
 import javax.servlet.Filter;
@@ -76,7 +77,12 @@ public class FilterImplSecurity implements Filter {
         }
 
         if (authorizationManager.authorized(principal, "URL", getSecureURI(uri, httpServletRequest.getContextPath()), method, httpServletRequest.getParameterMap()) == true) {
-            filterChain.doFilter(servletRequest, servletResponse);
+            try {
+                SecurityUtil.bindPrincipalToThread(principal);
+                filterChain.doFilter(servletRequest, servletResponse);
+            }finally {
+                SecurityUtil.unbindPrincipalFromThread();
+            }
         } else {
             httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
         }
