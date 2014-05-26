@@ -21,6 +21,7 @@ import es.logongas.ix3.persistence.services.dao.GenericDAO;
 import es.logongas.ix3.persistence.services.dao.NamedSearch;
 import es.logongas.ix3.persistence.services.dao.Order;
 import es.logongas.ix3.persistence.services.dao.Page;
+import es.logongas.ix3.persistence.services.dao.TransactionManager;
 import es.logongas.ix3.persistence.services.metadata.MetaData;
 import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
 import es.logongas.ix3.util.ReflectionUtil;
@@ -49,7 +50,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected SessionFactory sessionFactory;
     @Autowired
     protected MetaDataFactory metaDataFactory;
-
+    @Autowired
+    protected TransactionManager transactionManager;
+    
     Class entityType;
 
     protected final Log log = LogFactory.getLog(getClass());
@@ -93,16 +96,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
             this.preInsertBeforeTransaction(session, entity);
-            session.beginTransaction();
+            transactionManager.begin();
             this.preInsertInTransaction(session, entity);
             session.save(entity);
             this.postInsertInTransaction(session, entity);
-            session.getTransaction().commit();
+            transactionManager.commit();
             this.postInsertAfterTransaction(session, entity);
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -110,8 +113,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -119,8 +122,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(cve);
         } catch (RuntimeException ex) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -128,8 +131,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw ex;
         } catch (Exception ex) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -156,29 +159,29 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
             if (entity2 == null) {
                 this.preInsertBeforeTransaction(session, entity);
-                session.beginTransaction();
+                transactionManager.begin();
                 this.preInsertInTransaction(session, entity);
                 session.save(entity);
                 this.postInsertInTransaction(session, entity);
-                session.getTransaction().commit();
+                transactionManager.commit();
                 this.postInsertAfterTransaction(session, entity);
                 hasUpdate = false;
             } else {
                 this.preUpdateBeforeTransaction(session, entity);
-                session.beginTransaction();
+                transactionManager.begin();
                 this.preUpdateInTransaction(session, entity);
                 session.evict(entity2);
                 session.update(entity);
                 this.postUpdateInTransaction(session, entity);
-                session.getTransaction().commit();
+                transactionManager.commit();
                 this.postUpdateAfterTransaction(session, entity);
                 hasUpdate = true;
             }
             return hasUpdate;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -186,8 +189,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -195,8 +198,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(cve);
         } catch (RuntimeException ex) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -204,8 +207,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw ex;
         } catch (Exception ex) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -240,26 +243,26 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         EntityType entity = null;
         try {
             this.preDeleteBeforeTransaction(session, id);
-            session.beginTransaction();
+            transactionManager.begin();
             entity = (EntityType) session.get(getEntityMetaData().getType(), id);
             this.preDeleteInTransaction(session, id, entity);
             if (entity == null) {
                 exists = false;
                 this.postDeleteInTransaction(session, id, entity);
-                session.getTransaction().commit();
+                transactionManager.commit();
             } else {
                 session.delete(entity);
                 exists = true;
                 this.postDeleteInTransaction(session, id, entity);
-                session.getTransaction().commit();
+                transactionManager.commit();
             }
 
             this.postDeleteAfterTransaction(session, id, entity);
             return exists;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -267,8 +270,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -276,8 +279,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(cve);
         } catch (RuntimeException ex) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -285,8 +288,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw ex;
         } catch (Exception ex) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -395,8 +398,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             return page;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -404,8 +407,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(cve);
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -413,8 +416,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(cve);
         } catch (RuntimeException ex) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -422,8 +425,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw ex;
         } catch (Exception ex) {
             try {
-                if (session.getTransaction().isActive()) {
-                    session.getTransaction().rollback();
+                if (transactionManager.isActive()) {
+                    transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
