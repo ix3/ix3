@@ -38,5 +38,6 @@ limitations under the License.
         </property>
     </bean>
 
+    <bean class="es.logongas.ix3.security.util.SecurityUtil" factory-method="getPrincipal" scope="prototype"  />
 
 </beans>
