@@ -15,6 +15,7 @@
  */
 package es.logongas.ix3.persistence.impl.hibernate.dao;
 
+import es.logongas.ix3.util.InvocationHandlerImpl;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
 import es.logongas.ix3.persistence.services.dao.GenericDAO;
 import java.lang.reflect.Proxy;
@@ -80,7 +81,7 @@ public class DAOFactoryImplHibernate implements DAOFactory {
                     //sería perder rendimiento.
                    genericDAO=realGenericDAO;
                 } else {
-                    genericDAO=(GenericDAO)Proxy.newProxyInstance(InvocationHandlerImplDAO.class.getClassLoader(), new Class[] { daoClass }, new InvocationHandlerImplDAO(realGenericDAO));
+                    genericDAO=(GenericDAO)Proxy.newProxyInstance(InvocationHandlerImpl.class.getClassLoader(), new Class[] { daoClass }, new InvocationHandlerImpl(realGenericDAO));
                 }
             }
         }

@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.persistence.impl.hibernate.dao;
+package es.logongas.ix3.util;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 /**
- * Esta clase es una ayuda para crear un Proxy de los interfaces DAO.
+ * Esta clase es una ayuda para crear un Proxy de los interfaces deleganto la llamada a otro objeto.
  * @author Lorenzo González
  */
-public class InvocationHandlerImplDAO implements InvocationHandler {
+public class InvocationHandlerImpl implements InvocationHandler {
 
     Object realObject;
 
-    public InvocationHandlerImplDAO(Object realObject) {
+    public InvocationHandlerImpl(Object realObject) {
         this.realObject = realObject;
     }
 
