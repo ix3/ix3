@@ -23,7 +23,15 @@ limitations under the License.
 ">
     <bean name="sessionFactory" class="es.logongas.ix3.persistence.impl.hibernate.util.HibernateUtil" factory-method="getSessionFactory"  />
     <bean name="sessionFactory2" class="es.logongas.ix3.persistence.impl.hibernate.util.HibernateUtil" factory-method="getSessionFactory2"  />
-        <!-- <bean class="es.logongas.ix3.persistence.impl.hibernate.dao.DAOFactoryImplHibernate" /> -->
+
     <bean class="es.logongas.ix3.persistence.impl.hibernate.metadata.MetaDataFactoryImplHibernate" />
-    <bean class="es.logongas.ix3.persistence.impl.hibernate.dao.TransactionManagerImplHibernate" />        
+    <bean class="es.logongas.ix3.persistence.impl.hibernate.dao.TransactionManagerImplHibernate" />   
+    
+    <!-- Hay que ponerlo en cada aplicacion que hagamos -->
+    <!--<bean class="es.logongas.ix3.persistence.impl.hibernate.dao.DAOFactoryImplHibernate" >
+        <property name="domainBasePackageName"     value="Nombre del paquete de las clases de negocio o de dominio" />
+        <property name="interfaceBasePackageName"  value="Nombre del paquete de los interfaces DAO" />
+        <property name="implBasePackageName"       value="Nombre del paquete de las implementaciones de los interfaces DAO" />
+    </bean>-->
+        
 </beans>
