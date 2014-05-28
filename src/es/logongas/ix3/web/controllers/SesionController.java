@@ -16,7 +16,6 @@
 package es.logongas.ix3.web.controllers;
 
 
-import es.logongas.ix3.model.User;
 import es.logongas.ix3.persistence.services.dao.BusinessException;
 import es.logongas.ix3.persistence.services.dao.BusinessMessage;
 import es.logongas.ix3.persistence.services.dao.DAOFactory;
@@ -76,7 +75,7 @@ public class SesionController {
 
 
             //Retornamos el user
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter(User.class);
+            JsonWriter jsonWriter = jsonFactory.getJsonWriter(Principal.class);
             String datos = jsonWriter.toJson(principal);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
@@ -122,7 +121,7 @@ public class SesionController {
             }
 
             if (principal != null) {
-                JsonWriter jsonWriter = jsonFactory.getJsonWriter(User.class);
+                JsonWriter jsonWriter = jsonFactory.getJsonWriter(Principal.class);
                 String datos = jsonWriter.toJson(principal);
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_OK);
