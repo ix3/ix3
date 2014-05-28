@@ -68,47 +68,47 @@ public class GenericServiceImpl<EntityType,PrimaryKeyType extends Serializable> 
 
     
     @Override
-    public Object create() throws BusinessException {
+    final public Object create() throws BusinessException {
         return getDAO().create();
     }
 
     @Override
-    public Object create(Map initialProperties) throws BusinessException {
+    final public Object create(Map initialProperties) throws BusinessException {
         return getDAO().create(initialProperties);
     }
 
     @Override
-    public void insert(Object entity) throws BusinessException {
+    final public void insert(Object entity) throws BusinessException {
         getDAO().insert(entity);
     }
 
     @Override
-    public Object read(Serializable primaryKey) throws BusinessException {
+    final public Object read(Serializable primaryKey) throws BusinessException {
         return getDAO().read(primaryKey);
     }
 
     @Override
-    public boolean update(Object entity) throws BusinessException {
+    final public boolean update(Object entity) throws BusinessException {
         return getDAO().update(entity);
     }
 
     @Override
-    public boolean delete(Serializable primaryKey) throws BusinessException {
+    final public boolean delete(Serializable primaryKey) throws BusinessException {
         return getDAO().delete(primaryKey);
     }
 
     @Override
-    public Object readByNaturalKey(Object value) throws BusinessException {
+    final public Object readByNaturalKey(Object value) throws BusinessException {
         return getDAO().readByNaturalKey(value);
     }
 
     @Override
-    public List search(Map filter) throws BusinessException {
+    final public List search(Map filter) throws BusinessException {
         return getDAO().search(filter);
     }
 
     @Override
-    public List search(Map filter, List orders) throws BusinessException {
+    final public List search(Map filter, List orders) throws BusinessException {
         return getDAO().search(filter, orders);
     }
 
@@ -118,12 +118,12 @@ public class GenericServiceImpl<EntityType,PrimaryKeyType extends Serializable> 
     }
 
     @Override
-    public Page pageableSearch(Map filter, int pageNumber, int pageSize) throws BusinessException {
+    final public Page pageableSearch(Map filter, int pageNumber, int pageSize) throws BusinessException {
         return getDAO().pageableSearch(filter, pageNumber, pageSize);
     }
 
     @Override
-    public Page pageableSearch(Map filter, List orders, int pageNumber, int pageSize) throws BusinessException {
+    final public Page pageableSearch(Map filter, List orders, int pageNumber, int pageSize) throws BusinessException {
         return getDAO().pageableSearch(filter, orders, pageNumber, pageSize);
     }
 }
