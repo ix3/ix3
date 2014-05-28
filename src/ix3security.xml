@@ -22,21 +22,7 @@ limitations under the License.
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
 ">
 
-    <bean id="authenticationManager" class="es.logongas.ix3.security.impl.authentication.AuthenticationManagerImpl"  >
-        <property name="authenticationProviders">
-            <list>
-                <bean class="es.logongas.ix3.security.impl.authentication.AuthenticationProviderImplMoodle" />
-            </list>
-        </property>
-    </bean>
 
-    <bean id="authorizationManager" class="es.logongas.ix3.security.impl.authorization.AuthorizationManagerImplIdentity"  >
-        <property name="authorizationProviders">
-            <list>
-                <bean class="es.logongas.ix3.security.impl.authorization.AuthorizationProviderImplIdentity" />
-            </list>
-        </property>
-    </bean>
 
     <bean class="es.logongas.ix3.security.util.SecurityUtil" factory-method="getPrincipal" scope="prototype"  />
 

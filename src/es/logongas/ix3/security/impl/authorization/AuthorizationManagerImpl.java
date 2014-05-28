@@ -15,36 +15,26 @@
  */
 package es.logongas.ix3.security.impl.authorization;
 
-import es.logongas.ix3.model.Permission;
-import es.logongas.ix3.model.SecureResourceType;
-import es.logongas.ix3.persistence.services.dao.BusinessException;
-import es.logongas.ix3.persistence.services.dao.DAOFactory;
-import es.logongas.ix3.persistence.services.dao.GenericDAO;
 import es.logongas.ix3.security.services.authentication.Principal;
 import es.logongas.ix3.security.services.authorization.AuthorizationManager;
 import es.logongas.ix3.security.services.authorization.AuthorizationProvider;
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Busca por orden correlativo todos los AuthorizationProvider y se queda con el primero que encuentra que permite o deniega
  * @author Lorenzo González
  */
-public class AuthorizationManagerImplIdentity implements AuthorizationManager {
+public class AuthorizationManagerImpl implements AuthorizationManager {
     private List<AuthorizationProvider> authorizationProviders=new ArrayList<AuthorizationProvider>();
     private boolean defaultAuthorization=false;
 
-    @Autowired
-    DAOFactory daoFactory;
 
     @Override
-    public boolean authorized(Principal principal,String secureResource, Permission permission, Object arguments) {
+    public boolean authorized(Principal principal,String secureResourceTypeName,String secureResource,String permissionName,Object arguments) {
         for(AuthorizationProvider authorizationProvider:authorizationProviders) {
-            AuthorizationType authorizationType=authorizationProvider.authorized(principal,secureResource, permission, arguments);
+            AuthorizationType authorizationType=authorizationProvider.authorized(principal,secureResourceTypeName,secureResource, permissionName, arguments);
 
             if (authorizationType==AuthorizationType.AccessAllow) {
                 return true;
@@ -53,35 +43,6 @@ public class AuthorizationManagerImplIdentity implements AuthorizationManager {
             }
         }
         return defaultAuthorization;
-    }
-
-    @Override
-    public boolean authorized(Principal principal,String secureResourceTypeName,String secureResource,String permissionName,Object arguments) {
-        try {
-            GenericDAO<SecureResourceType,Integer> secureResourceTypeDAO=daoFactory.getDAO(SecureResourceType.class);
-            GenericDAO<Permission,Integer> permissionDAO=daoFactory.getDAO(Permission.class);
-
-            SecureResourceType secureResourceType=secureResourceTypeDAO.readByNaturalKey(secureResourceTypeName);
-            Map<String,Object> filter=new HashMap<String,Object>();
-            filter.put("secureResourceType", secureResourceType);
-            filter.put("name", permissionName);
-
-            List<Permission> permissions=permissionDAO.search(filter);
-            if (permissions.size()==0) {
-                throw new RuntimeException("No existe el permiso con nombre:"+permissionName + " del tipo:"+secureResourceType);
-            }
-            if (permissions.size()>1) {
-                throw new RuntimeException("Existe más de un permiso con nombre:"+permissionName + " del tipo:"+secureResourceType);
-            }
-
-            Permission permission=permissions.get(0);
-
-            return authorized(principal, secureResource, permission, arguments);
-
-        } catch (BusinessException ex) {
-            //Si las reglas de negocio no nos dejan , es que no estamos autorizados
-            return false;
-        }
     }
 
     /**

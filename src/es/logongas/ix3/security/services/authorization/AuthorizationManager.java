@@ -15,7 +15,6 @@
  */
 package es.logongas.ix3.security.services.authorization;
 
-import es.logongas.ix3.model.Permission;
 import es.logongas.ix3.security.services.authentication.Principal;
 
 /**
@@ -23,6 +22,5 @@ import es.logongas.ix3.security.services.authentication.Principal;
  * @author Lorenzo González
  */
 public interface AuthorizationManager {
-    boolean authorized(Principal principal,String secureResource,Permission permission,Object arguments);
     boolean authorized(Principal principal,String secureResourceTypeName,String secureResource,String permissionName,Object arguments);
 }
