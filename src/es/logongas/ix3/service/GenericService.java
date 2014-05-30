@@ -17,9 +17,9 @@
 
 package es.logongas.ix3.service;
 
-import es.logongas.ix3.persistence.services.dao.BusinessException;
-import es.logongas.ix3.persistence.services.dao.Order;
-import es.logongas.ix3.persistence.services.dao.Page;
+import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.core.Order;
+import es.logongas.ix3.core.Page;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
