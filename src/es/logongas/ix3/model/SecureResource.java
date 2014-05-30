@@ -15,7 +15,7 @@
  */
 package es.logongas.ix3.model;
 
-import es.logongas.ix3.persistence.services.annotations.ValuesList;
+import es.logongas.ix3.core.annotations.ValuesList;
 
 /**
  * Un recurso que puede ser "securizado"

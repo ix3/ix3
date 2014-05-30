@@ -15,7 +15,7 @@
  */
 package es.logongas.ix3.model;
 
-import es.logongas.ix3.persistence.services.annotations.ValuesList;
+import es.logongas.ix3.core.annotations.ValuesList;
 import es.logongas.ix3.security.services.authorization.AuthorizationType;
 import es.logongas.ix3.util.ScriptEvaluator;
 import javax.script.ScriptEngine;
