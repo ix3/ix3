@@ -15,7 +15,7 @@
  */
 package es.logongas.ix3.web.hibernate;
 
-import es.logongas.ix3.persistence.impl.hibernate.util.HibernateUtil;
+import es.logongas.ix3.core.hibernate.HibernateUtil;
 import java.io.IOException;
 import javax.servlet.*;
 

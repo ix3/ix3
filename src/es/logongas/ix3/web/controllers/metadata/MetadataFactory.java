@@ -15,12 +15,12 @@
  */
 package es.logongas.ix3.web.controllers.metadata;
 
-import es.logongas.ix3.persistence.services.dao.BusinessException;
-import es.logongas.ix3.persistence.services.dao.DAOFactory;
-import es.logongas.ix3.persistence.services.dao.GenericDAO;
-import es.logongas.ix3.persistence.services.metadata.MetaData;
-import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
-import es.logongas.ix3.persistence.services.metadata.ValuesList;
+import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.dao.DAOFactory;
+import es.logongas.ix3.dao.GenericDAO;
+import es.logongas.ix3.dao.metadata.MetaData;
+import es.logongas.ix3.dao.metadata.MetaDataFactory;
+import es.logongas.ix3.dao.metadata.ValuesList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class MetadataFactory {
 
-    public Metadata getMetadata(es.logongas.ix3.persistence.services.metadata.MetaData metaData, MetaDataFactory metaDataFactory, DAOFactory daoFactory, String basePath,List<String> expand) throws BusinessException {
+    public Metadata getMetadata(es.logongas.ix3.dao.metadata.MetaData metaData, MetaDataFactory metaDataFactory, DAOFactory daoFactory, String basePath,List<String> expand) throws BusinessException {
         Metadata metadata = new Metadata();
         String propertyPath="";
         

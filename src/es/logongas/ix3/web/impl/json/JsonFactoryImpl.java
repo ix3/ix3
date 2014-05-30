@@ -15,8 +15,8 @@
  */
 package es.logongas.ix3.web.impl.json;
 
-import es.logongas.ix3.persistence.services.metadata.MetaData;
-import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
+import es.logongas.ix3.dao.metadata.MetaData;
+import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.web.services.json.JsonFactory;
 import es.logongas.ix3.web.services.json.JsonReader;
 import es.logongas.ix3.web.services.json.JsonWriter;

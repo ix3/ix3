@@ -16,9 +16,9 @@
 package es.logongas.ix3.web.controllers;
 
 
-import es.logongas.ix3.persistence.services.dao.BusinessException;
-import es.logongas.ix3.persistence.services.dao.BusinessMessage;
-import es.logongas.ix3.persistence.services.dao.DAOFactory;
+import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.core.BusinessMessage;
+import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.security.impl.authentication.CredentialImplLoginPassword;
 import es.logongas.ix3.security.services.authentication.AuthenticationManager;
 import es.logongas.ix3.security.services.authentication.Principal;

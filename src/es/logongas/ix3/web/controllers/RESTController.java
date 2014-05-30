@@ -15,16 +15,16 @@
  */
 package es.logongas.ix3.web.controllers;
 
-import es.logongas.ix3.persistence.services.dao.BusinessException;
-import es.logongas.ix3.persistence.services.dao.BusinessMessage;
-import es.logongas.ix3.persistence.services.dao.DAOFactory;
-import es.logongas.ix3.persistence.services.dao.GenericDAO;
-import es.logongas.ix3.persistence.services.dao.NamedSearch;
-import es.logongas.ix3.persistence.services.dao.OrderDirection;
-import es.logongas.ix3.persistence.services.dao.Order;
-import es.logongas.ix3.persistence.services.metadata.MetaData;
-import es.logongas.ix3.persistence.services.metadata.MetaType;
-import es.logongas.ix3.persistence.services.metadata.MetaDataFactory;
+import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.core.BusinessMessage;
+import es.logongas.ix3.dao.DAOFactory;
+import es.logongas.ix3.dao.GenericDAO;
+import es.logongas.ix3.dao.NamedSearch;
+import es.logongas.ix3.core.OrderDirection;
+import es.logongas.ix3.core.Order;
+import es.logongas.ix3.dao.metadata.MetaData;
+import es.logongas.ix3.dao.metadata.MetaType;
+import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.controllers.metadata.Metadata;
 import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
