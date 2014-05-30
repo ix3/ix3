@@ -15,7 +15,7 @@
  */
 package es.logongas.ix3.security.services.authentication;
 
-import es.logongas.ix3.persistence.services.dao.BusinessException;
+import es.logongas.ix3.core.BusinessException;
 import java.io.Serializable;
 
 /**

@@ -15,7 +15,7 @@
  */
 package es.logongas.ix3.security.impl.authentication;
 
-import es.logongas.ix3.persistence.services.dao.BusinessException;
+import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.security.services.authentication.AuthenticationManager;
 import es.logongas.ix3.security.services.authentication.AuthenticationProvider;
 import es.logongas.ix3.security.services.authentication.Credential;
