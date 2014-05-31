@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.logongas.ix3.web.impl.json;
+package es.logongas.ix3.web.json.impl;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParseException;

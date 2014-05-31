@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.impl.json;
+package es.logongas.ix3.web.json.impl;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import es.logongas.ix3.web.services.json.JsonReader;
+import es.logongas.ix3.web.json.JsonReader;
 
 /**
  *

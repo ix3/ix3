@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package es.logongas.ix3.web.impl.json;
+package es.logongas.ix3.web.json.impl;
 
 import es.logongas.ix3.dao.metadata.CollectionType;
 import es.logongas.ix3.dao.metadata.Constraints;

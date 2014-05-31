@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Lorenzo González.
+ * Copyright 2012 Lorenzo González.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.services.json;
+package es.logongas.ix3.web.hibernate;
 
-/**
- *
- * @author Lorenzo González
- */
-public interface JsonReader {
-    Object fromJson(String json);
+import es.logongas.ix3.core.hibernate.HibernateUtil;
+import javax.servlet.*;
+
+public class HibernateContextListener implements ServletContextListener {
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        HibernateUtil.buildSessionFactory();
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        HibernateUtil.closeSessionFactory();
+    }
 }

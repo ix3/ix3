@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.services.json;
-
-import java.util.List;
+package es.logongas.ix3.web.json;
 
 /**
- * Transforma un Objeto Java en un String JSON
+ *
  * @author Lorenzo González
  */
-public interface JsonWriter {
-    String toJson(Object obj);
-    String toJson(Object obj,List<String> expand);
+public interface JsonReader {
+    Object fromJson(String json);
 }

@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.impl.json;
+package es.logongas.ix3.web.json.impl;
 
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
-import es.logongas.ix3.web.services.json.JsonFactory;
-import es.logongas.ix3.web.services.json.JsonReader;
-import es.logongas.ix3.web.services.json.JsonWriter;
+import es.logongas.ix3.web.json.JsonFactory;
+import es.logongas.ix3.web.json.JsonReader;
+import es.logongas.ix3.web.json.JsonWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 

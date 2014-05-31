@@ -19,12 +19,7 @@ import es.logongas.ix3.core.hibernate.HibernateUtil;
 import java.io.IOException;
 import javax.servlet.*;
 
-public class HibernateContextListenerAndFilter implements Filter, ServletContextListener {
-
-    @Override
-    public void contextInitialized(ServletContextEvent sce) {
-        HibernateUtil.buildSessionFactory();
-    }
+public class HibernateFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -45,8 +40,4 @@ public class HibernateContextListenerAndFilter implements Filter, ServletContext
     public void destroy() {
     }
 
-    @Override
-    public void contextDestroyed(ServletContextEvent sce) {
-        HibernateUtil.closeSessionFactory();
-    }
 }
