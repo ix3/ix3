@@ -31,8 +31,9 @@ public class ServiceFactoryImpl implements ServiceFactory {
     private String domainBasePackageName ;
     private String interfaceBasePackageName;
     private String implBasePackageName;
-    private final String interfaceSufix="Service";
-    private final String implSufix="ServiceImplHibernate"; 
+    private String implSubPackageName="impl";
+    private String interfaceSufix="Service";
+    private String implSufix="ServiceImplHibernate"; 
     private final Class<? extends GenericService> defaultImplClass = GenericServiceImpl.class;
     
     @Autowired
@@ -40,7 +41,7 @@ public class ServiceFactoryImpl implements ServiceFactory {
     
     @Override
     public GenericService getService(Class entityClass) {
-        FactoryHelper<GenericService> factoryHelper=new FactoryHelper<GenericService>(domainBasePackageName, interfaceBasePackageName, implBasePackageName, interfaceSufix, implSufix, defaultImplClass, context);
+        FactoryHelper<GenericService> factoryHelper=new FactoryHelper<GenericService>(domainBasePackageName, interfaceBasePackageName, implBasePackageName,implSubPackageName, interfaceSufix, implSufix, defaultImplClass, context);
         
         return factoryHelper.getImpl(entityClass);
     }
@@ -64,6 +65,34 @@ public class ServiceFactoryImpl implements ServiceFactory {
      */
     public void setImplBasePackageName(String implBasePackageName) {
         this.implBasePackageName = implBasePackageName;
+    }
+
+    /**
+     * @return the implSubPackageName
+     */
+    public String getImplSubPackageName() {
+        return implSubPackageName;
+    }
+
+    /**
+     * @param implSubPackageName the implSubPackageName to set
+     */
+    public void setImplSubPackageName(String implSubPackageName) {
+        this.implSubPackageName = implSubPackageName;
+    }
+
+    /**
+     * @param interfaceSufix the interfaceSufix to set
+     */
+    public void setInterfaceSufix(String interfaceSufix) {
+        this.interfaceSufix = interfaceSufix;
+    }
+
+    /**
+     * @param implSufix the implSufix to set
+     */
+    public void setImplSufix(String implSufix) {
+        this.implSufix = implSufix;
     }
 
 }
