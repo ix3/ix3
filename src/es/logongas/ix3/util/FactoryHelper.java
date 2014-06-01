@@ -24,36 +24,37 @@ import org.springframework.context.ApplicationContext;
  * @author Lorenzo
  * @param <T>
  */
-public class FactoryHelper<T>  {
+public class FactoryHelper<T> {
 
-    
-    private final String domainBasePackageName ;
+    private final String domainBasePackageName;
     private final String interfaceBasePackageName;
     private final String implBasePackageName;
     private final String interfaceSufix;
-    private final String implSufix; 
+    private final String implSufix;
     private final Class<? extends T> defaultImplClass;
     private final ApplicationContext context;
+    private final String implSubPackageName;
 
-    public FactoryHelper(String domainBasePackageName, String interfaceBasePackageName, String implBasePackageName, String interfaceSufix, String implSufix,Class<? extends T> defaultImplClass, ApplicationContext context) {
+    public FactoryHelper(String domainBasePackageName, String interfaceBasePackageName, String implBasePackageName,String implSubPackageName, String interfaceSufix, String implSufix, Class<? extends T> defaultImplClass, ApplicationContext context) {
         this.domainBasePackageName = domainBasePackageName;
         this.interfaceBasePackageName = interfaceBasePackageName;
         this.implBasePackageName = implBasePackageName;
+        this.implSubPackageName = implSubPackageName;
         this.interfaceSufix = interfaceSufix;
         this.implSufix = implSufix;
-        this.defaultImplClass=defaultImplClass;
+        this.defaultImplClass = defaultImplClass;
         this.context = context;
     }
-    
+
     /**
      * Obtiene la Implementación de un objeto asociado a una clase de negocio.
      * El DAO debe tener el nombre siguiente DAONombreEntidad<<ImplSufi>>. Si no
      * existe una clase específica con ese nombre se retornará
-     * GenericDAOImplHibernate. Hay úncamente 2 paquetes donde debe estar la
+     * GenericDAOImplHibernate. Hay úncamente 3 paquetes donde debe estar la
      * clase DAONombreEntidadImplHibernate En el paquete
-     * 'interfaceBasePackageName' o en el paquete interfaceBasePackageName y un
+     * 'interfaceBasePackageName' , en el paquete interfaceBasePackageName y un
      * subpaquete igual a subtituir domainBasePackageName por
-     * interfaceBasePackageName
+     * interfaceBasePackageName o en un subpaquete del interfaz llamado "implSubPackageName"
      *
      * @param entityClass
      * @return El DAO de la entidad
@@ -77,22 +78,30 @@ public class FactoryHelper<T>  {
                 t = (T) tClass.newInstance();
                 context.getAutowireCapableBeanFactory().autowireBean(t);
             } catch (Exception ex1) {
-                //Si no existe probamos con la siguiente
-                //Pero como es generico deberemos ver si existe el interfaz
-                T realGenericDAO;
                 try {
-                    realGenericDAO = defaultImplClass.getConstructor(Class.class).newInstance(entityClass);
+                    fqcn = getFQCNImplInSubPackage(entityClass, domainBasePackageName, implBasePackageName);
+                    tClass = Class.forName(fqcn);
+                    t = (T) tClass.newInstance();
+                    context.getAutowireCapableBeanFactory().autowireBean(t);
                 } catch (Exception ex2) {
-                    throw new RuntimeException(ex2);
-                }
-                context.getAutowireCapableBeanFactory().autowireBean(realGenericDAO);
-                Class<? extends T> interfaceClass = getInterface(entityClass);
-                if (interfaceClass == null) {
-                    //Si no existe el interfaz no hace falta crear el Proxy pq
-                    //sería perder rendimiento.
-                    t = realGenericDAO;
-                } else {
-                    t = (T) Proxy.newProxyInstance(InvocationHandlerImpl.class.getClassLoader(), new Class[]{interfaceClass}, new InvocationHandlerImpl(realGenericDAO));
+
+                    //Si no existe probamos con la siguiente
+                    //Pero como es generico deberemos ver si existe el interfaz
+                    T realGenericDAO;
+                    try {
+                        realGenericDAO = defaultImplClass.getConstructor(Class.class).newInstance(entityClass);
+                    } catch (Exception ex3) {
+                        throw new RuntimeException(ex3);
+                    }
+                    context.getAutowireCapableBeanFactory().autowireBean(realGenericDAO);
+                    Class<? extends T> interfaceClass = getInterface(entityClass);
+                    if (interfaceClass == null) {
+                        //Si no existe el interfaz no hace falta crear el Proxy pq
+                        //sería perder rendimiento.
+                        t = realGenericDAO;
+                    } else {
+                        t = (T) Proxy.newProxyInstance(InvocationHandlerImpl.class.getClassLoader(), new Class[]{interfaceClass}, new InvocationHandlerImpl(realGenericDAO));
+                    }
                 }
             }
         }
@@ -101,7 +110,8 @@ public class FactoryHelper<T>  {
     }
 
     /**
-     * Busca el interfaz del objeto que estamos fabricando relativo a la clase de negocio. Si éste no existe retorna <code>null</code>
+     * Busca el interfaz del objeto que estamos fabricando relativo a la clase
+     * de negocio. Si éste no existe retorna <code>null</code>
      *
      * @param entityClass La clase Java de una "Clase de negocio"
      * @return El interfaz
@@ -127,8 +137,6 @@ public class FactoryHelper<T>  {
 
         return interfaceClass;
     }
-
-
 
     private String getFQCNInterfaceInSamePackage(Class entityClass, String implBasePackageName) {
         if (implBasePackageName != null) {
@@ -168,6 +176,16 @@ public class FactoryHelper<T>  {
 
     }
 
+    private String getFQCNImplInSubPackage(Class entityClass, String domainBasePackageName, String implBasePackageName) {
+        if ((domainBasePackageName != null) && (implBasePackageName != null)) {
+            String packageName = entityClass.getPackage().getName().replace(domainBasePackageName, implBasePackageName) + "." + implSubPackageName;
+            return packageName + "." + getImplClassName(entityClass);
+        } else {
+            return null;
+        }
+
+    }
+
     private String getInterfaceClassName(Class entityClass) {
         return entityClass.getSimpleName() + interfaceSufix;
     }
@@ -175,8 +193,5 @@ public class FactoryHelper<T>  {
     private String getImplClassName(Class entityClass) {
         return entityClass.getSimpleName() + implSufix;
     }
-
-
-
 
 }
