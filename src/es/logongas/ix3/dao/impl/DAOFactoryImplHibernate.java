@@ -31,8 +31,9 @@ public class DAOFactoryImplHibernate implements DAOFactory {
     private String domainBasePackageName;
     private String interfaceBasePackageName;
     private String implBasePackageName;
-    private final String interfaceSufix = "DAO";
-    private final String implSufix = "DAOImplHibernate";
+    private String implSubPackageName="impl";
+    private String interfaceSufix = "DAO";
+    private String implSufix = "DAOImplHibernate";
     private final Class<? extends GenericDAO> defaultImplClass = GenericDAOImplHibernate.class;
             
     @Autowired
@@ -54,7 +55,7 @@ public class DAOFactoryImplHibernate implements DAOFactory {
      */
     @Override
     public GenericDAO getDAO(Class entityClass) {
-        FactoryHelper<GenericDAO> factoryHelper = new FactoryHelper<GenericDAO>(domainBasePackageName, interfaceBasePackageName, implBasePackageName, interfaceSufix, implSufix, defaultImplClass, context);
+        FactoryHelper<GenericDAO> factoryHelper = new FactoryHelper<GenericDAO>(domainBasePackageName, interfaceBasePackageName, implBasePackageName,implSubPackageName, interfaceSufix, implSufix, defaultImplClass, context);
 
         return factoryHelper.getImpl(entityClass);
     }
@@ -78,5 +79,26 @@ public class DAOFactoryImplHibernate implements DAOFactory {
      */
     public void setImplBasePackageName(String implBasePackageName) {
         this.implBasePackageName = implBasePackageName;
+    }
+
+    /**
+     * @param implSubPackageName the implSubPackageName to set
+     */
+    public void setImplSubPackageName(String implSubPackageName) {
+        this.implSubPackageName = implSubPackageName;
+    }
+
+    /**
+     * @param interfaceSufix the interfaceSufix to set
+     */
+    public void setInterfaceSufix(String interfaceSufix) {
+        this.interfaceSufix = interfaceSufix;
+    }
+
+    /**
+     * @param implSufix the implSufix to set
+     */
+    public void setImplSufix(String implSufix) {
+        this.implSufix = implSufix;
     }
 }
