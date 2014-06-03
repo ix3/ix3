@@ -21,7 +21,7 @@ import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.core.Page;
-import es.logongas.ix3.security.services.authentication.Principal;
+import es.logongas.ix3.security.authentication.Principal;
 import es.logongas.ix3.service.GenericService;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
