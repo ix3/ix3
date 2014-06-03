@@ -16,9 +16,9 @@
 package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.security.services.authentication.AuthenticationManager;
-import es.logongas.ix3.security.services.authentication.Principal;
-import es.logongas.ix3.security.services.authorization.AuthorizationManager;
+import es.logongas.ix3.security.authentication.AuthenticationManager;
+import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.security.authorization.AuthorizationManager;
 import es.logongas.ix3.security.util.SecurityUtil;
 import java.io.IOException;
 import java.io.Serializable;
