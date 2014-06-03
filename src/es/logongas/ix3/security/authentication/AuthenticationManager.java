@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authentication;
+package es.logongas.ix3.security.authentication;
+
+import es.logongas.ix3.core.BusinessException;
+import java.io.Serializable;
 
 /**
  *
  * @author Lorenzo González
  */
-public interface Credential {
+public interface AuthenticationManager {
+    Principal authenticate(Credential credential) throws BusinessException;
+    Principal getPrincipalBySID(Serializable sid) throws BusinessException;
 }

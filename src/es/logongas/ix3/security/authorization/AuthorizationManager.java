@@ -13,24 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authorization;
+package es.logongas.ix3.security.authorization;
+
+import es.logongas.ix3.security.authentication.Principal;
 
 /**
- * Si se concede o no acceso a un recurso
+ *
  * @author Lorenzo González
  */
-public enum AuthorizationType {
-    /*
-     * Se permite el acceso al recurso
-     */
-    AccessAllow,
-    /*
-     * Se deniega el acceso al recurso
-     */
-    AccessDeny,
-    /*
-     * No se dice nada sobre si se puede o no acceder al recurso
-     * Aunque el proveeder conoce el tipo de recurso
-     */
-    Abstain
+public interface AuthorizationManager {
+    boolean authorized(Principal principal,String secureResourceTypeName,String secureResource,String permissionName,Object arguments);
 }

@@ -16,7 +16,7 @@
 
 package es.logongas.ix3.security.util;
 
-import es.logongas.ix3.security.services.authentication.Principal;
+import es.logongas.ix3.security.authentication.Principal;
 
 
 /**

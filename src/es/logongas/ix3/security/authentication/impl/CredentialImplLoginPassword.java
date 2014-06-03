@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.impl.authentication;
+package es.logongas.ix3.security.authentication.impl;
 
-import es.logongas.ix3.security.services.authentication.Credential;
+import es.logongas.ix3.security.authentication.Credential;
 
 /**
  *

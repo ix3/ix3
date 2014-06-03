@@ -13,16 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authentication;
-
-import es.logongas.ix3.core.BusinessException;
-import java.io.Serializable;
+package es.logongas.ix3.security.authorization;
 
 /**
- *
+ * Si se concede o no acceso a un recurso
  * @author Lorenzo González
  */
-public interface AuthenticationProvider {
-    Principal authenticate(Credential credential) throws BusinessException;
-    Principal getPrincipalBySID(Serializable sid) throws BusinessException;
+public enum AuthorizationType {
+    /*
+     * Se permite el acceso al recurso
+     */
+    AccessAllow,
+    /*
+     * Se deniega el acceso al recurso
+     */
+    AccessDeny,
+    /*
+     * No se dice nada sobre si se puede o no acceder al recurso
+     * Aunque el proveeder conoce el tipo de recurso
+     */
+    Abstain
 }

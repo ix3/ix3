@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.impl.authorization;
+package es.logongas.ix3.security.authorization.impl;
 
-import es.logongas.ix3.security.services.authentication.Principal;
-import es.logongas.ix3.security.services.authorization.AuthorizationManager;
-import es.logongas.ix3.security.services.authorization.AuthorizationProvider;
-import es.logongas.ix3.security.services.authorization.AuthorizationType;
+import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.security.authorization.AuthorizationManager;
+import es.logongas.ix3.security.authorization.AuthorizationProvider;
+import es.logongas.ix3.security.authorization.AuthorizationType;
 import java.util.ArrayList;
 import java.util.List;
 

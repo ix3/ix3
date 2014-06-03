@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authorization;
+package es.logongas.ix3.security.authentication;
 
-import es.logongas.ix3.security.services.authentication.Principal;
+import java.io.Serializable;
 
 /**
  *
  * @author Lorenzo González
  */
-public interface AuthorizationManager {
-    boolean authorized(Principal principal,String secureResourceTypeName,String secureResource,String permissionName,Object arguments);
+public interface Principal extends java.security.Principal {
+    public Serializable getSid();
 }

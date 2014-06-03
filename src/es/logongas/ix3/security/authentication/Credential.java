@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.services.authentication;
-
-import java.io.Serializable;
+package es.logongas.ix3.security.authentication;
 
 /**
  *
  * @author Lorenzo González
  */
-public interface Principal extends java.security.Principal {
-    public Serializable getSid();
+public interface Credential {
 }
