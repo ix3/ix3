@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.model;
+package es.logongas.ix3.security.model;
 
 /**
- * Tipo de un ACE.
+ * El Login de usuarios especiales del sistema
  * @author Lorenzo González
  */
-public enum ACEType {
-    Allow,
-    Deny
+public enum SpecialUsers {
+    /**
+     * Los permisosde este usuario hacen referencia  a cualquier usuario , incluso si no hay ningun usuario
+     */
+    All,
+    /**
+     * Los permisos de este usuario hacen referencia a usuarios que se han identificado en el sistema.
+     */
+    Authenticated
 }

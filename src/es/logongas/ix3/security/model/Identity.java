@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.model;
+package es.logongas.ix3.security.model;
 
 import es.logongas.ix3.core.annotations.Caption;
-import es.logongas.ix3.security.services.authorization.AuthorizationType;
+import es.logongas.ix3.security.authorization.AuthorizationType;
 import java.io.Serializable;
 import java.util.Set;
 import org.hibernate.validator.constraints.NotBlank;
@@ -25,7 +25,7 @@ import org.hibernate.validator.constraints.NotBlank;
  *
  * @author Lorenzo González
  */
-public class Identity implements es.logongas.ix3.security.services.authentication.Principal {
+public class Identity implements es.logongas.ix3.security.authentication.Principal {
 
     protected int idIdentity;
     @NotBlank

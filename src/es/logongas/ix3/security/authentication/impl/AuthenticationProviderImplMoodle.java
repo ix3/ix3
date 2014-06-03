@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.impl.authentication;
+package es.logongas.ix3.security.authentication.impl;
 
-import es.logongas.ix3.model.Identity;
+import es.logongas.ix3.security.authentication.impl.CredentialImplLoginPassword;
+import es.logongas.ix3.security.model.Identity;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.GenericDAO;
-import es.logongas.ix3.security.services.authentication.AuthenticationProvider;
-import es.logongas.ix3.security.services.authentication.Credential;
-import es.logongas.ix3.security.services.authentication.Principal;
+import es.logongas.ix3.security.authentication.AuthenticationProvider;
+import es.logongas.ix3.security.authentication.Credential;
+import es.logongas.ix3.security.authentication.Principal;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;

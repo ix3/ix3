@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.security.impl.authorization;
+package es.logongas.ix3.security.authorization.impl;
 
-import es.logongas.ix3.model.Identity;
-import es.logongas.ix3.model.Permission;
-import es.logongas.ix3.model.SecureResourceType;
-import es.logongas.ix3.model.SpecialUsers;
+import es.logongas.ix3.security.model.Identity;
+import es.logongas.ix3.security.model.Permission;
+import es.logongas.ix3.security.model.SecureResourceType;
+import es.logongas.ix3.security.model.SpecialUsers;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.GenericDAO;
-import es.logongas.ix3.security.services.authentication.Principal;
-import es.logongas.ix3.security.services.authorization.AuthorizationProvider;
-import es.logongas.ix3.security.services.authorization.AuthorizationType;
+import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.security.authorization.AuthorizationProvider;
+import es.logongas.ix3.security.authorization.AuthorizationType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +44,7 @@ public class AuthorizationProviderImplIdentity implements AuthorizationProvider 
     public AuthorizationType authorized(Principal principal,String secureResourceTypeName, String secureResource, String permissionName, Object arguments) {
         try {
             AuthorizationType authorizationType;
-            GenericDAO<Identity, Integer> genericDAO = daoFactory.getDAO(es.logongas.ix3.model.Identity.class);
+            GenericDAO<Identity, Integer> genericDAO = daoFactory.getDAO(es.logongas.ix3.security.model.Identity.class);
             Permission permission=getPermission(secureResourceTypeName, permissionName);
             
             

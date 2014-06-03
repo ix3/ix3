@@ -13,19 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.model;
+package es.logongas.ix3.security.model;
+
+import java.util.Set;
 
 /**
- * El Login de usuarios especiales del sistema
+ *
  * @author Lorenzo González
  */
-public enum SpecialUsers {
+public class Group extends Identity {
+    private Set<GroupMember> groupMembers;
+
+    public Group() {
+    }
+
+    public Group(int idIdentity, String login, String name) {
+        super(idIdentity, login, name);
+    }
+
+
+
     /**
-     * Los permisosde este usuario hacen referencia  a cualquier usuario , incluso si no hay ningun usuario
+     * @return the groupMembers
      */
-    All,
+    public Set<GroupMember> getGroupMembers() {
+        return groupMembers;
+    }
+
     /**
-     * Los permisos de este usuario hacen referencia a usuarios que se han identificado en el sistema.
+     * @param groupMembers the groupMembers to set
      */
-    Authenticated
+    public void setGroupMembers(Set<GroupMember> groupMembers) {
+        this.groupMembers = groupMembers;
+    }
 }

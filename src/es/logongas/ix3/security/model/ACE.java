@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.model;
+package es.logongas.ix3.security.model;
 
 import es.logongas.ix3.core.annotations.ValuesList;
-import es.logongas.ix3.security.services.authorization.AuthorizationType;
+import es.logongas.ix3.security.authorization.AuthorizationType;
 import es.logongas.ix3.util.ScriptEvaluator;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;

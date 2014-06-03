@@ -15,7 +15,12 @@
  */
 package es.logongas.ix3.model;
 
-import es.logongas.ix3.security.services.authorization.AuthorizationType;
+import es.logongas.ix3.security.model.Permission;
+import es.logongas.ix3.security.model.User;
+import es.logongas.ix3.security.model.SecureResourceType;
+import es.logongas.ix3.security.model.ACEType;
+import es.logongas.ix3.security.model.ACE;
+import es.logongas.ix3.security.authorization.AuthorizationType;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;

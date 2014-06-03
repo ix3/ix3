@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+  <class name="es.logongas.ix3.security.model.SecureResourceType">
+    <cache usage="read-write"/>
+    <id name="idSecureResourceType">
+      <generator class="identity"/>
+    </id>
+    <natural-id>
+      <property name="name"/>
+    </natural-id>
+    <property name="description"/>
+    <set cascade="all" inverse="true" name="permissions">
+      <cache usage="read-write"/>
+      <key>
+        <column name="idSecureResourceType"/>
+      </key>
+      <one-to-many class="es.logongas.ix3.security.model.Permission"/>
+    </set>
+    <set cascade="all" inverse="true" name="secureResources">
+      <cache usage="read-write"/>
+      <key>
+        <column name="idSecureResourceType"/>
+      </key>
+      <one-to-many class="es.logongas.ix3.security.model.SecureResource"/>
+    </set>
+  </class>
+</hibernate-mapping>

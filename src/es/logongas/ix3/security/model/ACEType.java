@@ -13,37 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.model;
-
-import java.util.Set;
+package es.logongas.ix3.security.model;
 
 /**
- *
+ * Tipo de un ACE.
  * @author Lorenzo González
  */
-public class Group extends Identity {
-    private Set<GroupMember> groupMembers;
-
-    public Group() {
-    }
-
-    public Group(int idIdentity, String login, String name) {
-        super(idIdentity, login, name);
-    }
-
-
-
-    /**
-     * @return the groupMembers
-     */
-    public Set<GroupMember> getGroupMembers() {
-        return groupMembers;
-    }
-
-    /**
-     * @param groupMembers the groupMembers to set
-     */
-    public void setGroupMembers(Set<GroupMember> groupMembers) {
-        this.groupMembers = groupMembers;
-    }
+public enum ACEType {
+    Allow,
+    Deny
 }
