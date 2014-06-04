@@ -40,7 +40,7 @@ public class Property {
     private Integer maxLength;
     private String pattern;
     private Format format; //Para los Strings si es una URL o un EMAIL, etc.
-    private List<Value> values=new ArrayList<Value>(); //las propiedades values o urlValues son excluyentes
+    private List<Object> values=new ArrayList<Object>(); //las propiedades values o urlValues son excluyentes
     private String urlValues; //las propiedades values o urlValues son excluyentes
     private List<String> dependProperties=new ArrayList<String>(); //Solo está este valor si urlValues!=null
     private boolean shortLength;
@@ -219,14 +219,14 @@ public class Property {
     /**
      * @return the values
      */
-    public List<Value> getValues() {
+    public List<Object> getValues() {
         return values;
     }
 
     /**
      * @param values the values to set
      */
-    public void setValues(List<Value> values) {
+    public void setValues(List<Object> values) {
         this.values = values;
     }
 

@@ -141,8 +141,8 @@ public class MetadataFactory {
         return property;
     }
 
-    private List<Value> getValuesFromEnum(Class clazz) {
-        List<Value> values = new ArrayList<Value>();
+    private List<Object> getValuesFromEnum(Class clazz) {
+        List<Object> values = new ArrayList<Object>();
 
         if (clazz.isEnum() == false) {
             throw new RuntimeException("El argumento clazz debe ser de un enumerado");
@@ -159,8 +159,8 @@ public class MetadataFactory {
         return values;
     }
 
-    private List<Value> getValuesFromData(List<Object> data, String primaryKeyName) {
-        List<Value> values = new ArrayList<Value>();
+    private List<Object> getValuesFromData(List<Object> data, String primaryKeyName) {
+        List<Object> values;
 
         if (data == null) {
             throw new RuntimeException("El argumento data no puede ser null");
@@ -169,10 +169,7 @@ public class MetadataFactory {
             throw new RuntimeException("El argumento primaryKeyName no puede estar vacio");
         }
 
-        for (Object obj : data) {
-            Value value=new Value(obj, obj.toString());
-            values.add(value);
-        }
+        values=data;
 
         return values;
     }
