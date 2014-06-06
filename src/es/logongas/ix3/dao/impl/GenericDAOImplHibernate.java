@@ -87,6 +87,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             }
             this.postCreate(session, entity);
             return entity;
+        } catch (BusinessException ex) {
+            throw ex;
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -110,6 +112,15 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 transactionManager.commit();
             }
             this.postInsertAfterTransaction(session, entity);
+        } catch (BusinessException ex) {
+            try {
+                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                    transactionManager.rollback();
+                }
+            } catch (Exception exc) {
+                log.error("Falló al hacer un rollback", exc);
+            }            
+            throw ex;            
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
                 if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
@@ -195,6 +206,15 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 hasUpdate = true;
             }
             return hasUpdate;
+        } catch (BusinessException ex) {
+            try {
+                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                    transactionManager.rollback();
+                }
+            } catch (Exception exc) {
+                log.error("Falló al hacer un rollback", exc);
+            }            
+            throw ex;            
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
                 if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
@@ -242,6 +262,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
             this.postRead(session, id, entity);
             return entity;
+        } catch (BusinessException ex) {
+            throw ex;
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
@@ -283,6 +305,15 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
             this.postDeleteAfterTransaction(session, id, entity);
             return exists;
+        } catch (BusinessException ex) {
+            try {
+                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                    transactionManager.rollback();
+                }
+            } catch (Exception exc) {
+                log.error("Falló al hacer un rollback", exc);
+            }            
+            throw ex;            
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
                 if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
@@ -419,7 +450,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
             Page page = new PageImpl(results, pageSize, pageNumber, totalPages);
 
-            return page;
+            return page;          
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
@@ -468,7 +499,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             Object result = method.invoke(this, args.toArray());
 
             return result;
-
         } catch (RuntimeException ex) {
             throw ex;
         } catch (BusinessException ex) {
@@ -487,6 +517,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(naturalKey);
             this.postReadByNaturalKey(session, naturalKey, entity);
             return entity;
+        } catch (BusinessException ex) {            
+            throw ex;            
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
@@ -503,55 +535,55 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         return metaDataFactory.getMetaData(entityType);
     }
 
-    protected void postCreate(Session session, EntityType entity) {
+    protected void postCreate(Session session, EntityType entity) throws BusinessException  {
     }
 
-    protected void preInsertBeforeTransaction(Session session, EntityType entity) {
+    protected void preInsertBeforeTransaction(Session session, EntityType entity) throws BusinessException  {
     }
 
-    protected void preInsertInTransaction(Session session, EntityType entity) {
+    protected void preInsertInTransaction(Session session, EntityType entity) throws BusinessException  {
     }
 
-    protected void postInsertInTransaction(Session session, EntityType entity) {
+    protected void postInsertInTransaction(Session session, EntityType entity) throws BusinessException  {
     }
 
-    protected void postInsertAfterTransaction(Session session, EntityType entity) {
+    protected void postInsertAfterTransaction(Session session, EntityType entity) throws BusinessException  {
     }
 
-    protected void preRead(Session session, PrimaryKeyType id) {
+    protected void preRead(Session session, PrimaryKeyType id) throws BusinessException  {
     }
 
-    protected void postRead(Session session, PrimaryKeyType id, EntityType entity) {
+    protected void postRead(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException  {
     }
 
-    protected void preReadByNaturalKey(Session session, Object naturalKey) {
+    protected void preReadByNaturalKey(Session session, Object naturalKey) throws BusinessException  {
     }
 
-    protected void postReadByNaturalKey(Session session, Object naturalKey, EntityType entity) {
+    protected void postReadByNaturalKey(Session session, Object naturalKey, EntityType entity) throws BusinessException  {
     }
 
-    protected void preUpdateBeforeTransaction(Session session, EntityType entity) {
+    protected void preUpdateBeforeTransaction(Session session, EntityType entity) throws BusinessException  {
     }
 
-    protected void preUpdateInTransaction(Session session, EntityType entity) {
+    protected void preUpdateInTransaction(Session session, EntityType entity) throws BusinessException  {
     }
 
-    protected void postUpdateInTransaction(Session session, EntityType entity) {
+    protected void postUpdateInTransaction(Session session, EntityType entity) throws BusinessException  {
     }
 
-    protected void postUpdateAfterTransaction(Session session, EntityType entity) {
+    protected void postUpdateAfterTransaction(Session session, EntityType entity) throws BusinessException  {
     }
 
-    protected void preDeleteBeforeTransaction(Session session, PrimaryKeyType id) {
+    protected void preDeleteBeforeTransaction(Session session, PrimaryKeyType id) throws BusinessException  {
     }
 
-    protected void preDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) {
+    protected void preDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException  {
     }
 
-    protected void postDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) {
+    protected void postDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException  {
     }
 
-    protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) {
+    protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException  {
     }
 
 }
