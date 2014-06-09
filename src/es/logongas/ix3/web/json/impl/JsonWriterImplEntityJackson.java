@@ -275,9 +275,10 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
         }
 
-        //Añadimos la representación como String del objeto
+        //Añadimos la representación como String del objeto y el nombre de su clase
         values.put("toString", obj.toString());
-
+        values.put("$class", obj.getClass().getSimpleName());
+        
         return values;
     }
 
@@ -317,7 +318,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
      * Dado un objeto que es otra entidad distinta de la que queremos transforma
      * en JSON. La transforma pero solo añadiendo las siguientes propeidades.
      * <ul> <li>El valor de la clave primaria</li> <li>El valor de las claves de
-     * naturals (si las hay)</li> <li>El valor de llamar a toString</li> </ul>
+     * naturals (si las hay)</li> <li>El valor de llamar a toString</li><li>El valor de llamar getClass().getSimpleName() en la propiedad 'class'</li> </ul>
      *
      * @param obj El Objeto a transformar en un Map
      * @param metaData Sus Metadatos
@@ -343,8 +344,9 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             values.put(naturalKeyPropertyName, getValueFromBean(obj, naturalKeyPropertyName));
         }
 
-        //Añadimos la representación como String del objeto
+        //Añadimos la representación como String del objeto y el nombre de su clase
         values.put("toString", obj.toString());
+        values.put("$class", obj.getClass().getSimpleName());
 
         return values;
     }
