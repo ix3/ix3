@@ -17,6 +17,7 @@
 package es.logongas.ix3.web.controllers.metadata;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,7 +29,8 @@ public class Metadata {
     private String title;
     private String description;
     private Map<String,Property> properties=new HashMap<String, Property>();
-
+    private String primaryKeyPropertyName;
+    private List<String> naturalKeyPropertiesName;
     /**
      * @return the className
      */
@@ -88,6 +90,34 @@ public class Metadata {
     @Override
     public String toString() {
         return this.title;
+    }
+
+    /**
+     * @return the primaryKeyPropertyName
+     */
+    public String getPrimaryKeyPropertyName() {
+        return primaryKeyPropertyName;
+    }
+
+    /**
+     * @param primaryKeyPropertyName the primaryKeyPropertyName to set
+     */
+    public void setPrimaryKeyPropertyName(String primaryKeyPropertyName) {
+        this.primaryKeyPropertyName = primaryKeyPropertyName;
+    }
+
+    /**
+     * @return the naturalKeyPropertiesName
+     */
+    public List<String> getNaturalKeyPropertiesName() {
+        return naturalKeyPropertiesName;
+    }
+
+    /**
+     * @param naturalKeyPropertiesName the naturalKeyPropertiesName to set
+     */
+    public void setNaturalKeyPropertiesName(List<String> naturalKeyPropertiesName) {
+        this.naturalKeyPropertiesName = naturalKeyPropertiesName;
     }
     
     

@@ -38,6 +38,9 @@ public class MetadataFactory {
         metadata.setClassName(metaData.getType().getSimpleName());
         metadata.setDescription(metadata.getClassName());
         metadata.setTitle(metadata.getClassName());
+        metadata.setPrimaryKeyPropertyName(metaData.getPrimaryKeyPropertyName());
+        metadata.setNaturalKeyPropertiesName(metaData.getNaturalKeyPropertiesName());
+        
 
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
