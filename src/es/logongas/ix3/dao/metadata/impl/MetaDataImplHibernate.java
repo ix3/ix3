@@ -382,7 +382,7 @@ public class MetaDataImplHibernate implements MetaData {
         es.logongas.ix3.core.annotations.ValuesList valuesList = ReflectionUtil.getAnnotation(clazz, getPropertyName(), es.logongas.ix3.core.annotations.ValuesList.class);
         if (valuesList != null) {
             ValuesListImpl valuesListImpl = new ValuesListImpl();
-            valuesListImpl.dependProperties = valuesList.dependProperties();
+            valuesListImpl.dependProperty = valuesList.dependProperty();
             valuesListImpl.shortLength = valuesList.shortLength();
             valuesListImpl.namedSearch = valuesList.namedSearch();
             valuesListImpl.entity = valuesList.entity();
@@ -453,7 +453,7 @@ public class MetaDataImplHibernate implements MetaData {
 
         boolean shortLength;
         Class entity;
-        String[] dependProperties;
+        String dependProperty;
         String namedSearch;
 
         @Override
@@ -467,8 +467,8 @@ public class MetaDataImplHibernate implements MetaData {
         }
 
         @Override
-        public String[] dependProperties() {
-            return dependProperties;
+        public String dependProperty() {
+            return dependProperty;
         }
 
         @Override

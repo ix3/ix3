@@ -41,15 +41,15 @@ public interface ValuesList {
     Class entity();
 
     /**
-     * Lista de propiedades de las que depende el valor de esta
+     * Propiedad de las que depende el valor de esta
      *
      * @return
      */
-    String[] dependProperties();
+    String dependProperty();
 
     /**
      * En caso de querer consultas que no sea simplemente la lista de todas las
-     * entidades, aqui pondremos el nombre de un método DAO de la entidad
+     * entidades, aqui pondremos el nombre de un servicio de la entidad
      * correspondiente
      *
      * @return
