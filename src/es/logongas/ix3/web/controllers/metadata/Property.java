@@ -41,8 +41,7 @@ public class Property {
     private String pattern;
     private Format format; //Para los Strings si es una URL o un EMAIL, etc.
     private List<Object> values=new ArrayList<Object>(); //las propiedades values o urlValues son excluyentes
-    private String urlValues; //las propiedades values o urlValues son excluyentes
-    private List<String> dependProperties=new ArrayList<String>(); //Solo está este valor si urlValues!=null
+    private String dependProperty; //Solo está este valor si urlValues!=null
     private boolean shortLength;
     
     private String label;
@@ -231,31 +230,17 @@ public class Property {
     }
 
     /**
-     * @return the urlValues
-     */
-    public String getUrlValues() {
-        return urlValues;
-    }
-
-    /**
-     * @param urlValues the urlValues to set
-     */
-    public void setUrlValues(String urlValues) {
-        this.urlValues = urlValues;
-    }
-
-    /**
      * @return the dependProperties
      */
-    public List<String> getDependProperties() {
-        return dependProperties;
+    public String getDependProperty() {
+        return dependProperty;
     }
 
     /**
      * @param dependProperties the dependProperties to set
      */
-    public void setDependProperties(List<String> dependProperties) {
-        this.dependProperties = dependProperties;
+    public void setDependProperties(String dependProperty) {
+        this.dependProperty = dependProperty;
     }
 
     /**
