@@ -31,7 +31,7 @@ public class ACE {
 
     private int idACE;
     private ACEType aceType;
-    @ValuesList(dependProperties = "aceType")
+    @ValuesList(dependProperty = "aceType")
     private Permission permission;
     @ValuesList()
     private Identity identity;
