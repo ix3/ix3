@@ -51,11 +51,11 @@ public @interface ValuesList {
     Class entity() default DEFAULT.class;
 
     /**
-     * Lista de propiedades de las que depende el valor de esta
+     * Propiedad de ls que depende el valor de esta
      *
      * @return
      */
-    String[] dependProperties() default {};
+    String dependProperty() default "";
 
     /**
      * En caso de querer consultas que no sea simplemente la lista de todas las
