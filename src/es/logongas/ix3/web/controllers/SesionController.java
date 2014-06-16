@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
- * Controlador REST que gestion ael log-in, log-out.
+ * Controlador REST que gestiona el log-in, log-out, etc.
  * @author Lorenzo González
  */
 @Controller
