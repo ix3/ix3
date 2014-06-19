@@ -16,9 +16,7 @@
 
 package es.logongas.ix3.dao.impl;
 
-import es.logongas.ix3.core.annotations.Caption;
-import es.logongas.ix3.core.database.impl.ConstraintViolationTranslatorImplMySQL;
-import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.core.annotations.Label;
 import es.logongas.ix3.core.BusinessMessage;
 import es.logongas.ix3.core.database.ConstraintViolationTranslator;
 import java.lang.reflect.Field;
@@ -82,8 +80,8 @@ public class ExceptionTranslator {
         if (path != null) {
             Class currentClazz = clazz;
             for (Path.Node node : path) {
-                ClassAndCaption clazzAndCaption = getSingleCaption(currentClazz, node.getName());
-                if (clazzAndCaption.caption != null) {
+                ClassAndLabel clazzAndCaption = getSingleCaption(currentClazz, node.getName());
+                if (clazzAndCaption.label != null) {
                     if (sb.length() != 0) {
                         sb.append(".");
                     }
@@ -91,16 +89,16 @@ public class ExceptionTranslator {
                         if (node.getIndex() != null) {
                             sb.append(node.getIndex());
                             sb.append("º ");
-                            sb.append(clazzAndCaption.caption);
+                            sb.append(clazzAndCaption.label);
                         } else if (node.getKey() != null) {
-                            sb.append(clazzAndCaption.caption);
+                            sb.append(clazzAndCaption.label);
                             sb.append(" de ");
                             sb.append(node.getKey());
                         } else {
-                            sb.append(clazzAndCaption.caption);
+                            sb.append(clazzAndCaption.label);
                         }
                     } else {
-                        sb.append(clazzAndCaption.caption);
+                        sb.append(clazzAndCaption.label);
                     }
                 } else {
                     sb.append("");
@@ -116,50 +114,50 @@ public class ExceptionTranslator {
 
     }
 
-    private ClassAndCaption getSingleCaption(Class clazz, String fieldName) {
-        ClassAndCaption clazzAndCaptionField;
-        ClassAndCaption clazzAndCaptionMethod;
+    private ClassAndLabel getSingleCaption(Class clazz, String fieldName) {
+        ClassAndLabel clazzAndLabelField;
+        ClassAndLabel clazzAndLabelMethod;
 
         if ((fieldName == null) || (fieldName.trim().equals(""))) {
-            return new ClassAndCaption(clazz, null);
+            return new ClassAndLabel(clazz, null);
         }
 
-        clazzAndCaptionField = getFieldCaption(clazz, fieldName);
-        if ((clazzAndCaptionField != null) && (clazzAndCaptionField.caption != null)) {
-            return clazzAndCaptionField;
+        clazzAndLabelField = getFieldLabel(clazz, fieldName);
+        if ((clazzAndLabelField != null) && (clazzAndLabelField.label != null)) {
+            return clazzAndLabelField;
         }
 
-        clazzAndCaptionMethod = getMethodCaption(clazz, fieldName);
-        if ((clazzAndCaptionMethod != null) && (clazzAndCaptionMethod.caption != null)) {
-            return clazzAndCaptionMethod;
+        clazzAndLabelMethod = getMethodLabel(clazz, fieldName);
+        if ((clazzAndLabelMethod != null) && (clazzAndLabelMethod.label != null)) {
+            return clazzAndLabelMethod;
         }
 
-        if (clazzAndCaptionField != null) {
-            return new ClassAndCaption(clazzAndCaptionField.clazz, fieldName);
-        } else if (clazzAndCaptionMethod != null) {
-            return new ClassAndCaption(clazzAndCaptionMethod.clazz, fieldName);
+        if (clazzAndLabelField != null) {
+            return new ClassAndLabel(clazzAndLabelField.clazz, fieldName);
+        } else if (clazzAndLabelMethod != null) {
+            return new ClassAndLabel(clazzAndLabelMethod.clazz, fieldName);
         } else {
-            return new ClassAndCaption(clazz, fieldName);
+            return new ClassAndLabel(clazz, fieldName);
         }
     }
 
-    private ClassAndCaption getFieldCaption(Class clazz, String fieldName) {
+    private ClassAndLabel getFieldLabel(Class clazz, String fieldName) {
         Field field = ReflectionUtils.findField(clazz, fieldName);
         if (field == null) {
             return null;
         }
 
-        Caption caption = field.getAnnotation(Caption.class);
-        if (caption != null) {
-            return new ClassAndCaption(field.getType(), caption.value());
+        Label label = field.getAnnotation(Label.class);
+        if (label != null) {
+            return new ClassAndLabel(field.getType(), label.value());
         } else {
-            return new ClassAndCaption(field.getType(), null);
+            return new ClassAndLabel(field.getType(), null);
         }
 
 
     }
 
-    private ClassAndCaption getMethodCaption(Class clazz, String methodName) {
+    private ClassAndLabel getMethodLabel(Class clazz, String methodName) {
         String suffixMethodName = StringUtils.capitalize(methodName);
         Method method = ReflectionUtils.findMethod(clazz, "get" + suffixMethodName);
         if (method == null) {
@@ -169,24 +167,24 @@ public class ExceptionTranslator {
             }
         }
 
-        Caption caption = method.getAnnotation(Caption.class);
-        if (caption != null) {
-            return new ClassAndCaption(method.getReturnType(), caption.value());
+        Label label = method.getAnnotation(Label.class);
+        if (label != null) {
+            return new ClassAndLabel(method.getReturnType(), label.value());
         } else {
-            return new ClassAndCaption(method.getReturnType(), null);
+            return new ClassAndLabel(method.getReturnType(), null);
         }
 
 
     }
 
-    private class ClassAndCaption {
+    private class ClassAndLabel {
 
         Class clazz;
-        String caption;
+        String label;
 
-        public ClassAndCaption(Class clazz, String caption) {
+        public ClassAndLabel(Class clazz, String label) {
             this.clazz = clazz;
-            this.caption = caption;
+            this.label = label;
         }
     }
     
