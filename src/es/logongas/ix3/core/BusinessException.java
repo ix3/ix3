@@ -15,17 +15,8 @@
  */
 package es.logongas.ix3.core;
 
-import es.logongas.ix3.core.annotations.Caption;
-import es.logongas.ix3.core.database.impl.ConstraintViolationTranslatorImplMySQL;
-import es.logongas.ix3.core.database.ConstraintViolationTranslator;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import javax.validation.ConstraintViolation;
-import javax.validation.Path;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
 public class BusinessException extends Exception {
 
