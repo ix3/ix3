@@ -15,7 +15,7 @@
  */
 package es.logongas.ix3.security.model;
 
-import es.logongas.ix3.core.annotations.Caption;
+import es.logongas.ix3.core.annotations.Label;
 import es.logongas.ix3.security.authorization.AuthorizationType;
 import java.io.Serializable;
 import java.util.Set;
@@ -29,10 +29,10 @@ public class Identity implements es.logongas.ix3.security.authentication.Princip
 
     protected int idIdentity;
     @NotBlank
-    @Caption("Identificador")
+    @Label("Identificador")
     protected String login;
     @NotBlank
-    @Caption("Nombre")
+    @Label("Nombre")
     protected String name;
     protected Set<ACE> acl;
     protected Set<GroupMember> memberOf;
