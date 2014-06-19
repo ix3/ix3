@@ -17,7 +17,7 @@ package es.logongas.ix3.dao.metadata.impl;
 
 import es.logongas.ix3.core.annotations.Date;
 import es.logongas.ix3.core.annotations.Time;
-import es.logongas.ix3.core.annotations.Caption;
+import es.logongas.ix3.core.annotations.Label;
 import es.logongas.ix3.dao.metadata.Constraints;
 import es.logongas.ix3.dao.metadata.Format;
 import es.logongas.ix3.dao.metadata.MetaData;
@@ -60,7 +60,7 @@ public class MetaDataImplHibernate implements MetaData {
     private final Type type;
     private final String propertyName;
     private final MetaData parentMetaData;
-    private String caption;
+    private String label;
     private final ContraintsImpl constraints = new ContraintsImpl();
 
     protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory, String propertyName, MetaData parentMetaData) {
@@ -271,8 +271,8 @@ public class MetaDataImplHibernate implements MetaData {
     }
 
     @Override
-    public String getCaption() {
-        return this.caption;
+    public String getLabel() {
+        return this.label;
     }
 
     @Override
@@ -293,11 +293,11 @@ public class MetaDataImplHibernate implements MetaData {
             clazz = null;
         }
 
-        Caption captionAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Caption.class);
-        if (captionAnnotation != null) {
-            caption = captionAnnotation.value();
+        Label labelAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Label.class);
+        if (labelAnnotation != null) {
+            label = labelAnnotation.value();
         } else {
-            caption = getPropertyName();
+            label = getPropertyName();
         }
 
         constraints.format = null;

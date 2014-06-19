@@ -103,7 +103,7 @@ public interface MetaData {
      * Sera null si hace rererencia a una clase en vez de a una propiedad de una clase.
      * @return El label de la propiedad.
      */
-    String getCaption();
+    String getLabel();
 
     /**
      * Obtiene las restricciones de la propiedad
