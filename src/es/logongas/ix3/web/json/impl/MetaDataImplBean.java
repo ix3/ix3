@@ -249,7 +249,7 @@ public class MetaDataImplBean implements MetaData {
     }
 
     @Override
-    public String getCaption() {
+    public String getLabel() {
         return getPropertyName();
     }
 
