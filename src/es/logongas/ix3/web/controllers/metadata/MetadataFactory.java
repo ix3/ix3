@@ -134,8 +134,8 @@ public class MetadataFactory {
         property.setPattern(metaData.getConstraints().getPattern());
         property.setFormat(metaData.getConstraints().getFormat());
 
-        property.setLabel(metaData.getCaption());
-        property.setDescription(metaData.getCaption());
+        property.setLabel(metaData.getLabel());
+        property.setDescription(metaData.getLabel());
 
         return property;
     }
