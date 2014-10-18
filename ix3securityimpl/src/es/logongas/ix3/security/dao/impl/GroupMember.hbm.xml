@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+  <class name="es.logongas.ix3.security.model.GroupMember">
+    <cache usage="read-write"/>
+    <id name="idGroupMember">
+      <generator class="identity"/>
+    </id>
+    <many-to-one name="group">
+      <column name="idGroup"/>
+    </many-to-one>
+    <many-to-one name="identity">
+      <column name="idIdentity"/>
+    </many-to-one>
+    <property name="priority"/>
+  </class>
+</hibernate-mapping>

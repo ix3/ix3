@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+  <class name="es.logongas.ix3.security.model.Identity">
+    <cache usage="read-write"/>
+    <id name="idIdentity">
+      <generator class="identity"/>
+    </id>
+    <natural-id>
+      <property name="login"/>
+    </natural-id>
+    <property name="name"/>
+    <set cascade="all" inverse="false" name="acl" order-by="priority">
+      <cache usage="read-write"/>
+      <key>
+        <column name="idIdentity"/>
+      </key>
+      <one-to-many class="es.logongas.ix3.security.model.ACE"/>
+    </set>
+    <set cascade="save-update,evict,lock,merge,refresh,replicate" inverse="true" name="memberOf" order-by="priority">
+      <cache usage="read-write"/>
+      <key>
+        <column name="idIdentity"/>
+      </key>
+      <one-to-many class="es.logongas.ix3.security.model.GroupMember"/>
+    </set>
+    <joined-subclass extends="es.logongas.ix3.security.model.Identity" name="es.logongas.ix3.security.model.User" table="userr">
+      <key column="idIdentity"/>
+    </joined-subclass>
+    <joined-subclass extends="es.logongas.ix3.security.model.Identity" name="es.logongas.ix3.security.model.Group" table="groupp">
+      <key column="idIdentity"/>
+      <set cascade="save-update,evict,lock,merge,refresh,replicate" inverse="true" name="groupMembers">
+        <cache usage="read-write"/>
+        <key>
+          <column name="idIdentity"/>
+        </key>
+        <one-to-many class="es.logongas.ix3.security.model.GroupMember"/>
+      </set>
+    </joined-subclass>
+  </class>
+</hibernate-mapping>
