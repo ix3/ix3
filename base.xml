@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." name="base" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+	
+    <target name="-configureAnt">
+	<!-- OpenShift -->
+	<taskdef  resource="es/logongas/openshift/ant/antlib.xml" />
+		
+        <!-- El try-cath -->
+        <taskdef  resource="net/sf/antcontrib/antcontrib.properties"/>
+
+        <!-- Manejo de ficheros XML -->
+        <taskdef  name="xmltask" classname="com.oopsconsultancy.xmltask.ant.XmlTask"/>
+
+         <!-- Tarea de Maven -->
+        <typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="antlib:org.apache.maven.artifact.ant"  /> 
+
+    </target> 
+	
+    <macrodef name="publishRelease">
+        
+        <attribute name="jarFile" />
+        
+        <attribute name="groupId" />
+        <attribute name="artifactId" />
+        <attribute name="version" />
+        
+        <element name="dependencies" optional="yes" implicit="true"  />
+        
+        <attribute name="repositoryUrl"  />
+        <attribute name="userName"  />
+        <attribute name="password" />
+        
+        
+        <sequential>
+            <artifact:pom id="temp_pom" groupId="@{groupId}" artifactId="@{artifactId}" version="@{version}" name="@{artifactId}">
+                <dependencies />
+            </artifact:pom>
+            
+            <artifact:writepom pomRefId="temp_pom" file="${basedir}/pom.xml" />
+            
+            <mkdir dir="${basedir}/dist" />
+            <property name="JAR_FILE" value="${basedir}/dist/@{artifactId}-@{version}.jar" />
+            <copy file="@{jarFile}" toFile="${JAR_FILE}" />
+            
+            <artifact:deploy  file="${JAR_FILE}">
+                <remoteRepository url="@{repositoryUrl}">
+                    <authentication username="@{userName}" password="@{password}"/>
+                </remoteRepository>
+                <artifact:pom file="pom.xml" />
+            </artifact:deploy>        
+            <delete file="pom.xml" />
+            <delete file="${JAR_FILE}" />     
+        </sequential>
+    </macrodef>
+    
+
+	
+</project>

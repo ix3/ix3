@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="proyecto_software" default="default" basedir=".">
+    <description>Publica todos los artefactos de ix3</description>
+    <import file="base.xml"/>
+
+	<target name="default">
+		<echo>Para publicar una version ejecuta la tarea ''publish''</echo>
+	</target>
+
+	<target name="publish" depends="-configureAnt,ask-data,create-tag,publish-release">
+	</target>
+	
+	<target name="ask-data" depends="-configureAnt">
+		<echo>Datos para poder desplegar</echo>
+
+		<input
+			message="Numero de version:"
+			addproperty="VERSION"
+		/>
+		<input
+			message="Repository user name:"
+			defaultvalue="logongas"
+			addproperty="USER_NAME"
+		/>
+		<input
+			message="Repository password:"
+			addproperty="PASSWORD"
+		/>
+	
+		<property name="GROUP_ID" value="es.logongas.ix3" />
+
+		<property name="REPOSITORY_URL" value="https://api.bintray.com/maven/logongas/maven/ix3" />
+	</target>	
+
+
+	<target name="create-tag" depends="-configureAnt">
+		<echo>Crear el tag en cada proyecto</echo>
+
+	
+	</target>
+
+	<target name="publish-release" depends="-configureAnt">
+		<echo>Publicar en el repositorio</echo>
+
+		
+
+		<publishReleaseIx3
+		    artifactId="ix3core"
+		>
+			<dependency groupId="org.springframework"   artifactId="spring-core"         version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.springframework"   artifactId="spring-context"      version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-core"      version="4.1.6.Final" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-validator" version="4.3.1.Final" />
+		    	<dependency groupId="com.googlecode.flyway" artifactId="flyway-core"         version="2.3.1" />
+		</publishReleaseIx3>
+
+		<publishReleaseIx3
+		    artifactId="ix3dao"
+		>
+		    	<dependency groupId="org.springframework"   artifactId="spring-core"         version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.springframework"   artifactId="spring-context"      version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-core"      version="4.1.6.Final" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-validator" version="4.3.1.Final" />
+		    	<dependency groupId="com.googlecode.flyway" artifactId="flyway-core"         version="2.3.1" />
+		    	<dependency groupId="${GROUP_ID}"           artifactId="ix3core"             version="${VERSION}" />
+		</publishReleaseIx3>
+
+		<publishReleaseIx3
+		    artifactId="ix3security"
+		>
+		    	<dependency groupId="org.springframework"   artifactId="spring-core"         version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.springframework"   artifactId="spring-context"      version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-core"      version="4.1.6.Final" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-validator" version="4.3.1.Final" />
+		    	<dependency groupId="${GROUP_ID}"           artifactId="ix3core"             version="${VERSION}" />
+		</publishReleaseIx3>
+		<publishReleaseIx3
+		    artifactId="ix3securityimpl"
+		>
+		    	<dependency groupId="org.springframework"   artifactId="spring-core"         version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.springframework"   artifactId="spring-context"      version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-core"      version="4.1.6.Final" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-validator" version="4.3.1.Final" />
+		    	<dependency groupId="${GROUP_ID}"           artifactId="ix3core"             version="${VERSION}" />
+			<dependency groupId="${GROUP_ID}"           artifactId="ix3dao"              version="${VERSION}" />
+			<dependency groupId="${GROUP_ID}"           artifactId="ix3security"         version="${VERSION}" />
+		</publishReleaseIx3>
+
+		<publishReleaseIx3
+		    artifactId="ix3service"
+		>
+		    	<dependency groupId="org.springframework"   artifactId="spring-core"         version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.springframework"   artifactId="spring-context"      version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-core"      version="4.1.6.Final" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-validator" version="4.3.1.Final" />
+		    	<dependency groupId="${GROUP_ID}"           artifactId="ix3core"             version="${VERSION}" />
+			<dependency groupId="${GROUP_ID}"           artifactId="ix3dao"              version="${VERSION}" />
+			<dependency groupId="${GROUP_ID}"           artifactId="ix3security"         version="${VERSION}" />
+		</publishReleaseIx3>
+
+		<publishReleaseIx3
+		    artifactId="ix3web"
+		>
+		    	<dependency groupId="org.springframework"   artifactId="spring-core"         version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.springframework"   artifactId="spring-context"      version="3.2.10.RELEASE" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-core"      version="4.1.6.Final" />
+		    	<dependency groupId="org.hibernate"         artifactId="hibernate-validator" version="4.3.1.Final" />
+		    	<dependency groupId="${GROUP_ID}"           artifactId="ix3core"             version="${VERSION}" />
+			<dependency groupId="${GROUP_ID}"           artifactId="ix3dao"              version="${VERSION}" />
+			<dependency groupId="${GROUP_ID}"           artifactId="ix3security"         version="${VERSION}" />
+			<dependency groupId="${GROUP_ID}"           artifactId="ix3securityimpl"     version="${VERSION}" />
+			<dependency groupId="${GROUP_ID}"           artifactId="ix3service"          version="${VERSION}" />
+		</publishReleaseIx3>
+
+	</target>
+
+    <macrodef name="publishReleaseIx3">
+        
+        <attribute name="artifactId" />
+        <element name="dependencies" optional="yes" implicit="true"  />
+        
+        <sequential>
+		<ant  antfile="./@{artifactId}/build.xml" dir="./@{artifactId}" target="jar"/>
+
+
+		<publishRelease
+		    jarFile="./@{artifactId}/dist/@{artifactId}.jar"
+		    groupId="${GROUP_ID}"
+		    artifactId="@{artifactId}"
+		    version="${VERSION}"
+		
+		    repositoryUrl="${REPOSITORY_URL}"
+		    userName="${USER_NAME}" 
+		    password="${PASSWORD}"
+		>
+		    <dependencies />
+		</publishRelease>     
+        </sequential>
+    </macrodef>
+    
+
+	
+</project>
