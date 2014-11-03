@@ -20,18 +20,25 @@ import es.logongas.ix3.core.database.DatabaseMigration;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class DatabaseMigrateContextListener implements ServletContextListener {
 
+    @Autowired
+    DatabaseMigration databaseMigration;
+    
     @Override
-    public void contextInitialized(ServletContextEvent sce) {
+    public void contextInitialized(ServletContextEvent servletContextEvent) {
         List<String> locations = new ArrayList<String>();
-        locations.add(sce.getServletContext().getInitParameter("databasemigration.location"));
+        locations.add(servletContextEvent.getServletContext().getInitParameter("databasemigration.location"));
 
-        WebApplicationContext springContext = WebApplicationContextUtils.getWebApplicationContext(sce.getServletContext());
-        DatabaseMigration databaseMigration = springContext.getBean(DatabaseMigration.class);
+        WebApplicationContext webApplicationContext = WebApplicationContextUtils.getRequiredWebApplicationContext(servletContextEvent.getServletContext());
+        AutowireCapableBeanFactory autowireCapableBeanFactory=webApplicationContext.getAutowireCapableBeanFactory();
+        autowireCapableBeanFactory.autowireBean(this);
+        
         databaseMigration.migrate(locations);
     }
 
