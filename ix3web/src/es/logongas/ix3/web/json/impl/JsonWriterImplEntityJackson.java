@@ -276,8 +276,8 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         }
 
         //Añadimos la representación como String del objeto y el nombre de su clase
-        values.put("toString", obj.toString());
-        values.put("$class", obj.getClass().getSimpleName());
+        values.put("$toString", obj.toString());
+        values.put("$className", metaData.getType().getSimpleName());
         
         return values;
     }
@@ -345,8 +345,8 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         }
 
         //Añadimos la representación como String del objeto y el nombre de su clase
-        values.put("toString", obj.toString());
-        values.put("$class", obj.getClass().getSimpleName());
+        values.put("$toString", obj.toString());
+        values.put("$className", metaData.getType().getSimpleName());
 
         return values;
     }
