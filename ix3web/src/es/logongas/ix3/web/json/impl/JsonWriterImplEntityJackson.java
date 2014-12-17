@@ -117,7 +117,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 Object jsonValue;
 
                 //Como no es un objeto de negocio obtenemos los metadatos mediante reflection
-                metaData = new MetaDataImplBean(obj.getClass(), null, true, false, metaDataFactory, null);
+                metaData = new MetaDataImplBean(obj.getClass(), null, true, false, metaDataFactory, null,obj.getClass().getSimpleName());
                 if (metaData.getMetaType() == MetaType.Scalar) {
                     jsonValue = obj;
                 } else {
@@ -278,6 +278,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         //Añadimos la representación como String del objeto y el nombre de su clase
         values.put("$toString", obj.toString());
         values.put("$className", metaData.getType().getSimpleName());
+        values.put("$propertyPath", metaData.getPropertyPath());
         
         return values;
     }
@@ -347,6 +348,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         //Añadimos la representación como String del objeto y el nombre de su clase
         values.put("$toString", obj.toString());
         values.put("$className", metaData.getType().getSimpleName());
+        values.put("$propertyPath", metaData.getPropertyPath());
 
         return values;
     }

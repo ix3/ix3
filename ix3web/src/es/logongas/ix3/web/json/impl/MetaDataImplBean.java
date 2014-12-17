@@ -38,14 +38,16 @@ public class MetaDataImplBean implements MetaData {
     private final CollectionType collectionType;
     private final MetaDataFactory metaDataFactory;
     private final String propertyName;
+    private final String propertyPath;
 
-    public MetaDataImplBean(Class clazz, CollectionType collectionType, boolean read, boolean write, MetaDataFactory metaDataFactory, String propertyName) {
+    public MetaDataImplBean(Class clazz, CollectionType collectionType, boolean read, boolean write, MetaDataFactory metaDataFactory, String propertyName,String propertyPath) {
         this.clazz = clazz;
         this.collectionType = collectionType;
         this.read = read;
         this.write = write;
         this.metaDataFactory = metaDataFactory;
         this.propertyName = propertyName;
+        this.propertyPath=propertyPath;
     }
 
     @Override
@@ -93,15 +95,15 @@ public class MetaDataImplBean implements MetaData {
                     if (Set.class.isAssignableFrom(propertyClass)) {
                         newCollectionType = CollectionType.Set;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
-                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName);
+                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName,propertyPath+"."+propertyName);
                     } else if (List.class.isAssignableFrom(propertyClass)) {
                         newCollectionType = CollectionType.List;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
-                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName);
+                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName,propertyPath+"."+propertyName);
                     } else if (Map.class.isAssignableFrom(propertyClass)) {
                         newCollectionType = CollectionType.Map;
                         realPropertyClass = getCollectionClass(propertyDescriptor.getReadMethod());
-                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName);
+                        metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName,propertyPath+"."+propertyName);
                     } else {
                         //No es una colección
                         newCollectionType = null;
@@ -109,7 +111,7 @@ public class MetaDataImplBean implements MetaData {
 
                         metaData = metaDataFactory.getMetaData(realPropertyClass);
                         if (metaData == null) {
-                            metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName);
+                            metaData = new MetaDataImplBean(realPropertyClass, newCollectionType, read, write, metaDataFactory, propertyName,propertyPath+"."+propertyName);
                         }
 
                     }
@@ -248,6 +250,13 @@ public class MetaDataImplBean implements MetaData {
         return this.propertyName;
     }
 
+    @Override
+    public String getPropertyPath() {
+        return propertyPath;
+    }
+
+    
+    
     @Override
     public String getLabel() {
         return getPropertyName();
