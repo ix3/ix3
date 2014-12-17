@@ -60,24 +60,28 @@ public class MetaDataImplHibernate implements MetaData {
     private final Type type;
     private final String propertyName;
     private final MetaData parentMetaData;
+    private final String propertyPath;
     private String label;
     private final ContraintsImpl constraints = new ContraintsImpl();
+    
 
-    protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory, String propertyName, MetaData parentMetaData) {
+    protected MetaDataImplHibernate(Class entityType, SessionFactory sessionFactory, String propertyName, MetaData parentMetaData,String propertyPath) {
         this.sessionFactory = sessionFactory;
         this.entityType = entityType;
         this.type = null;
         this.propertyName = propertyName;
         this.parentMetaData = parentMetaData;
+        this.propertyPath=propertyPath;
         analizeAnotations();
     }
 
-    protected MetaDataImplHibernate(Type type, SessionFactory sessionFactory, String propertyName, MetaData parentMetaData) {
+    protected MetaDataImplHibernate(Type type, SessionFactory sessionFactory, String propertyName, MetaData parentMetaData,String propertyPath) {
         this.sessionFactory = sessionFactory;
         this.entityType = null;
         this.type = type;
         this.propertyName = propertyName;
         this.parentMetaData = parentMetaData;
+        this.propertyPath=propertyPath;        
         analizeAnotations();
     }
 
@@ -160,14 +164,14 @@ public class MetaDataImplHibernate implements MetaData {
                 if (classMetadata.hasIdentifierProperty() == true) {
                     String propertyName = classMetadata.getIdentifierPropertyName();
                     Type propertyType = classMetadata.getIdentifierType();
-                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName, this);
+                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName, this,propertyPath+"."+propertyName);
                     metaDatas.put(propertyName, metaData);
                 }
 
                 String[] propertyNames = classMetadata.getPropertyNames();
                 for (String propertyName : propertyNames) {
                     Type propertyType = classMetadata.getPropertyType(propertyName);
-                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName, this);
+                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName, this,propertyPath+"."+propertyName);
                     metaDatas.put(propertyName, metaData);
                 }
             } else if (this.type instanceof ComponentType) {
@@ -182,7 +186,7 @@ public class MetaDataImplHibernate implements MetaData {
                 for (int i=0;i<propertyNames.length;i++) {
                     String propertyName=propertyNames[i];
                     Type propertyType = propertyTypes[i];
-                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName, this);
+                    MetaData metaData = new MetaDataImplHibernate(propertyType, sessionFactory, propertyName, this,propertyPath+"."+propertyName);
                     metaDatas.put(propertyName, metaData);
                 }
             }
@@ -285,6 +289,13 @@ public class MetaDataImplHibernate implements MetaData {
         return constraints;
     }
 
+    @Override
+    public String getPropertyPath() {
+        return propertyPath;
+    }
+
+    
+    
     private void analizeAnotations() {
         Class clazz;
         if (parentMetaData != null) {

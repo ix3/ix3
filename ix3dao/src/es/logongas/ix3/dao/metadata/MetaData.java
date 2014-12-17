@@ -111,4 +111,9 @@ public interface MetaData {
      */
     Constraints getConstraints();
     
+    /**
+     * El path de esta propopiedad desde el inicio de la entidad
+     * @return El path de esta propopiedad desde el inicio de la entidad
+     */
+    String getPropertyPath();
 }

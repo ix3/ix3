@@ -38,7 +38,7 @@ public class MetaDataFactoryImplHibernate implements MetaDataFactory {
         if (classMetadata==null) {
             return null;
         } else {
-            return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory,null,null);
+            return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory,null,null,classMetadata.getMappedClass().getSimpleName());
         }
     }
     
@@ -53,7 +53,7 @@ public class MetaDataFactoryImplHibernate implements MetaDataFactory {
         if (classMetadata==null) {
             return null;
         } else {
-            return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory,null,null);
+            return new MetaDataImplHibernate(classMetadata.getMappedClass(),sessionFactory,null,null,entityName);
         }
     }
 
