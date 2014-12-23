@@ -129,9 +129,18 @@ public class RESTController {
                 MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
                 if (propertyMetaData != null) {
                     Class propertyType = propertyMetaData.getType();
-                    Object value = conversionService.convert(httpRequest.getParameter(propertyName), propertyType);
-                    if (value != null) {
-                        filter.put(propertyName, value);
+                    String[] parameterValues=httpRequest.getParameterValues(propertyName);
+                    if (parameterValues.length==1) {
+                        Object value = conversionService.convert(parameterValues[0], propertyType);
+                        if (value != null) {
+                            filter.put(propertyName, value);
+                        }
+                    } else {
+                        List<Object> values=new ArrayList<Object>();
+                        for(Object parameterValue : parameterValues) {
+                            values.add(conversionService.convert(parameterValue, propertyType));
+                        }
+                        filter.put(propertyName, values);
                     }
                 }
             }
@@ -252,14 +261,14 @@ public class RESTController {
             Object entity = genericDAO.read(id);
             noCache(httpServletResponse);
             httpServletResponse.setContentType("application/json; charset=UTF-8");
-            if (entity!=null) {
+            if (entity != null) {
                 String jsonOut = jsonWriter.toJson(entity, expand);
                 httpServletResponse.setStatus(HttpServletResponse.SC_OK);
                 httpServletResponse.getWriter().print(jsonOut);
-            }else {
+            } else {
                 httpServletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
             }
-            
+
         } catch (BusinessException ex) {
             try {
                 String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
@@ -410,13 +419,12 @@ public class RESTController {
             JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
 
             //Entidades a expandir
-            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));            
-            
+            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+
             Object entity = jsonReader.fromJson(jsonIn);
             genericDAO.insert(entity);
-            
-            
-            String jsonOut = jsonWriter.toJson(entity,expand);
+
+            String jsonOut = jsonWriter.toJson(entity, expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_CREATED);
@@ -461,12 +469,12 @@ public class RESTController {
             JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
 
             //Entidades a expandir
-            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));            
-            
+            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+
             Object entity = jsonReader.fromJson(jsonIn);
             genericDAO.update(entity);
-            
-            String jsonOut = jsonWriter.toJson(entity,expand);
+
+            String jsonOut = jsonWriter.toJson(entity, expand);
 
             noCache(httpServletResponse);
             httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -731,13 +739,15 @@ public class RESTController {
     }
 
     /**
-     * Esta funcion transforma los valores iniciales de la petición HTTP en una serie de objetos.
-     * Si las propiedaes hacen referencia a una propiedad de una entida o a una clave primaria de una entidad se leerá dicha entidad
+     * Esta funcion transforma los valores iniciales de la petición HTTP en una
+     * serie de objetos. Si las propiedaes hacen referencia a una propiedad de
+     * una entida o a una clave primaria de una entidad se leerá dicha entidad
      * Sino simplemente se pondrá el valor de la entidad.
-     * @param metaData Metada desde la que se quiere 
+     *
+     * @param metaData Metada desde la que se quiere
      * @param parameters
      * @return
-     * @throws BusinessException 
+     * @throws BusinessException
      */
     private Map<String, Object> getPropertiesFromParameters(MetaData metaData, Map<String, String[]> parameters) throws BusinessException {
         Map<String, Object> newParameters = new LinkedHashMap<String, Object>();
@@ -753,10 +763,10 @@ public class RESTController {
             Object value;
             MetaData initialValueMetaData = metaData.getPropertyMetaData(propertyName);
 
-            if (initialValueMetaData==null) {
+            if (initialValueMetaData == null) {
                 throw new RuntimeException("No existe la propiedad:" + propertyName);
             }
-            
+
             if (initialValueMetaData.isCollection()) {
                 throw new RuntimeException("No se permite como valor inicial una coleccion:" + propertyName);
             }
