@@ -29,6 +29,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,10 +53,10 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected MetaDataFactory metaDataFactory;
     @Autowired
     protected TransactionManager transactionManager;
-    
+
     @Autowired
     protected ExceptionTranslator exceptionTranslator;
-    
+
     Class entityType;
 
     protected final Log log = LogFactory.getLog(getClass());
@@ -99,31 +100,31 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Override
     final public void insert(EntityType entity) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
-        boolean isActivePreviousTransaction=transactionManager.isActive();
+        boolean isActivePreviousTransaction = transactionManager.isActive();
         try {
             this.preInsertBeforeTransaction(session, entity);
-            if (isActivePreviousTransaction==false) {
+            if (isActivePreviousTransaction == false) {
                 transactionManager.begin();
             }
             this.preInsertInTransaction(session, entity);
             session.save(entity);
             this.postInsertInTransaction(session, entity);
-            if (isActivePreviousTransaction==false) {
+            if (isActivePreviousTransaction == false) {
                 transactionManager.commit();
             }
             this.postInsertAfterTransaction(session, entity);
         } catch (BusinessException ex) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
-            }            
-            throw ex;            
+            }
+            throw ex;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -132,7 +133,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -141,7 +142,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (RuntimeException ex) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -150,7 +151,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw ex;
         } catch (Exception ex) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -164,7 +165,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     final public boolean update(EntityType entity) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         MetaData metaData = metaDataFactory.getMetaData(entity);
-        boolean isActivePreviousTransaction=transactionManager.isActive();
+        boolean isActivePreviousTransaction = transactionManager.isActive();
         boolean hasUpdate;
         try {
 
@@ -179,27 +180,27 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
             if (entity2 == null) {
                 this.preInsertBeforeTransaction(session, entity);
-                if (isActivePreviousTransaction==false) {
+                if (isActivePreviousTransaction == false) {
                     transactionManager.begin();
                 }
                 this.preInsertInTransaction(session, entity);
                 session.save(entity);
                 this.postInsertInTransaction(session, entity);
-                if (isActivePreviousTransaction==false) {
+                if (isActivePreviousTransaction == false) {
                     transactionManager.commit();
                 }
                 this.postInsertAfterTransaction(session, entity);
                 hasUpdate = false;
             } else {
                 this.preUpdateBeforeTransaction(session, entity);
-                if (isActivePreviousTransaction==false) {
+                if (isActivePreviousTransaction == false) {
                     transactionManager.begin();
                 }
                 this.preUpdateInTransaction(session, entity);
                 session.evict(entity2);
                 session.update(entity);
                 this.postUpdateInTransaction(session, entity);
-                if (isActivePreviousTransaction==false) {
+                if (isActivePreviousTransaction == false) {
                     transactionManager.commit();
                 }
                 this.postUpdateAfterTransaction(session, entity);
@@ -208,16 +209,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             return hasUpdate;
         } catch (BusinessException ex) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
-            }            
-            throw ex;            
+            }
+            throw ex;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -226,7 +227,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -235,7 +236,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (RuntimeException ex) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -244,7 +245,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw ex;
         } catch (Exception ex) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -278,12 +279,12 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Override
     final public boolean delete(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
-        boolean isActivePreviousTransaction=transactionManager.isActive();
+        boolean isActivePreviousTransaction = transactionManager.isActive();
         boolean exists;
         EntityType entity = null;
         try {
             this.preDeleteBeforeTransaction(session, id);
-            if (isActivePreviousTransaction==false) {
+            if (isActivePreviousTransaction == false) {
                 transactionManager.begin();
             }
             entity = (EntityType) session.get(getEntityMetaData().getType(), id);
@@ -291,14 +292,14 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             if (entity == null) {
                 exists = false;
                 this.postDeleteInTransaction(session, id, entity);
-                if (isActivePreviousTransaction==false) {
+                if (isActivePreviousTransaction == false) {
                     transactionManager.commit();
                 }
             } else {
                 session.delete(entity);
                 exists = true;
                 this.postDeleteInTransaction(session, id, entity);
-                if (isActivePreviousTransaction==false) {
+                if (isActivePreviousTransaction == false) {
                     transactionManager.commit();
                 }
             }
@@ -307,16 +308,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             return exists;
         } catch (BusinessException ex) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
-            }            
-            throw ex;            
+            }
+            throw ex;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -325,7 +326,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -334,7 +335,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (RuntimeException ex) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -343,7 +344,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw ex;
         } catch (Exception ex) {
             try {
-                if ((transactionManager.isActive()==true) && (isActivePreviousTransaction==false)) {
+                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
                     transactionManager.rollback();
                 }
             } catch (Exception exc) {
@@ -388,13 +389,19 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 for (String propertyName : filter.keySet()) {
                     Object value = filter.get(propertyName);
 
-                    if (String.class.isAssignableFrom(getEntityMetaData().getPropertiesMetaData().get(propertyName).getType())) {
-                        if ((value != null) && (((String) value).trim().equals("") == false)) {
-                            criteria.add(Restrictions.like(propertyName, "%" + value + "%"));
-                        }
+                    if (value instanceof Object[]) {
+                        criteria.add(Restrictions.in(propertyName, (Object[])value));
+                    }else if (value instanceof Collection) {
+                        criteria.add(Restrictions.in(propertyName, (Collection)value));
                     } else {
-                        if (value != null) {
-                            criteria.add(Restrictions.eq(propertyName, value));
+                        if (String.class.isAssignableFrom(getEntityMetaData().getPropertiesMetaData().get(propertyName).getType())) {
+                            if ((value != null) && (((String) value).trim().equals("") == false)) {
+                                criteria.add(Restrictions.like(propertyName, "%" + value + "%"));
+                            }
+                        } else {
+                            if (value != null) {
+                                criteria.add(Restrictions.eq(propertyName, value));
+                            }
                         }
                     }
                 }
@@ -450,7 +457,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
             Page page = new PageImpl(results, pageSize, pageNumber, totalPages);
 
-            return page;          
+            return page;
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
@@ -517,8 +524,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(naturalKey);
             this.postReadByNaturalKey(session, naturalKey, entity);
             return entity;
-        } catch (BusinessException ex) {            
-            throw ex;            
+        } catch (BusinessException ex) {
+            throw ex;
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
@@ -535,55 +542,55 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         return metaDataFactory.getMetaData(entityType);
     }
 
-    protected void postCreate(Session session, EntityType entity) throws BusinessException  {
+    protected void postCreate(Session session, EntityType entity) throws BusinessException {
     }
 
-    protected void preInsertBeforeTransaction(Session session, EntityType entity) throws BusinessException  {
+    protected void preInsertBeforeTransaction(Session session, EntityType entity) throws BusinessException {
     }
 
-    protected void preInsertInTransaction(Session session, EntityType entity) throws BusinessException  {
+    protected void preInsertInTransaction(Session session, EntityType entity) throws BusinessException {
     }
 
-    protected void postInsertInTransaction(Session session, EntityType entity) throws BusinessException  {
+    protected void postInsertInTransaction(Session session, EntityType entity) throws BusinessException {
     }
 
-    protected void postInsertAfterTransaction(Session session, EntityType entity) throws BusinessException  {
+    protected void postInsertAfterTransaction(Session session, EntityType entity) throws BusinessException {
     }
 
-    protected void preRead(Session session, PrimaryKeyType id) throws BusinessException  {
+    protected void preRead(Session session, PrimaryKeyType id) throws BusinessException {
     }
 
-    protected void postRead(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException  {
+    protected void postRead(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
     }
 
-    protected void preReadByNaturalKey(Session session, Object naturalKey) throws BusinessException  {
+    protected void preReadByNaturalKey(Session session, Object naturalKey) throws BusinessException {
     }
 
-    protected void postReadByNaturalKey(Session session, Object naturalKey, EntityType entity) throws BusinessException  {
+    protected void postReadByNaturalKey(Session session, Object naturalKey, EntityType entity) throws BusinessException {
     }
 
-    protected void preUpdateBeforeTransaction(Session session, EntityType entity) throws BusinessException  {
+    protected void preUpdateBeforeTransaction(Session session, EntityType entity) throws BusinessException {
     }
 
-    protected void preUpdateInTransaction(Session session, EntityType entity) throws BusinessException  {
+    protected void preUpdateInTransaction(Session session, EntityType entity) throws BusinessException {
     }
 
-    protected void postUpdateInTransaction(Session session, EntityType entity) throws BusinessException  {
+    protected void postUpdateInTransaction(Session session, EntityType entity) throws BusinessException {
     }
 
-    protected void postUpdateAfterTransaction(Session session, EntityType entity) throws BusinessException  {
+    protected void postUpdateAfterTransaction(Session session, EntityType entity) throws BusinessException {
     }
 
-    protected void preDeleteBeforeTransaction(Session session, PrimaryKeyType id) throws BusinessException  {
+    protected void preDeleteBeforeTransaction(Session session, PrimaryKeyType id) throws BusinessException {
     }
 
-    protected void preDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException  {
+    protected void preDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
     }
 
-    protected void postDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException  {
+    protected void postDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
     }
 
-    protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException  {
+    protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
     }
 
 }
