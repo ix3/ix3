@@ -40,9 +40,7 @@ public class Property {
     private Integer maxLength;
     private String pattern;
     private Format format; //Para los Strings si es una URL o un EMAIL, etc.
-    private List<Object> values=new ArrayList<Object>(); //las propiedades values o urlValues son excluyentes
-    private String dependProperty; //Solo está este valor si urlValues!=null
-    private boolean shortLength;
+    private List<Object> values=new ArrayList<Object>();
     
     private String label;
     private String description;    
@@ -230,20 +228,6 @@ public class Property {
     }
 
     /**
-     * @return the dependProperties
-     */
-    public String getDependProperty() {
-        return dependProperty;
-    }
-
-    /**
-     * @param dependProperties the dependProperties to set
-     */
-    public void setDependProperties(String dependProperty) {
-        this.dependProperty = dependProperty;
-    }
-
-    /**
      * @return the label
      */
     public String getLabel() {
@@ -274,21 +258,5 @@ public class Property {
     @Override
     public String toString() {
         return this.getLabel();
-    }
-
-    /**
-     * @return the shortLength
-     */
-    public boolean isShortLength() {
-        return shortLength;
-    }
-
-    /**
-     * @param shortLength the shortLength to set
-     */
-    public void setShortLength(boolean shortLength) {
-        this.shortLength = shortLength;
-    }
-    
-    
+    }  
 }
