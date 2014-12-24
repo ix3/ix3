@@ -15,11 +15,13 @@
  */
 package es.logongas.ix3.security.model;
 
+import es.logongas.ix3.core.annotations.Label;
 import es.logongas.ix3.core.annotations.ValuesList;
 import es.logongas.ix3.security.authorization.AuthorizationType;
 import es.logongas.ix3.util.ScriptEvaluator;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.validation.constraints.AssertTrue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -31,7 +33,6 @@ public class ACE {
 
     private int idACE;
     private ACEType aceType;
-    @ValuesList(dependProperty = "aceType")
     private Permission permission;
     @ValuesList()
     private Identity identity;
