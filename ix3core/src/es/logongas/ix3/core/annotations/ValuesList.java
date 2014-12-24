@@ -51,13 +51,6 @@ public @interface ValuesList {
     Class entity() default DEFAULT.class;
 
     /**
-     * Propiedad de ls que depende el valor de esta
-     *
-     * @return
-     */
-    String dependProperty() default "";
-
-    /**
      * En caso de querer consultas que no sea simplemente la lista de todas las
      * entidades, aqui pondremos el nombre de un método DAO de la entidad
      * correspondiente
