@@ -41,13 +41,6 @@ public interface ValuesList {
     Class entity();
 
     /**
-     * Propiedad de las que depende el valor de esta
-     *
-     * @return
-     */
-    String dependProperty();
-
-    /**
      * En caso de querer consultas que no sea simplemente la lista de todas las
      * entidades, aqui pondremos el nombre de un servicio de la entidad
      * correspondiente
