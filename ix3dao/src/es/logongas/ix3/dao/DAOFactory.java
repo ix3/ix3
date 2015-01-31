@@ -15,8 +15,6 @@
  */
 package es.logongas.ix3.dao;
 
-import es.logongas.ix3.dao.GenericDAO;
-
 /**
  *
  * @author Lorenzo González
