@@ -390,9 +390,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                     Object value = filter.get(propertyName);
 
                     if (value instanceof Object[]) {
-                        criteria.add(Restrictions.in(propertyName, (Object[])value));
-                    }else if (value instanceof Collection) {
-                        criteria.add(Restrictions.in(propertyName, (Collection)value));
+                        criteria.add(Restrictions.in(propertyName, (Object[]) value));
+                    } else if (value instanceof Collection) {
+                        criteria.add(Restrictions.in(propertyName, (Collection) value));
                     } else {
                         if (String.class.isAssignableFrom(getEntityMetaData().getPropertiesMetaData().get(propertyName).getType())) {
                             if ((value != null) && (((String) value).trim().equals("") == false)) {
@@ -484,7 +484,19 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
             NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(this.getClass(), namedSearch, NamedSearch.class);
             if (namedSearchAnnotation == null) {
-                throw new RuntimeException("No es posible llamar al método '" + this.getClass().getName() + "." + namedSearch + "' si no contiene la anotacion NamedSearch");
+                //Vemos si alguno de sus interfaces la tiene
+                Class[] interfaces = this.getClass().getInterfaces();
+
+                for (Class interfaze : interfaces) {
+                    namedSearchAnnotation = ReflectionUtil.getAnnotation(interfaze, namedSearch, NamedSearch.class);
+                    if (namedSearchAnnotation != null) {
+                        break;
+                    }
+                }
+
+                if (namedSearchAnnotation == null) {
+                    throw new RuntimeException("No es posible llamar al método '" + this.getClass().getName() + "." + namedSearch + "' si no contiene la anotacion NamedSearch");
+                }
             }
 
             String[] parameterNames = namedSearchAnnotation.parameterNames();
