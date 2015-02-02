@@ -352,14 +352,14 @@ public class RESTController extends AbstractRESTController {
                 Class propertyType = propertyMetaData.getType();
                 String[] parameterValues = httpServletRequest.getParameterValues(propertyName);
                 if (parameterValues.length == 1) {
-                    Object value = conversionService.convert(parameterValues[0], propertyType);
+                    Object value = conversion.convertFromString(parameterValues[0], propertyType);
                     if (value != null) {
                         filter.put(propertyName, value);
                     }
                 } else {
                     List<Object> values = new ArrayList<Object>();
-                    for (Object parameterValue : parameterValues) {
-                        values.add(conversionService.convert(parameterValue, propertyType));
+                    for (String parameterValue : parameterValues) {
+                        values.add(conversion.convertFromString(parameterValue, propertyType));
                     }
                     filter.put(propertyName, values);
                 }
@@ -430,7 +430,7 @@ public class RESTController extends AbstractRESTController {
                 //Ahora vamos a obtener el valor de la clave primaria
                 Serializable primaryKey;
                 try {
-                    primaryKey = (Serializable) conversionService.convert(stringParameterValue, primaryKeyType);
+                    primaryKey = (Serializable) conversion.convertFromString(stringParameterValue, primaryKeyType);
                 } catch (Exception ex) {
                     throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro no tiene el formato adecuado para ser una PK:" + stringParameterValue));
                 }
@@ -443,7 +443,7 @@ public class RESTController extends AbstractRESTController {
                 }
             } else {
                 try {
-                    parameterValue = conversionService.convert(stringParameterValue, parameterType);
+                    parameterValue = conversion.convertFromString(stringParameterValue, parameterType);
                 } catch (Exception ex) {
                     throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro no tiene el formato adecuado:" + stringParameterValue));
                 }
@@ -543,7 +543,7 @@ public class RESTController extends AbstractRESTController {
                     //Nos han pasado un valor directamente
                     if (leftPropertyName == null) {
                         realPropertyName = rigthPropertyName;
-                        value = conversionService.convert(rawValue, initialValueMetaData.getType());
+                        value = conversion.convertFromString(rawValue, initialValueMetaData.getType());
                     } else {
                         MetaData leftPropertyMetaData = metaData.getPropertyMetaData(leftPropertyName);
                         if (leftPropertyMetaData.getMetaType() == MetaType.Entity) {
@@ -552,7 +552,7 @@ public class RESTController extends AbstractRESTController {
                                 //y el valor inicial será el de la entidad ya leida y no el de la clave primaria.
                                 GenericDAO genericDAO = daoFactory.getDAO(leftPropertyMetaData.getType());
                                 Class primaryKeyType = leftPropertyMetaData.getPropertyMetaData(leftPropertyMetaData.getPrimaryKeyPropertyName()).getType();
-                                Serializable primaryKey = (Serializable) conversionService.convert(rawValue, primaryKeyType);
+                                Serializable primaryKey = (Serializable) conversion.convertFromString(rawValue, primaryKeyType);
 
                                 realPropertyName = leftPropertyName;
                                 value = genericDAO.read(primaryKey);
@@ -562,7 +562,7 @@ public class RESTController extends AbstractRESTController {
                         } else {
                             //Como la propieda anterior no era una entidad no era nada "raro" y nos habian pasado simplemente el valor
                             realPropertyName = propertyName;
-                            value = conversionService.convert(rawValue, initialValueMetaData.getType());
+                            value = conversion.convertFromString(rawValue, initialValueMetaData.getType());
                         }
                     }
 
@@ -573,7 +573,7 @@ public class RESTController extends AbstractRESTController {
                     //La propiedad corresponde a una entidad , así que se supondrá que el valor era la clave primaria de dicha entidad
                     GenericDAO genericDAO = daoFactory.getDAO(initialValueMetaData.getType());
                     Class primaryKeyType = initialValueMetaData.getPropertyMetaData(initialValueMetaData.getPrimaryKeyPropertyName()).getType();
-                    Serializable primaryKey = (Serializable) conversionService.convert(rawValue, primaryKeyType);
+                    Serializable primaryKey = (Serializable) conversion.convertFromString(rawValue, primaryKeyType);
 
                     realPropertyName = propertyName;
                     value = genericDAO.read(primaryKey);

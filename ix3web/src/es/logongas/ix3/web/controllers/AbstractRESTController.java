@@ -16,6 +16,7 @@
 package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.core.conversion.Conversion;
 import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.web.json.JsonFactory;
@@ -29,7 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.convert.ConversionService;
 
 public class AbstractRESTController {
 
@@ -40,7 +40,7 @@ public class AbstractRESTController {
     @Autowired
     protected MetaDataFactory metaDataFactory;
     @Autowired
-    protected ConversionService conversionService;
+    protected Conversion conversion;
     @Autowired
     protected JsonFactory jsonFactory;
 
