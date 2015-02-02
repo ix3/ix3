@@ -17,24 +17,20 @@ package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.core.BusinessMessage;
-import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.dao.NamedSearch;
 import es.logongas.ix3.core.OrderDirection;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaType;
-import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.controllers.metadata.Metadata;
 import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
-import es.logongas.ix3.web.json.JsonFactory;
 import es.logongas.ix3.web.json.JsonReader;
-import es.logongas.ix3.web.json.JsonWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -46,8 +42,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -59,19 +53,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @author Lorenzo González
  */
 @Controller
-public class RESTController {
+public class RESTController extends AbstractRESTController {
 
-    @Autowired
-    DAOFactory daoFactory;
-    @Autowired
-    MetaDataFactory metaDataFactory;
-    @Autowired
-    ConversionService conversionService;
-    @Autowired
-    JsonFactory jsonFactory;
     private static final Log log = LogFactory.getLog(RESTController.class);
 
-    private final String PARAMETER_EXPAND = "$expand";
     private final String PARAMETER_ORDERBY = "$orderby";
     private final String PARAMETER_PAGENUMBER = "$pagenumber";
     private final String PARAMETER_PAGESIZE = "$pagesize";
@@ -80,488 +65,232 @@ public class RESTController {
     private final String PATH_CREATE = "$create";
 
     @RequestMapping(value = {"/{entityName}/" + PATH_METADATA}, method = RequestMethod.GET, produces = "application/json")
-    public void metadata(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
-        try {
-            MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+    public void metadata(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
+
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
+
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+
+                MetaData metaData = metaDataFactory.getMetaData(entityName);
+                if (metaData == null) {
+                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+                }
+
+                List<String> expand = getExpand(httpServletRequest.getParameter(PARAMETER_EXPAND));
+
+                Metadata metadata = (new MetadataFactory()).getMetadata(metaData, metaDataFactory, daoFactory, httpServletRequest.getContextPath(), expand);
+                return new CommandResult(Metadata.class, metadata, true);
+
             }
 
-            //Entidades a expandir
-            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+        });
 
-            Metadata metadata = (new MetadataFactory()).getMetadata(metaData, metaDataFactory, daoFactory, httpRequest.getContextPath(), expand);
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter();
-
-            String jsonOut = jsonWriter.toJson(metadata);
-
-            cache(httpServletResponse);
-            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-            httpServletResponse.setContentType("application/json; charset=UTF-8");
-            httpServletResponse.getWriter().println(jsonOut);
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (Exception ex2) {
-                log.error("Falló al imprimir la traza", ex2);
-            }
-        }
     }
 
     @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.GET, produces = "application/json")
-    public void search(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
-        try {
-            MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
-            }
-            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
+    public void search(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
 
-            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
-            Map<String, Object> filter = new HashMap<String, Object>();
-            Enumeration<String> enumeration = httpRequest.getParameterNames();
-            while (enumeration.hasMoreElements()) {
-                String propertyName = enumeration.nextElement();
-                MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
-                if (propertyMetaData != null) {
-                    Class propertyType = propertyMetaData.getType();
-                    String[] parameterValues=httpRequest.getParameterValues(propertyName);
-                    if (parameterValues.length==1) {
-                        Object value = conversionService.convert(parameterValues[0], propertyType);
-                        if (value != null) {
-                            filter.put(propertyName, value);
-                        }
-                    } else {
-                        List<Object> values=new ArrayList<Object>();
-                        for(Object parameterValue : parameterValues) {
-                            values.add(conversionService.convert(parameterValue, propertyType));
-                        }
-                        filter.put(propertyName, values);
-                    }
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+
+                MetaData metaData = metaDataFactory.getMetaData(entityName);
+                if (metaData == null) {
+                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
-            }
-
-            List<Order> orders = getOrders(metaData, httpRequest.getParameter(PARAMETER_ORDERBY));
-            Integer pageSize = getIntegerFromString(httpRequest.getParameter(PARAMETER_PAGESIZE));
-            Integer pageNumber = getIntegerFromString(httpRequest.getParameter(PARAMETER_PAGENUMBER));
-
-            Object entity;
-            if ((pageSize == null) && (pageNumber == null)) {
-                entity = genericDAO.search(filter, orders);
-            } else if ((pageSize != null) && (pageNumber != null)) {
-                entity = genericDAO.pageableSearch(filter, orders, pageNumber, pageSize);
-            } else {
-                throw new RuntimeException("Los datos de la paginacion no son correctos, es necesario los 2 datos:" + PARAMETER_PAGENUMBER + " y " + PARAMETER_PAGESIZE);
-            }
-
-            String jsonOut = jsonWriter.toJson(entity, expand);
-
-            noCache(httpServletResponse);
-            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-            httpServletResponse.setContentType("application/json; charset=UTF-8");
-            httpServletResponse.getWriter().println(jsonOut);
-        } catch (BusinessException ex) {
-            try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
-
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpServletResponse.setContentType("application/json; charset=UTF-8");
-                httpServletResponse.getWriter().println(jsonOut);
-            } catch (Exception ex2) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                httpServletResponse.setContentType("text/plain");
-                try {
-                    ex.printStackTrace(httpServletResponse.getWriter());
-                } catch (Exception ex3) {
-                    log.error("Falló al imprimir la traza", ex3);
+                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                Map<String, Object> filter = getFilterSearchFromParameters(httpServletRequest, metaData);
+                List<Order> orders = getOrders(metaData, httpServletRequest.getParameter(PARAMETER_ORDERBY));
+                Integer pageSize = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGESIZE));
+                Integer pageNumber = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGENUMBER));
+                Object entity;
+                if ((pageSize == null) && (pageNumber == null)) {
+                    entity = genericDAO.search(filter, orders);
+                } else if ((pageSize != null) && (pageNumber != null)) {
+                    entity = genericDAO.pageableSearch(filter, orders, pageNumber, pageSize);
+                } else {
+                    throw new RuntimeException("Los datos de la paginacion no son correctos, es necesario los 2 datos:" + PARAMETER_PAGENUMBER + " y " + PARAMETER_PAGESIZE);
                 }
+
+                return new CommandResult(metaData.getType(), entity);
+
             }
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (Exception ex2) {
-                log.error("Falló al imprimir la traza", ex2);
-            }
-        }
+        });
+
     }
 
     @RequestMapping(value = {"/{entityName}/" + PATH_NAMEDSEARCH + "/{namedSearch}"}, method = RequestMethod.GET, produces = "application/json")
-    public void namedSearch(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("namedSearch") String namedSearch) {
-        try {
-            MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
-            }
-            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-            JsonWriter jsonWriter;
+    public void namedSearch(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("namedSearch") String namedSearch) {
 
-            //Entidades a expandir
-            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
-            Map<String, Object> filter = getFilterFromParameters(genericDAO, namedSearch, removeDollarParameters(httpRequest.getParameterMap()));
-            Object result = genericDAO.namedSearch(namedSearch, filter);
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
 
-            if (result != null) {
-                jsonWriter = jsonFactory.getJsonWriter(null);
-            } else {
-                jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
-            }
-            String jsonOut = jsonWriter.toJson(result, expand);
-
-            noCache(httpServletResponse);
-            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-            httpServletResponse.setContentType("application/json; charset=UTF-8");
-            httpServletResponse.getWriter().println(jsonOut);
-        } catch (BusinessException ex) {
-            try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
-
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpServletResponse.setContentType("application/json; charset=UTF-8");
-                httpServletResponse.getWriter().println(jsonOut);
-            } catch (Exception ex2) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                httpServletResponse.setContentType("text/plain");
-                try {
-                    ex.printStackTrace(httpServletResponse.getWriter());
-                } catch (Exception ex3) {
-                    log.error("Falló al imprimir la traza", ex3);
+                MetaData metaData = metaDataFactory.getMetaData(entityName);
+                if (metaData == null) {
+                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
+                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                Map<String, Object> filter = getFilterNamedSearchFromParameters(genericDAO, namedSearch, removeDollarParameters(httpServletRequest.getParameterMap()));
+                Object result = genericDAO.namedSearch(namedSearch, filter);
+
+                return new CommandResult(metaData.getType(), result);
+
             }
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (Exception ex2) {
-                log.error("Falló al imprimir la traza", ex2);
-            }
-        }
+        });
     }
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, produces = "application/json")
-    public void read(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
-        try {
-            MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
-            }
-            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
+    public void read(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id) {
 
-            //Entidades a expandir
-            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
-            Object entity = genericDAO.read(id);
-            noCache(httpServletResponse);
-            httpServletResponse.setContentType("application/json; charset=UTF-8");
-            if (entity != null) {
-                String jsonOut = jsonWriter.toJson(entity, expand);
-                httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-                httpServletResponse.getWriter().print(jsonOut);
-            } else {
-                httpServletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            }
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
 
-        } catch (BusinessException ex) {
-            try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
-
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpServletResponse.setContentType("application/json; charset=UTF-8");
-                httpServletResponse.getWriter().println(jsonOut);
-            } catch (Exception ex2) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                httpServletResponse.setContentType("text/plain");
-                try {
-                    ex.printStackTrace(httpServletResponse.getWriter());
-                } catch (Exception ex3) {
-                    log.error("Falló al imprimir la traza", ex3);
+                MetaData metaData = metaDataFactory.getMetaData(entityName);
+                if (metaData == null) {
+                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
+                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                Object entity = genericDAO.read(id);
+
+                return new CommandResult(metaData.getType(), entity);
+
             }
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (Exception ex2) {
-                log.error("Falló al imprimir la traza", ex2);
-            }
-        }
+        });
+
     }
 
     @RequestMapping(value = {"/{entityName}/{id}/{child}"}, method = RequestMethod.GET, produces = "application/json")
-    public void readChild(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @PathVariable("child") String child) {
-        try {
-            MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
-            }
-            if (metaData.getPropertiesMetaData().get(child) == null) {
-                throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "' no existe la propiedad '" + child + "'"));
-            }
-            if (metaData.getPropertiesMetaData().get(child).isCollection() == false) {
-                throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "'  la propiedad '" + child + "' no es una colección"));
-            }
+    public void readChild(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id, final @PathVariable("child") String child) {
 
-            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
-            //Entidades a expandir
-            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
 
-            Object entity = genericDAO.read(id);
-            Object childData;
-            if (entity != null) {
-                childData = ReflectionUtil.getValueFromBean(entity, child);
-            } else {
-                //Si no hay datos , retornamos una lista vacia
-                childData = new ArrayList();
-            }
-            String jsonOut = jsonWriter.toJson(childData, expand);
-
-            noCache(httpServletResponse);
-            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-            httpServletResponse.setContentType("application/json; charset=UTF-8");
-            httpServletResponse.getWriter().println(jsonOut);
-        } catch (BusinessException ex) {
-            try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
-
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpServletResponse.setContentType("application/json; charset=UTF-8");
-                httpServletResponse.getWriter().println(jsonOut);
-            } catch (Exception ex2) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                httpServletResponse.setContentType("text/plain");
-                try {
-                    ex.printStackTrace(httpServletResponse.getWriter());
-                } catch (Exception ex3) {
-                    log.error("Falló al imprimir la traza", ex3);
+                MetaData metaData = metaDataFactory.getMetaData(entityName);
+                if (metaData == null) {
+                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
+                if (metaData.getPropertiesMetaData().get(child) == null) {
+                    throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "' no existe la propiedad '" + child + "'"));
+                }
+                if (metaData.getPropertiesMetaData().get(child).isCollection() == false) {
+                    throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "'  la propiedad '" + child + "' no es una colección"));
+                }
+
+                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                Object entity = genericDAO.read(id);
+                Object childData;
+                if (entity != null) {
+                    childData = ReflectionUtil.getValueFromBean(entity, child);
+                } else {
+                    //Si no hay datos , retornamos una lista vacia
+                    childData = new ArrayList();
+                }
+
+                return new CommandResult(metaData.getPropertiesMetaData().get(child).getType(), childData);
+
             }
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (Exception ex2) {
-                log.error("Falló al imprimir la traza", ex2);
-            }
-        }
+        });
+
     }
 
     @RequestMapping(value = {"/{entityName}/" + PATH_CREATE}, method = RequestMethod.GET, produces = "application/json")
-    public void create(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
-        try {
-            MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
-            }
-            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
+    public void create(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
 
-            //Entidades a expandir
-            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
-            Map<String, Object> initialProperties = getPropertiesFromParameters(metaData, removeDollarParameters(httpRequest.getParameterMap()));
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
 
-            Object entity = genericDAO.create(initialProperties);
-            String jsonOut = jsonWriter.toJson(entity, expand);
-
-            noCache(httpServletResponse);
-            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-            httpServletResponse.setContentType("application/json; charset=UTF-8");
-            httpServletResponse.getWriter().println(jsonOut);
-        } catch (BusinessException ex) {
-            try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
-
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpServletResponse.setContentType("application/json; charset=UTF-8");
-                httpServletResponse.getWriter().println(jsonOut);
-            } catch (Exception ex2) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                httpServletResponse.setContentType("text/plain");
-                try {
-                    ex.printStackTrace(httpServletResponse.getWriter());
-                } catch (Exception ex3) {
-                    log.error("Falló al imprimir la traza", ex3);
+                MetaData metaData = metaDataFactory.getMetaData(entityName);
+                if (metaData == null) {
+                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
-            }
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (Exception ex2) {
-                log.error("Falló al imprimir la traza", ex2);
-            }
-        }
+                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                Map<String, Object> initialProperties = getPropertiesFromParameters(metaData, removeDollarParameters(httpServletRequest.getParameterMap()));
+                Object entity = genericDAO.create(initialProperties);
 
+                return new CommandResult(metaData.getType(), entity);
+
+            }
+        });
     }
 
     @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-    public void insert(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @RequestBody String jsonIn) {
-        try {
-            MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
-            }
-            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
-            JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
+    public void insert(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @RequestBody String jsonIn) {
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
-            //Entidades a expandir
-            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
 
-            Object entity = jsonReader.fromJson(jsonIn);
-            genericDAO.insert(entity);
-
-            String jsonOut = jsonWriter.toJson(entity, expand);
-
-            noCache(httpServletResponse);
-            httpServletResponse.setStatus(HttpServletResponse.SC_CREATED);
-            httpServletResponse.setContentType("application/json; charset=UTF-8");
-            httpServletResponse.getWriter().println(jsonOut);
-        } catch (BusinessException ex) {
-            try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
-
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpServletResponse.setContentType("application/json; charset=UTF-8");
-                httpServletResponse.getWriter().println(jsonOut);
-            } catch (Exception ex2) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                httpServletResponse.setContentType("text/plain");
-                try {
-                    ex.printStackTrace(httpServletResponse.getWriter());
-                } catch (Exception ex3) {
-                    log.error("Falló al imprimir la traza", ex3);
+                MetaData metaData = metaDataFactory.getMetaData(entityName);
+                if (metaData == null) {
+                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
+                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
+                Object entity = jsonReader.fromJson(jsonIn);
+                genericDAO.insert(entity);
+
+                return new CommandResult(metaData.getType(), entity, HttpServletResponse.SC_CREATED);
+
             }
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (Exception ex2) {
-                log.error("Falló al imprimir la traza", ex2);
-            }
-        }
+        });
     }
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
-    public void update(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @RequestBody String jsonIn) {
-        try {
-            MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
-            }
-            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter(metaData.getType());
-            JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
+    public void update(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id, final @RequestBody String jsonIn) {
 
-            //Entidades a expandir
-            List<String> expand = getExpand(httpRequest.getParameter(PARAMETER_EXPAND));
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
-            Object entity = jsonReader.fromJson(jsonIn);
-            genericDAO.update(entity);
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
 
-            String jsonOut = jsonWriter.toJson(entity, expand);
-
-            noCache(httpServletResponse);
-            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-            httpServletResponse.setContentType("application/json; charset=UTF-8");
-            httpServletResponse.getWriter().println(jsonOut);
-
-        } catch (BusinessException ex) {
-            try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
-
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpServletResponse.setContentType("application/json; charset=UTF-8");
-                httpServletResponse.getWriter().println(jsonOut);
-            } catch (Exception ex2) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                httpServletResponse.setContentType("text/plain");
-                try {
-                    ex.printStackTrace(httpServletResponse.getWriter());
-                } catch (Exception ex3) {
-                    log.error("Falló al imprimir la traza", ex3);
+                MetaData metaData = metaDataFactory.getMetaData(entityName);
+                if (metaData == null) {
+                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
+                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
+                Object entity = jsonReader.fromJson(jsonIn);
+                genericDAO.update(entity);
+
+                return new CommandResult(metaData.getType(), entity);
+
             }
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (Exception ex2) {
-                log.error("Falló al imprimir la traza", ex2);
-            }
-        }
+        });
+
     }
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE)
-    public void delete(HttpServletRequest httpRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
-        try {
-            MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
-            }
-            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+    public void delete(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id) {
 
-            boolean deletedSuccess = genericDAO.delete(id);
-            if (deletedSuccess == false) {
-                throw new BusinessException(new BusinessMessage(null, "No existe la entidad a borrar"));
-            }
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
-            noCache(httpServletResponse);
-            httpServletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        } catch (BusinessException ex) {
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
 
-            try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
-
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpServletResponse.setContentType("application/json; charset=UTF-8");
-                httpServletResponse.getWriter().println(jsonOut);
-            } catch (Exception ex2) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                httpServletResponse.setContentType("text/plain");
-                try {
-                    ex.printStackTrace(httpServletResponse.getWriter());
-                } catch (Exception ex3) {
-                    log.error("Falló al imprimir la traza", ex3);
+                MetaData metaData = metaDataFactory.getMetaData(entityName);
+                if (metaData == null) {
+                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
+                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                boolean deletedSuccess = genericDAO.delete(id);
+                if (deletedSuccess == false) {
+                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad a borrar"));
+                }
+
+                return null;
+
             }
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (Exception ex2) {
-                log.error("Falló al imprimir la traza", ex2);
-            }
-        }
-    }
-
-    private void noCache(HttpServletResponse httpServletResponse) {
-        httpServletResponse.setHeader("Cache-Control", "no-cache");
-    }
-
-    private void cache(HttpServletResponse httpServletResponse) {
-        cache(httpServletResponse, 60);
-    }
-
-    private void cache(HttpServletResponse httpServletResponse, long expireSeconds) {
-        httpServletResponse.setHeader("Cache-Control", "private, no-transform, max-age=" + expireSeconds);
+        });
     }
 
     /**
@@ -613,22 +342,34 @@ public class RESTController {
         return orders;
     }
 
-    /**
-     * Transforma el parámetro "expand" que viene por la petición http en una
-     * array
-     *
-     * @param expand El String con varios expand separados por comas
-     * @return El array con cada uno de ello.
-     */
-    private List<String> getExpand(String expand) {
-        if ((expand == null) || (expand.trim().isEmpty())) {
-            return new ArrayList<String>();
-        } else {
-            return Arrays.asList(expand.split(","));
+    private Map<String, Object> getFilterSearchFromParameters(HttpServletRequest httpServletRequest, MetaData metaData) {
+        Map<String, Object> filter = new HashMap<String, Object>();
+        Enumeration<String> enumeration = httpServletRequest.getParameterNames();
+        while (enumeration.hasMoreElements()) {
+            String propertyName = enumeration.nextElement();
+            MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
+            if (propertyMetaData != null) {
+                Class propertyType = propertyMetaData.getType();
+                String[] parameterValues = httpServletRequest.getParameterValues(propertyName);
+                if (parameterValues.length == 1) {
+                    Object value = conversionService.convert(parameterValues[0], propertyType);
+                    if (value != null) {
+                        filter.put(propertyName, value);
+                    }
+                } else {
+                    List<Object> values = new ArrayList<Object>();
+                    for (Object parameterValue : parameterValues) {
+                        values.add(conversionService.convert(parameterValue, propertyType));
+                    }
+                    filter.put(propertyName, values);
+                }
+            }
         }
+
+        return filter;
     }
 
-    private Map<String, Object> getFilterFromParameters(GenericDAO genericDAO, String methodName, Map<String, String[]> parametersMap) throws BusinessException {
+    private Map<String, Object> getFilterNamedSearchFromParameters(GenericDAO genericDAO, String methodName, Map<String, String[]> parametersMap) throws BusinessException {
         Map<String, Object> filter = new HashMap<String, Object>();
 
         Method method = ReflectionUtil.getMethod(genericDAO.getClass(), methodName);
@@ -638,7 +379,19 @@ public class RESTController {
 
         NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(genericDAO.getClass(), methodName, NamedSearch.class);
         if (namedSearchAnnotation == null) {
-            throw new RuntimeException("No es posible llamar al método '" + genericDAO.getClass().getName() + "." + methodName + "' si no contiene la anotacion NamedSearch");
+            //Vemos si alguno de sus interfaces la tiene
+            Class[] interfaces = genericDAO.getClass().getInterfaces();
+
+            for (Class interfaze : interfaces) {
+                namedSearchAnnotation = ReflectionUtil.getAnnotation(interfaze, methodName, NamedSearch.class);
+                if (namedSearchAnnotation != null) {
+                    break;
+                }
+            }
+
+            if (namedSearchAnnotation == null) {
+                throw new RuntimeException("No es posible llamar al método '" + genericDAO.getClass().getName() + "." + methodName + "' si no contiene la anotacion NamedSearch");
+            }
         }
 
         String[] parameterNames = namedSearchAnnotation.parameterNames();

@@ -15,7 +15,6 @@
  */
 package es.logongas.ix3.web.controllers;
 
-
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.core.BusinessMessage;
 import es.logongas.ix3.dao.DAOFactory;
@@ -26,7 +25,12 @@ import es.logongas.ix3.web.json.JsonFactory;
 import es.logongas.ix3.web.json.JsonWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -37,115 +41,83 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
  * Controlador REST que gestiona el log-in, log-out, etc.
+ *
  * @author Lorenzo González
  */
 @Controller
-public class SesionController {
-
-    @Autowired
-    DAOFactory daoFactory;
-
-    @Autowired
-    JsonFactory jsonFactory;
+public class SesionController extends AbstractRESTController {
 
     @Autowired
     AuthenticationManager authenticationManager;
 
-
     @RequestMapping(value = {"/session"}, method = RequestMethod.POST, headers = "Accept=application/json")
-    public void login(HttpServletRequest request, HttpServletResponse httpServletResponse) {
-        try {
-            request.setCharacterEncoding("UTF-8");
-            
-            String login = request.getParameter("login");
-            String password = request.getParameter("password");
+    public void login(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-            CredentialImplLoginPassword credentialImplLoginPassword=new CredentialImplLoginPassword(login, password);
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+                httpServletRequest.setCharacterEncoding("UTF-8");
 
-            Principal principal=authenticationManager.authenticate(credentialImplLoginPassword);
+                String login = httpServletRequest.getParameter("login");
+                String password = httpServletRequest.getParameter("password");
 
-            if (principal==null) {
-                throw new BusinessException(new BusinessMessage(null, "El usuario o contraseña no son válidos"));
+                CredentialImplLoginPassword credentialImplLoginPassword = new CredentialImplLoginPassword(login, password);
+
+                Principal principal = authenticationManager.authenticate(credentialImplLoginPassword);
+
+                if (principal == null) {
+                    throw new BusinessException(new BusinessMessage(null, "El usuario o contraseña no son válidos"));
+                }
+
+                //Creamos la sesión y la el sid
+                HttpSession httpSession = httpServletRequest.getSession();
+                httpSession.setAttribute("sid", principal.getSid());
+
+                return new CommandResult(Principal.class, principal,HttpServletResponse.SC_CREATED);
+
             }
+        });
 
-            //Creamos la sesión y la el sid
-            HttpSession httpSession = request.getSession();
-            httpSession.setAttribute("sid", principal.getSid());
-
-
-            //Retornamos el user
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter(Principal.class);
-            String datos = jsonWriter.toJson(principal);
-            httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-            httpServletResponse.setContentType("application/json; charset=UTF-8");
-            httpServletResponse.getWriter().println(datos);
-
-
-
-        } catch (BusinessException be) {
-            JsonWriter jsonWriter = jsonFactory.getJsonWriter(BusinessMessage.class);
-            Collection<BusinessMessage> businessMessages = be.getBusinessMessages();
-            String jsonBusinessMessages = jsonWriter.toJson(businessMessages);
-
-            httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            httpServletResponse.setContentType("application/json; charset=UTF-8");
-            try {
-                httpServletResponse.getWriter().println(jsonBusinessMessages);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain; charset=UTF-8");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (IOException ex1) {
-                throw new RuntimeException(ex1);
-            }
-        }
     }
 
     @RequestMapping(value = {"/session"}, method = RequestMethod.GET, headers = "Accept=application/json")
-    public void logged(HttpServletRequest request, HttpServletResponse httpServletResponse) {
-        try {
-            Principal principal;
+    public void logged(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-            HttpSession httpSession = request.getSession();
-            Serializable sid = (Serializable) httpSession.getAttribute("sid");
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
-            if (sid == null) {
-                principal = null;
-            } else {
-                principal = authenticationManager.getPrincipalBySID(sid);
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+                Principal principal;
+
+                HttpSession httpSession = httpServletRequest.getSession();
+                Serializable sid = (Serializable) httpSession.getAttribute("sid");
+
+                if (sid == null) {
+                    principal = null;
+                } else {
+                    principal = authenticationManager.getPrincipalBySID(sid);
+                }
+
+                return new CommandResult(Principal.class, principal);
+
             }
+        });
 
-            if (principal != null) {
-                JsonWriter jsonWriter = jsonFactory.getJsonWriter(Principal.class);
-                String datos = jsonWriter.toJson(principal);
-
-                httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-                httpServletResponse.setContentType("application/json; charset=UTF-8");
-                httpServletResponse.getWriter().println(datos);
-            } else {
-                httpServletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            }
-        } catch (Exception ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            httpServletResponse.setContentType("text/plain; charset=UTF-8");
-            try {
-                ex.printStackTrace(httpServletResponse.getWriter());
-            } catch (IOException ex1) {
-                throw new RuntimeException(ex1);
-            }
-        }
     }
 
     @RequestMapping(value = {"/session"}, method = RequestMethod.DELETE)
-    public void logout(HttpServletRequest request, HttpServletResponse httpServletResponse) {
-        HttpSession httpSession = request.getSession();
-        httpSession.setAttribute("sid", null);
+    public void logout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
 
-        httpServletResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            @Override
+            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+                HttpSession httpSession = httpServletRequest.getSession();
+                httpSession.setAttribute("sid", null);
+
+                return null;
+
+            }
+        });
     }
 }
