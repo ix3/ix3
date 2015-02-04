@@ -120,7 +120,7 @@
         <element name="dependencies" optional="yes" implicit="true"  />
         
         <sequential>
-		<ant  antfile="./@{artifactId}/build.xml" dir="./@{artifactId}" target="jar"/>
+		<ant  antfile="./build.xml" dir="./@{artifactId}" target="jar"/>
 
 
 		<publishRelease
