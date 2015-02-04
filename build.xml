@@ -23,7 +23,7 @@
 			addproperty="USER_NAME"
 		/>
 		<input
-			message="Repository password:"
+			message="Repository API Key (Debes obtenerla de la cuenta de bittray):"
 			addproperty="PASSWORD"
 		/>
 	
