@@ -86,6 +86,8 @@ public class AbstractRESTController {
                 }
             }
         } catch (Exception ex) {
+            log.error("Fallo al ejecutar el método del controlador REST", ex);            
+            
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             httpServletResponse.setContentType("text/plain");
             try {
