@@ -32,13 +32,19 @@ public class DatabaseMigrateContextListener implements ServletContextListener {
     
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
-        List<String> locations = new ArrayList<String>();
-        locations.add(servletContextEvent.getServletContext().getInitParameter("databasemigration.location"));
-
         WebApplicationContext webApplicationContext = WebApplicationContextUtils.getRequiredWebApplicationContext(servletContextEvent.getServletContext());
         AutowireCapableBeanFactory autowireCapableBeanFactory=webApplicationContext.getAutowireCapableBeanFactory();
         autowireCapableBeanFactory.autowireBean(this);
         
+        //Permitirmos varias "locations" en el parámetro separados por "\n"
+        String[] rawLocations = (servletContextEvent.getServletContext().getInitParameter("databasemigration.location")+"").split("\\n");
+        List<String> locations = new ArrayList<String>();
+        for(String location : rawLocations) {
+            if ((location!=null) && (location.trim().isEmpty()==false)) {
+                locations.add(location);
+            }
+        }
+
         databaseMigration.migrate(locations);
     }
 
