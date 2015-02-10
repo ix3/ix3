@@ -41,6 +41,7 @@ public class DatabaseMigrationImplFlywayHibernate implements DatabaseMigration {
         DataSource dataSource=getDataSource(dataSourceName);
         
         Flyway flyway = new Flyway();
+        flyway.setOutOfOrder(true);
         flyway.setDataSource(dataSource);
         flyway.setLocations((String[])locations.toArray(new String[0]));
         flyway.setEncoding("utf-8");
