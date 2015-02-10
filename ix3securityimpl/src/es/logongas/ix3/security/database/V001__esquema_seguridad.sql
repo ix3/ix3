@@ -32,7 +32,7 @@ CREATE TABLE `sec_groupmember` (
   KEY `FK8598F9D91EDD9A75` (`ididentity`),
   CONSTRAINT `FK8598F9D91EDD9A75` FOREIGN KEY (`ididentity`) REFERENCES `sec_identity` (`ididentity`),
   CONSTRAINT `FK8598F9D9AAEDEABC` FOREIGN KEY (`idGroup`) REFERENCES `sec_group` (`ididentity`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=50;
 
 
 
@@ -44,7 +44,7 @@ CREATE TABLE `sec_secureresourcetype` (
   `description` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`idSecureResourceType`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=50;
 
 CREATE TABLE `sec_secureresource` (
   `idSecureResource` int(11) NOT NULL AUTO_INCREMENT,
@@ -55,7 +55,7 @@ CREATE TABLE `sec_secureresource` (
   UNIQUE KEY `name_idSecureResourceType` (`name`,`idSecureResourceType`),
   KEY `FK920CE8C5850089C0` (`idSecureResourceType`),
   CONSTRAINT `FK920CE8C5850089C0` FOREIGN KEY (`idSecureResourceType`) REFERENCES `sec_secureresourcetype` (`idSecureResourceType`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=50;
 
 
 
@@ -68,7 +68,7 @@ CREATE TABLE `sec_permission` (
   UNIQUE KEY `name_idSecureResourceType` (`name`,`idSecureResourceType`),
   KEY `FK57F7A1EF850089C0` (`idSecureResourceType`),
   CONSTRAINT `FK57F7A1EF850089C0` FOREIGN KEY (`idSecureResourceType`) REFERENCES `sec_secureresourcetype` (`idSecureResourceType`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=50;
 
 CREATE TABLE `sec_ace` (
   `idACE` int(11) NOT NULL AUTO_INCREMENT,
@@ -83,15 +83,7 @@ CREATE TABLE `sec_ace` (
   KEY `FKFC631EDD9A75` (`ididentity`),
   CONSTRAINT `FKFC631EDD9A75` FOREIGN KEY (`ididentity`) REFERENCES `sec_identity` (`ididentity`),
   CONSTRAINT `FKFC63E44E74A0` FOREIGN KEY (`idPermission`) REFERENCES `sec_permission` (`idPermission`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=50;
 
 
-
-INSERT INTO `sec_identity` (`ididentity`, `login`, `name`) VALUES
-	(1, 'All', 'Todos'),
-	(2, 'Authenticated', 'Autenticados');
-
-INSERT INTO `sec_user` (`ididentity`) VALUES
-	(1),
-        (2);
 
