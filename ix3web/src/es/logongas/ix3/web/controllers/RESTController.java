@@ -17,18 +17,20 @@ package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.core.BusinessMessage;
-import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.dao.NamedSearch;
 import es.logongas.ix3.core.OrderDirection;
 import es.logongas.ix3.core.Order;
+import es.logongas.ix3.core.conversion.Conversion;
 import es.logongas.ix3.dao.metadata.MetaData;
+import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.metadata.MetaType;
+import es.logongas.ix3.service.CRUDService;
+import es.logongas.ix3.service.CRUDServiceFactory;
 import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.controllers.metadata.Metadata;
 import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
 import es.logongas.ix3.web.json.JsonReader;
 import java.io.Serializable;
-import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -42,6 +44,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -64,6 +67,15 @@ public class RESTController extends AbstractRESTController {
     private final String PATH_NAMEDSEARCH = "$namedsearch";
     private final String PATH_CREATE = "$create";
 
+    @Autowired
+    private MetaDataFactory metaDataFactory;
+    
+    @Autowired
+    private Conversion conversion;
+    
+    @Autowired
+    private CRUDServiceFactory crudServiceFactory;    
+
     @RequestMapping(value = {"/{entityName}/" + PATH_METADATA}, method = RequestMethod.GET, produces = "application/json")
     public void metadata(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
 
@@ -79,7 +91,7 @@ public class RESTController extends AbstractRESTController {
 
                 List<String> expand = getExpand(httpServletRequest.getParameter(PARAMETER_EXPAND));
 
-                Metadata metadata = (new MetadataFactory()).getMetadata(metaData, metaDataFactory, daoFactory, httpServletRequest.getContextPath(), expand);
+                Metadata metadata = (new MetadataFactory()).getMetadata(metaData, metaDataFactory, crudServiceFactory, httpServletRequest.getContextPath(), expand);
                 return new CommandResult(Metadata.class, metadata, true);
 
             }
@@ -100,16 +112,16 @@ public class RESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
-                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 Map<String, Object> filter = getFilterSearchFromParameters(httpServletRequest, metaData);
                 List<Order> orders = getOrders(metaData, httpServletRequest.getParameter(PARAMETER_ORDERBY));
                 Integer pageSize = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGESIZE));
                 Integer pageNumber = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGENUMBER));
                 Object entity;
                 if ((pageSize == null) && (pageNumber == null)) {
-                    entity = genericDAO.search(filter, orders);
+                    entity = crudService.search(filter, orders);
                 } else if ((pageSize != null) && (pageNumber != null)) {
-                    entity = genericDAO.pageableSearch(filter, orders, pageNumber, pageSize);
+                    entity = crudService.pageableSearch(filter, orders, pageNumber, pageSize);
                 } else {
                     throw new RuntimeException("Los datos de la paginacion no son correctos, es necesario los 2 datos:" + PARAMETER_PAGENUMBER + " y " + PARAMETER_PAGESIZE);
                 }
@@ -133,9 +145,9 @@ public class RESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
-                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-                Map<String, Object> filter = getFilterNamedSearchFromParameters(genericDAO, namedSearch, removeDollarParameters(httpServletRequest.getParameterMap()));
-                Object result = genericDAO.namedSearch(namedSearch, filter);
+                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                Map<String, Object> filter = getFilterNamedSearchFromParameters(crudService, namedSearch, removeDollarParameters(httpServletRequest.getParameterMap()));
+                Object result = executeNamedSearch(crudService,namedSearch, filter);
 
                 return new CommandResult(metaData.getType(), result);
 
@@ -155,8 +167,8 @@ public class RESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
-                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-                Object entity = genericDAO.read(id);
+                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                Object entity = crudService.read(id);
 
                 return new CommandResult(metaData.getType(), entity);
 
@@ -184,8 +196,8 @@ public class RESTController extends AbstractRESTController {
                     throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "'  la propiedad '" + child + "' no es una colección"));
                 }
 
-                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-                Object entity = genericDAO.read(id);
+                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                Object entity = crudService.read(id);
                 Object childData;
                 if (entity != null) {
                     childData = ReflectionUtil.getValueFromBean(entity, child);
@@ -213,9 +225,9 @@ public class RESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
-                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 Map<String, Object> initialProperties = getPropertiesFromParameters(metaData, removeDollarParameters(httpServletRequest.getParameterMap()));
-                Object entity = genericDAO.create(initialProperties);
+                Object entity = crudService.create(initialProperties);
 
                 return new CommandResult(metaData.getType(), entity);
 
@@ -234,10 +246,10 @@ public class RESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
-                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
                 Object entity = jsonReader.fromJson(jsonIn);
-                genericDAO.insert(entity);
+                crudService.insert(entity);
 
                 return new CommandResult(metaData.getType(), entity, HttpServletResponse.SC_CREATED);
 
@@ -257,10 +269,10 @@ public class RESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
-                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
                 Object entity = jsonReader.fromJson(jsonIn);
-                genericDAO.update(entity);
+                crudService.update(entity);
 
                 return new CommandResult(metaData.getType(), entity);
 
@@ -281,8 +293,8 @@ public class RESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
-                GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
-                boolean deletedSuccess = genericDAO.delete(id);
+                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                boolean deletedSuccess = crudService.delete(id);
                 if (deletedSuccess == false) {
                     throw new BusinessException(new BusinessMessage(null, "No existe la entidad a borrar"));
                 }
@@ -369,18 +381,18 @@ public class RESTController extends AbstractRESTController {
         return filter;
     }
 
-    private Map<String, Object> getFilterNamedSearchFromParameters(GenericDAO genericDAO, String methodName, Map<String, String[]> parametersMap) throws BusinessException {
+    private Map<String, Object> getFilterNamedSearchFromParameters(CRUDService crudService, String methodName, Map<String, String[]> parametersMap) throws BusinessException {
         Map<String, Object> filter = new HashMap<String, Object>();
 
-        Method method = ReflectionUtil.getMethod(genericDAO.getClass(), methodName);
+        Method method = ReflectionUtil.getMethod(crudService.getClass(), methodName);
         if (method == null) {
-            throw new BusinessException(new BusinessMessage(null, "No existe el método " + methodName + " en la clase " + genericDAO.getClass().getName()));
+            throw new BusinessException(new BusinessMessage(null, "No existe el método " + methodName + " en la clase " + crudService.getClass().getName()));
         }
 
-        NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(genericDAO.getClass(), methodName, NamedSearch.class);
+        NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(crudService.getClass(), methodName, NamedSearch.class);
         if (namedSearchAnnotation == null) {
             //Vemos si alguno de sus interfaces la tiene
-            Class[] interfaces = genericDAO.getClass().getInterfaces();
+            Class[] interfaces = crudService.getClass().getInterfaces();
 
             for (Class interfaze : interfaces) {
                 namedSearchAnnotation = ReflectionUtil.getAnnotation(interfaze, methodName, NamedSearch.class);
@@ -390,17 +402,17 @@ public class RESTController extends AbstractRESTController {
             }
 
             if (namedSearchAnnotation == null) {
-                throw new RuntimeException("No es posible llamar al método '" + genericDAO.getClass().getName() + "." + methodName + "' si no contiene la anotacion NamedSearch");
+                throw new RuntimeException("No es posible llamar al método '" + crudService.getClass().getName() + "." + methodName + "' si no contiene la anotacion NamedSearch");
             }
         }
 
         String[] parameterNames = namedSearchAnnotation.parameterNames();
         if ((parameterNames == null) && (method.getParameterTypes().length > 0)) {
-            throw new RuntimeException("Es necesario la lista de nombre de parametros para la anotación NameSearch del método:" + genericDAO.getClass().getName() + "." + methodName);
+            throw new RuntimeException("Es necesario la lista de nombre de parametros para la anotación NameSearch del método:" + crudService.getClass().getName() + "." + methodName);
         }
 
         if (method.getParameterTypes().length != parameterNames.length) {
-            throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + genericDAO.getClass().getName() + "." + methodName);
+            throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + crudService.getClass().getName() + "." + methodName);
         }
 
         for (int i = 0; i < method.getParameterTypes().length; i++) {
@@ -436,8 +448,8 @@ public class RESTController extends AbstractRESTController {
                 }
 
                 //Y finalmente Leemos la entidad en función de la clave primaria
-                GenericDAO genericDAOParameter = daoFactory.getDAO(parameterType);
-                parameterValue = genericDAOParameter.read(primaryKey);
+                CRUDService crudServiceParameter = crudServiceFactory.getService(parameterType);
+                parameterValue = crudServiceParameter.read(primaryKey);
                 if (parameterValue == null) {
                     throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro con valor '" + stringParameterValue + "' no es de ninguna entidad."));
                 }
@@ -550,12 +562,12 @@ public class RESTController extends AbstractRESTController {
                             if (rigthPropertyName.equals(leftPropertyMetaData.getPrimaryKeyPropertyName())) {
                                 //nos ham pasado la clave primaria de una entidad ,así que leemos la entidad
                                 //y el valor inicial será el de la entidad ya leida y no el de la clave primaria.
-                                GenericDAO genericDAO = daoFactory.getDAO(leftPropertyMetaData.getType());
+                                CRUDService crudService = crudServiceFactory.getService(leftPropertyMetaData.getType());
                                 Class primaryKeyType = leftPropertyMetaData.getPropertyMetaData(leftPropertyMetaData.getPrimaryKeyPropertyName()).getType();
                                 Serializable primaryKey = (Serializable) conversion.convertFromString(rawValue, primaryKeyType);
 
                                 realPropertyName = leftPropertyName;
-                                value = genericDAO.read(primaryKey);
+                                value = crudService.read(primaryKey);
                             } else {
                                 throw new RuntimeException("No se puede pasar una propiedad de una entidad, solo se permite la clave primaria:" + propertyName);
                             }
@@ -571,12 +583,12 @@ public class RESTController extends AbstractRESTController {
                     throw new RuntimeException("No se permite como valor inicial un componente:" + propertyName);
                 case Entity:
                     //La propiedad corresponde a una entidad , así que se supondrá que el valor era la clave primaria de dicha entidad
-                    GenericDAO genericDAO = daoFactory.getDAO(initialValueMetaData.getType());
+                    CRUDService crudService = crudServiceFactory.getService(initialValueMetaData.getType());
                     Class primaryKeyType = initialValueMetaData.getPropertyMetaData(initialValueMetaData.getPrimaryKeyPropertyName()).getType();
                     Serializable primaryKey = (Serializable) conversion.convertFromString(rawValue, primaryKeyType);
 
                     realPropertyName = propertyName;
-                    value = genericDAO.read(primaryKey);
+                    value = crudService.read(primaryKey);
 
                     break;
                 default:
@@ -589,4 +601,62 @@ public class RESTController extends AbstractRESTController {
         return newParameters;
     }
 
+    private Object executeNamedSearch(CRUDService crudService,String namedSearch, Map<String, Object> filter) throws BusinessException {
+        try {
+            if (filter == null) {
+                filter = new HashMap<String, Object>();
+            }
+
+            Method method = ReflectionUtil.getMethod(crudService.getClass(), namedSearch);
+            if (method == null) {
+                throw new BusinessException(new BusinessMessage(null, "No existe el método " + namedSearch + " en la clase de Servicio: " + crudService.getClass().getName()));
+            }
+
+            NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(crudService.getClass(), namedSearch, NamedSearch.class);
+            if (namedSearchAnnotation == null) {
+                //Vemos si alguno de sus interfaces la tiene
+                Class[] interfaces = crudService.getClass().getInterfaces();
+
+                for (Class interfaze : interfaces) {
+                    namedSearchAnnotation = ReflectionUtil.getAnnotation(interfaze, namedSearch, NamedSearch.class);
+                    if (namedSearchAnnotation != null) {
+                        break;
+                    }
+                }
+
+                if (namedSearchAnnotation == null) {
+                    throw new RuntimeException("No es posible llamar al método '" + crudService.getClass().getName() + "." + namedSearch + "' si no contiene la anotacion NamedSearch");
+                }
+            }
+
+            String[] parameterNames = namedSearchAnnotation.parameterNames();
+            if ((parameterNames == null) && (method.getParameterTypes().length > 0)) {
+                throw new RuntimeException("Es necesario la lista de nombre de parametros para la anotación NameSearch del método:" + crudService.getClass().getName() + "." + namedSearch);
+            }
+
+            if (method.getParameterTypes().length != parameterNames.length) {
+                throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + crudService.getClass().getName() + "." + namedSearch);
+            }
+
+            List args = new ArrayList();
+            for (int i = 0; i < method.getParameterTypes().length; i++) {
+                Object parameterValue = filter.get(parameterNames[i]);
+
+                args.add(parameterValue);
+            }
+
+            Object result = method.invoke(crudService, args.toArray());
+
+            return result;
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    
+    
 }

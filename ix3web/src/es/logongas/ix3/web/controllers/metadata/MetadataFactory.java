@@ -16,13 +16,13 @@
 package es.logongas.ix3.web.controllers.metadata;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.metadata.ValuesList;
+import es.logongas.ix3.service.CRUDService;
+import es.logongas.ix3.service.CRUDServiceFactory;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class MetadataFactory {
 
-    public Metadata getMetadata(es.logongas.ix3.dao.metadata.MetaData metaData, MetaDataFactory metaDataFactory, DAOFactory daoFactory, String basePath,List<String> expand) throws BusinessException {
+    public Metadata getMetadata(es.logongas.ix3.dao.metadata.MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, String basePath,List<String> expand) throws BusinessException {
         Metadata metadata = new Metadata();
         String propertyPath="";
         
@@ -46,7 +46,7 @@ public class MetadataFactory {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
             if ((propertyMetaData.isCollection() == false) || (expandMath(expand, propertyPath+"."+propertyName))) {
-                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, daoFactory, basePath,expand,propertyPath+"."+propertyName);
+                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, basePath,expand,propertyPath+"."+propertyName);
 
                 metadata.getProperties().put(propertyName, property);
             }
@@ -55,7 +55,7 @@ public class MetadataFactory {
         return metadata;
     }
 
-    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, DAOFactory daoFactory, String basePath,List<String> expand,String propertyPath) throws BusinessException {
+    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, String basePath,List<String> expand,String propertyPath) throws BusinessException {
         Property property = new Property();
         property.setType(Type.getTypeFromClass(metaData.getType()));
 
@@ -68,7 +68,7 @@ public class MetadataFactory {
                 MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
                 if ((propertyMetaData.isCollection() == false) || (expandMath(expand, propertyPath+"."+propertyName))) {
-                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, daoFactory, basePath,expand,propertyPath+"."+propertyName);
+                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, basePath,expand,propertyPath+"."+propertyName);
 
                     property.getProperties().put(propertyName, subproperty);
                 }
@@ -86,16 +86,10 @@ public class MetadataFactory {
             ValuesList valuesList = metaData.getConstraints().getValuesList();
 
             if (valuesList.shortLength() == true) {
-                //Los valores no dependen de nada , así que podemos leer los valores directamente
-                GenericDAO genericDAOEntityValuesList = daoFactory.getDAO(valuesList.entity());
-                MetaData metaDataEntityValuesList = metaDataFactory.getMetaData(valuesList.entity());
+                CRUDService crudServiceEntityValuesList = crudServiceFactory.getService(metaData.getType());
+                MetaData metaDataEntityValuesList = metaDataFactory.getMetaData(metaData.getType());
                 String primaryKeyName = metaDataEntityValuesList.getPrimaryKeyPropertyName();
-                List<Object> data;
-                if ((valuesList.namedSearch() != null) && (valuesList.namedSearch().trim().length() > 0)) {
-                    data = (List<Object>) genericDAOEntityValuesList.namedSearch(valuesList.namedSearch(), null);
-                } else {
-                    data = genericDAOEntityValuesList.search(null);
-                }
+                List<Object> data = crudServiceEntityValuesList.search(null);
                 property.setValues(getValuesFromData(data, primaryKeyName));
             } else {
                 property.setValues(null);
