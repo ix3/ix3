@@ -20,6 +20,6 @@ package es.logongas.ix3.service;
  *
  * @author Lorenzo
  */
-public interface ServiceFactory {
-    GenericService getService(Class entityClass);
+public interface CRUDServiceFactory {
+    CRUDService getService(Class entityClass);
 }

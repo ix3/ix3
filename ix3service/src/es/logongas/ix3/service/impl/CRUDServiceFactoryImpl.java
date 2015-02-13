@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package es.logongas.ix3.service.impl;
 
-import es.logongas.ix3.service.GenericService;
-import es.logongas.ix3.service.ServiceFactory;
+import es.logongas.ix3.service.CRUDService;
+import es.logongas.ix3.service.CRUDServiceFactory;
 import es.logongas.ix3.util.FactoryHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -26,23 +25,23 @@ import org.springframework.context.ApplicationContext;
  *
  * @author Lorenzo
  */
-public class ServiceFactoryImpl implements ServiceFactory {
-    
-    private String domainBasePackageName ;
+public class CRUDServiceFactoryImpl implements CRUDServiceFactory {
+
+    private String domainBasePackageName;
     private String interfaceBasePackageName;
     private String implBasePackageName;
-    private String implSubPackageName="impl";
-    private String interfaceSufix="Service";
-    private String implSufix="ServiceImplHibernate"; 
-    private final Class<? extends GenericService> defaultImplClass = GenericServiceImpl.class;
-    
+    private String implSubPackageName = "impl";
+    private String interfaceSufix = "CRUDService";
+    private String implSufix = "CRUDServiceImpl";
+    private final Class<? extends CRUDService> defaultImplClass = CRUDServiceImpl.class;
+
     @Autowired
     private ApplicationContext context;
-    
+
     @Override
-    public GenericService getService(Class entityClass) {
-        FactoryHelper<GenericService> factoryHelper=new FactoryHelper<GenericService>(domainBasePackageName, interfaceBasePackageName, implBasePackageName,implSubPackageName, interfaceSufix, implSufix, defaultImplClass, context);
-        
+    public CRUDService getService(Class entityClass) {
+        FactoryHelper<CRUDService> factoryHelper = new FactoryHelper<CRUDService>(domainBasePackageName, interfaceBasePackageName, implBasePackageName, implSubPackageName, interfaceSufix, implSufix, defaultImplClass, context);
+
         return factoryHelper.getImpl(entityClass);
     }
 

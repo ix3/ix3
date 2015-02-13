@@ -23,7 +23,7 @@ limitations under the License.
 ">     
     
     <!-- Hay que ponerlo en cada aplicacion que hagamos -->
-    <!--<bean class="es.logongas.ix3.service.impl.ServiceFactoryImpl" >
+    <!--<bean class="es.logongas.ix3.service.impl.CRUDServiceFactoryImpl" >
         <property name="domainBasePackageName"     value="Nombre del paquete de las clases de negocio o de dominio" />
         <property name="interfaceBasePackageName"  value="Nombre del paquete de los interfaces Service" />
         <property name="implBasePackageName"       value="Nombre del paquete de las implementaciones de los interfaces Service" />
