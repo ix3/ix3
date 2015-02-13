@@ -41,23 +41,7 @@ public @interface ValuesList {
      * @return Si vale <code>true</code> la lista contiene pocos elementos.
      */
     boolean shortLength() default false;
-    
-    /**
-     * Nombre de la entidad de cuyo DAO obtener obtener los datos.Por defecto es
-     * del tipo de la propiedad o del tipo que retorna el método
-     *
-     * @return
-     */
-    Class entity() default DEFAULT.class;
 
-    /**
-     * En caso de querer consultas que no sea simplemente la lista de todas las
-     * entidades, aqui pondremos el nombre de un método DAO de la entidad
-     * correspondiente
-     *
-     * @return
-     */
-    String namedSearch() default "";
     
     static final class DEFAULT {} ;
 }
