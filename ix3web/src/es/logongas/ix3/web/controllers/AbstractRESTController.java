@@ -16,9 +16,6 @@
 package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.core.conversion.Conversion;
-import es.logongas.ix3.dao.DAOFactory;
-import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.web.json.JsonFactory;
 import es.logongas.ix3.web.json.JsonWriter;
 import java.util.ArrayList;
@@ -34,13 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class AbstractRESTController {
 
     protected final String PARAMETER_EXPAND = "$expand";
-
-    @Autowired
-    protected DAOFactory daoFactory;
-    @Autowired
-    protected MetaDataFactory metaDataFactory;
-    @Autowired
-    protected Conversion conversion;
+    
     @Autowired
     protected JsonFactory jsonFactory;
 
