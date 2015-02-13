@@ -30,22 +30,5 @@ public interface ValuesList {
      * Si la cantidad de datos es excesiva nunca debería ser <code>true</code>.
      * @return Si vale <code>true</code> la lista contiene pocos elementos.
      */
-    boolean shortLength();
-    
-    /**
-     * Nombre de la entidad de cuyo DAO obtener obtener los datos.Por defecto es
-     * del tipo de la propiedad o del tipo que retorna el método
-     *
-     * @return
-     */
-    Class entity();
-
-    /**
-     * En caso de querer consultas que no sea simplemente la lista de todas las
-     * entidades, aqui pondremos el nombre de un servicio de la entidad
-     * correspondiente
-     *
-     * @return
-     */
-    String namedSearch();    
+    boolean shortLength();   
 }

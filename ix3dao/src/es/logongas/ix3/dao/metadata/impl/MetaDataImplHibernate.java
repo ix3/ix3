@@ -394,11 +394,6 @@ public class MetaDataImplHibernate implements MetaData {
         if (valuesList != null) {
             ValuesListImpl valuesListImpl = new ValuesListImpl();
             valuesListImpl.shortLength = valuesList.shortLength();
-            valuesListImpl.namedSearch = valuesList.namedSearch();
-            valuesListImpl.entity = valuesList.entity();
-            if (valuesListImpl.entity == es.logongas.ix3.core.annotations.ValuesList.DEFAULT.class) {
-                valuesListImpl.entity = this.getType();
-            }
             constraints.valuesList = valuesListImpl;
         } else {
             constraints.valuesList = null;
@@ -462,23 +457,10 @@ public class MetaDataImplHibernate implements MetaData {
     class ValuesListImpl implements ValuesList {
 
         boolean shortLength;
-        Class entity;
-        String namedSearch;
 
         @Override
         public boolean shortLength() {
             return shortLength;
-        }
-
-        @Override
-        public Class entity() {
-            return entity;
-        }
-
-
-        @Override
-        public String namedSearch() {
-            return namedSearch;
         }
 
     }
