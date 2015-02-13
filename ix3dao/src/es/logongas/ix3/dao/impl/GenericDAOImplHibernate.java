@@ -471,63 +471,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public Object namedSearch(String namedSearch, Map<String, Object> filter) throws BusinessException {
-        try {
-            if (filter == null) {
-                filter = new HashMap<String, Object>();
-            }
-
-            Method method = ReflectionUtil.getMethod(this.getClass(), namedSearch);
-            if (method == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe el método " + namedSearch + " en la clase DAO: " + this.getClass().getName()));
-            }
-
-            NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(this.getClass(), namedSearch, NamedSearch.class);
-            if (namedSearchAnnotation == null) {
-                //Vemos si alguno de sus interfaces la tiene
-                Class[] interfaces = this.getClass().getInterfaces();
-
-                for (Class interfaze : interfaces) {
-                    namedSearchAnnotation = ReflectionUtil.getAnnotation(interfaze, namedSearch, NamedSearch.class);
-                    if (namedSearchAnnotation != null) {
-                        break;
-                    }
-                }
-
-                if (namedSearchAnnotation == null) {
-                    throw new RuntimeException("No es posible llamar al método '" + this.getClass().getName() + "." + namedSearch + "' si no contiene la anotacion NamedSearch");
-                }
-            }
-
-            String[] parameterNames = namedSearchAnnotation.parameterNames();
-            if ((parameterNames == null) && (method.getParameterTypes().length > 0)) {
-                throw new RuntimeException("Es necesario la lista de nombre de parametros para la anotación NameSearch del método:" + this.getClass().getName() + "." + namedSearch);
-            }
-
-            if (method.getParameterTypes().length != parameterNames.length) {
-                throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + this.getClass().getName() + "." + namedSearch);
-            }
-
-            List args = new ArrayList();
-            for (int i = 0; i < method.getParameterTypes().length; i++) {
-                Object parameterValue = filter.get(parameterNames[i]);
-
-                args.add(parameterValue);
-            }
-
-            Object result = method.invoke(this, args.toArray());
-
-            return result;
-        } catch (RuntimeException ex) {
-            throw ex;
-        } catch (BusinessException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    @Override
     final public EntityType readByNaturalKey(Object naturalKey) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
         try {
