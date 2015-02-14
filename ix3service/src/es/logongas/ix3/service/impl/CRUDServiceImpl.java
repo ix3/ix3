@@ -21,6 +21,7 @@ import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.core.Page;
+import es.logongas.ix3.dao.TransactionManager;
 import es.logongas.ix3.security.authentication.Principal;
 import es.logongas.ix3.service.CRUDService;
 import java.io.Serializable;
@@ -44,6 +45,9 @@ public class CRUDServiceImpl<EntityType,PrimaryKeyType extends Serializable> imp
     @Autowired 
     protected DAOFactory daoFactory;
 
+    @Autowired
+    protected TransactionManager transactionManager;
+    
     Class entityType;
 
     protected final Log log = LogFactory.getLog(getClass());
