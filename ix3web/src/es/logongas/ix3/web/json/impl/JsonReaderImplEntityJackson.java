@@ -23,7 +23,9 @@ import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
+import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.json.JsonReader;
+import es.logongas.ix3.web.json.annotations.ForbiddenImport;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -33,8 +35,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -186,6 +186,13 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
+
+            //Ver si la propiedad está prohibida cargarla
+            ForbiddenImport forbiddenImport = ReflectionUtil.getAnnotation(entity.getClass(), propertyName, ForbiddenImport.class);
+            if (forbiddenImport != null) {
+                //No se puede cargar esa propiedad desde el "exterior"
+                continue;
+            }
 
             if (propertyMetaData.isCollection() == false) {
                 switch (propertyMetaData.getMetaType()) {

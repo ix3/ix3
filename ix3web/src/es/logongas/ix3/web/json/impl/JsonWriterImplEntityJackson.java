@@ -22,7 +22,9 @@ import es.logongas.ix3.core.Page;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.metadata.MetaType;
+import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.json.JsonWriter;
+import es.logongas.ix3.web.json.annotations.ForbiddenExport;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -142,6 +144,14 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
+            ForbiddenExport forbiddenExport=ReflectionUtil.getAnnotation(obj.getClass(), propertyName, ForbiddenExport.class);
+            if (forbiddenExport!=null) {
+                    //No se puede generar esa propiedad al "exterior"
+                    continue;
+
+            }            
+            
+            
             Object value;
 
             if (propertyMetaData.isCollection() == false) {
