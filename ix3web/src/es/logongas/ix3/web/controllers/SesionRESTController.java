@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @author Lorenzo González
  */
 @Controller
-public class SesionController extends AbstractRESTController {
+public class SesionRESTController extends AbstractRESTController {
 
     @Autowired
     AuthenticationManager authenticationManager;
