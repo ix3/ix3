@@ -16,9 +16,7 @@
 package es.logongas.ix3.dao.impl;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.core.BusinessMessage;
 import es.logongas.ix3.dao.GenericDAO;
-import es.logongas.ix3.dao.NamedSearch;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.Page;
 import es.logongas.ix3.dao.TransactionManager;
@@ -26,11 +24,9 @@ import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.util.ReflectionUtil;
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.logging.Log;
