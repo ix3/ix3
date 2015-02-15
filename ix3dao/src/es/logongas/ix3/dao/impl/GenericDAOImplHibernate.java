@@ -19,6 +19,8 @@ import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.Page;
+import es.logongas.ix3.dao.Filter;
+import es.logongas.ix3.dao.FilterOperator;
 import es.logongas.ix3.dao.TransactionManager;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
@@ -351,22 +353,22 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public List<EntityType> search(Map<String, Object> filter) throws BusinessException {
-        return search(filter, null);
+    final public List<EntityType> search(List<Filter> filters) throws BusinessException {
+        return search(filters, null);
     }
 
     @Override
-    final public List<EntityType> search(Map<String, Object> filter, List<Order> orders) throws BusinessException {
-        return pageableSearch(filter, orders, 0, Integer.MAX_VALUE).getContent();
+    final public List<EntityType> search(List<Filter> filters, List<Order> orders) throws BusinessException {
+        return pageableSearch(filters, orders, 0, Integer.MAX_VALUE).getContent();
     }
 
     @Override
-    public Page<EntityType> pageableSearch(Map<String, Object> filter, int pageNumber, int pageSize) throws BusinessException {
-        return pageableSearch(filter, null, pageNumber, pageSize);
+    public Page<EntityType> pageableSearch(List<Filter> filters, int pageNumber, int pageSize) throws BusinessException {
+        return pageableSearch(filters, null, pageNumber, pageSize);
     }
 
     @Override
-    public Page<EntityType> pageableSearch(Map<String, Object> filter, List<Order> orders, int pageNumber, int pageSize) throws BusinessException {
+    public Page<EntityType> pageableSearch(List<Filter> filters, List<Order> orders, int pageNumber, int pageSize) throws BusinessException {
 
         if (pageNumber < 0) {
             throw new RuntimeException("El agumento pageNumber no pude ser negativo");
@@ -381,24 +383,35 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         Session session = sessionFactory.getCurrentSession();
         try {
             Criteria criteria = session.createCriteria(getEntityMetaData().getType());
-            if (filter != null) {
-                for (String propertyName : filter.keySet()) {
-                    Object value = filter.get(propertyName);
-
-                    if (value instanceof Object[]) {
-                        criteria.add(Restrictions.in(propertyName, (Object[]) value));
-                    } else if (value instanceof Collection) {
-                        criteria.add(Restrictions.in(propertyName, (Collection) value));
-                    } else {
-                        if (String.class.isAssignableFrom(getEntityMetaData().getPropertiesMetaData().get(propertyName).getType())) {
-                            if ((value != null) && (((String) value).trim().equals("") == false)) {
-                                criteria.add(Restrictions.like(propertyName, "%" + value + "%"));
-                            }
+            if (filters != null) {
+                for (Filter filter : filters) {
+                    Object value = filter.getValue();
+                    String propertyName=filter.getPropertyName();
+                    FilterOperator filterOperator=filter.getFilterOperator();
+                    
+                    
+                    if (filterOperator==FilterOperator.eq)   {  
+                        if (value instanceof Object[]) {
+                            criteria.add(Restrictions.in(propertyName, (Object[]) value));
+                        } else if (value instanceof Collection) {
+                            criteria.add(Restrictions.in(propertyName, (Collection) value));
                         } else {
-                            if (value != null) {
-                                criteria.add(Restrictions.eq(propertyName, value));
-                            }
+                            criteria.add(Restrictions.eq(propertyName, value));
                         }
+                    } else if (filterOperator==FilterOperator.ne)   {  
+                        criteria.add(Restrictions.ne(propertyName, value));   
+                    } else if (filterOperator==FilterOperator.gt)   {  
+                        criteria.add(Restrictions.gt(propertyName, value));                         
+                    } else if (filterOperator==FilterOperator.ge)   {  
+                        criteria.add(Restrictions.ge(propertyName, value));                         
+                    } else if (filterOperator==FilterOperator.lt)   {  
+                        criteria.add(Restrictions.lt(propertyName, value));                         
+                    } else if (filterOperator==FilterOperator.le)   {  
+                        criteria.add(Restrictions.le(propertyName, value)); 
+                    } else if (filterOperator==FilterOperator.like)   {  
+                        criteria.add(Restrictions.like(propertyName, value));                         
+                    } else {
+                        throw new RuntimeException("El nombre del operador no es válido:"+filterOperator );
                     }
                 }
             }

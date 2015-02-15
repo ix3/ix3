@@ -36,8 +36,8 @@ public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable> {
     boolean update(EntityType entity) throws BusinessException;
     boolean delete(PrimaryKeyType primaryKey) throws BusinessException;
     EntityType readByNaturalKey(Object value) throws BusinessException;
-    List<EntityType> search(Map<String,Object> filter) throws BusinessException;
-    List<EntityType> search(Map<String,Object> filter,List<Order> orders) throws BusinessException;
-    Page<EntityType> pageableSearch(Map<String,Object> filter,int pageNumber,int pageSize) throws BusinessException;
-    Page<EntityType> pageableSearch(Map<String,Object> filter,List<Order> orders,int pageNumber,int pageSize) throws BusinessException;    
+    List<EntityType> search(List<Filter> filters) throws BusinessException;
+    List<EntityType> search(List<Filter> filters,List<Order> orders) throws BusinessException;
+    Page<EntityType> pageableSearch(List<Filter> filters,int pageNumber,int pageSize) throws BusinessException;
+    Page<EntityType> pageableSearch(List<Filter> filters,List<Order> orders,int pageNumber,int pageSize) throws BusinessException;    
 }
