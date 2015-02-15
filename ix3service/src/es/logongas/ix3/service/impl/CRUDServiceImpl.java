@@ -18,9 +18,11 @@
 package es.logongas.ix3.service.impl;
 
 import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.core.Order;
 import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.core.Page;
+import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.TransactionManager;
 import es.logongas.ix3.security.authentication.Principal;
 import es.logongas.ix3.service.CRUDService;
@@ -103,22 +105,22 @@ public class CRUDServiceImpl<EntityType,PrimaryKeyType extends Serializable> imp
     }
 
     @Override
-    public List search(Map filter) throws BusinessException {
-        return getDAO().search(filter);
+    public List search(List<Filter> filters) throws BusinessException {
+        return getDAO().search(filters);
     }
 
     @Override
-    public List search(Map filter, List orders) throws BusinessException {
-        return getDAO().search(filter, orders);
+    public List<EntityType> search(List<Filter> filters, List<Order> orders) throws BusinessException {
+        return getDAO().search(filters, orders);
     }
 
     @Override
-    public Page pageableSearch(Map filter, int pageNumber, int pageSize) throws BusinessException {
-        return getDAO().pageableSearch(filter, pageNumber, pageSize);
+    public Page pageableSearch(List<Filter> filters, int pageNumber, int pageSize) throws BusinessException {
+        return getDAO().pageableSearch(filters, pageNumber, pageSize);
     }
 
     @Override
-    public Page pageableSearch(Map filter, List orders, int pageNumber, int pageSize) throws BusinessException {
-        return getDAO().pageableSearch(filter, orders, pageNumber, pageSize);
+    public Page pageableSearch(List<Filter> filters, List<Order> orders, int pageNumber, int pageSize) throws BusinessException {
+        return getDAO().pageableSearch(filters, orders, pageNumber, pageSize);
     }
 }
