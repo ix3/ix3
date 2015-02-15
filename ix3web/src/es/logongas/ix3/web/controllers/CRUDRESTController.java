@@ -21,6 +21,8 @@ import es.logongas.ix3.dao.NamedSearch;
 import es.logongas.ix3.core.OrderDirection;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.conversion.Conversion;
+import es.logongas.ix3.dao.Filter;
+import es.logongas.ix3.dao.FilterOperator;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.metadata.MetaType;
@@ -113,15 +115,15 @@ public class CRUDRESTController extends AbstractRESTController {
                     throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
                 }
                 CRUDService crudService=crudServiceFactory.getService(metaData.getType());
-                Map<String, Object> filter = getFilterSearchFromParameters(httpServletRequest, metaData);
+                List<Filter> filters = getFiltersSearchFromParameters(httpServletRequest, metaData);
                 List<Order> orders = getOrders(metaData, httpServletRequest.getParameter(PARAMETER_ORDERBY));
                 Integer pageSize = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGESIZE));
                 Integer pageNumber = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGENUMBER));
                 Object entity;
                 if ((pageSize == null) && (pageNumber == null)) {
-                    entity = crudService.search(filter, orders);
+                    entity = crudService.search(filters, orders);
                 } else if ((pageSize != null) && (pageNumber != null)) {
-                    entity = crudService.pageableSearch(filter, orders, pageNumber, pageSize);
+                    entity = crudService.pageableSearch(filters, orders, pageNumber, pageSize);
                 } else {
                     throw new RuntimeException("Los datos de la paginacion no son correctos, es necesario los 2 datos:" + PARAMETER_PAGENUMBER + " y " + PARAMETER_PAGESIZE);
                 }
@@ -354,31 +356,35 @@ public class CRUDRESTController extends AbstractRESTController {
         return orders;
     }
 
-    private Map<String, Object> getFilterSearchFromParameters(HttpServletRequest httpServletRequest, MetaData metaData) {
-        Map<String, Object> filter = new HashMap<String, Object>();
+    private List<Filter> getFiltersSearchFromParameters(HttpServletRequest httpServletRequest, MetaData metaData) {
+        List<Filter> filters = new ArrayList<Filter>();
         Enumeration<String> enumeration = httpServletRequest.getParameterNames();
         while (enumeration.hasMoreElements()) {
-            String propertyName = enumeration.nextElement();
-            MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
+            String rawPropertyName = enumeration.nextElement();
+            Filter filter=getFilterFromPropertyName(rawPropertyName);
+            
+            MetaData propertyMetaData = metaData.getPropertiesMetaData().get(filter.getPropertyName());
             if (propertyMetaData != null) {
                 Class propertyType = propertyMetaData.getType();
-                String[] parameterValues = httpServletRequest.getParameterValues(propertyName);
+                String[] parameterValues = httpServletRequest.getParameterValues(rawPropertyName);
                 if (parameterValues.length == 1) {
                     Object value = conversion.convertFromString(parameterValues[0], propertyType);
                     if (value != null) {
-                        filter.put(propertyName, value);
+                        filter.setValue(value);
+                        filters.add(filter);
                     }
                 } else {
                     List<Object> values = new ArrayList<Object>();
                     for (String parameterValue : parameterValues) {
                         values.add(conversion.convertFromString(parameterValue, propertyType));
                     }
-                    filter.put(propertyName, values);
+                    filter.setValue(values);
+                    filters.add(filter);
                 }
             }
         }
 
-        return filter;
+        return filters;
     }
 
     private Map<String, Object> getFilterNamedSearchFromParameters(CRUDService crudService, String methodName, Map<String, String[]> parametersMap) throws BusinessException {
@@ -657,6 +663,40 @@ public class CRUDRESTController extends AbstractRESTController {
         }
     }
     
-    
+    private Filter getFilterFromPropertyName(String rawPropertyName) {
+        FilterOperator filterOperator;
+        String propertyName;
+        
+        if (rawPropertyName.endsWith("__")) {
+            filterOperator=null;
+            propertyName=null;
+            
+            for(FilterOperator searcherfilterOperator: FilterOperator.values()) {
+                String end="__"+searcherfilterOperator.name().toUpperCase()+"__";
+                if (rawPropertyName.endsWith(end)) {
+                    filterOperator=searcherfilterOperator;
+                    propertyName = rawPropertyName.substring(0, rawPropertyName.length() - end.length());
+                    break;
+                }
+            }
+            
+            if (filterOperator==null) {
+                if (rawPropertyName.matches("__[a-zA-Z]__$")) {
+                    throw new RuntimeException("El formato del modificado no es valido:"+rawPropertyName);
+                } else {
+                    filterOperator=FilterOperator.eq;
+                    propertyName=rawPropertyName;
+                }
+            }
+            
+        } else {
+            filterOperator=FilterOperator.eq;
+            propertyName=rawPropertyName;
+        }
+        
+        return new Filter(propertyName,null, filterOperator);
+        
+    }
+        
     
 }
