@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.logongas.ix3.dao;
+package es.logongas.ix3.service;
 
 import java.lang.annotation.Documented;
 import static java.lang.annotation.ElementType.METHOD;

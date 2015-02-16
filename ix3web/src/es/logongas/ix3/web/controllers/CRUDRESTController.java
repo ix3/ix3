@@ -17,7 +17,7 @@ package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.core.BusinessMessage;
-import es.logongas.ix3.dao.NamedSearch;
+import es.logongas.ix3.service.NamedSearch;
 import es.logongas.ix3.core.OrderDirection;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.conversion.Conversion;
