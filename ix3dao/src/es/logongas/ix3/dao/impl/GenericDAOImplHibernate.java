@@ -34,6 +34,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projection;
@@ -382,80 +383,30 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
         Session session = sessionFactory.getCurrentSession();
         try {
-            Criteria criteria = session.createCriteria(getEntityMetaData().getType());
-            if (filters != null) {
-                for (Filter filter : filters) {
-                    Object value = filter.getValue();
-                    String propertyName=filter.getPropertyName();
-                    FilterOperator filterOperator=filter.getFilterOperator();
-                    
-                    
-                    if (filterOperator==FilterOperator.eq)   {  
-                        if (value instanceof Object[]) {
-                            criteria.add(Restrictions.in(propertyName, (Object[]) value));
-                        } else if (value instanceof Collection) {
-                            criteria.add(Restrictions.in(propertyName, (Collection) value));
-                        } else {
-                            criteria.add(Restrictions.eq(propertyName, value));
-                        }
-                    } else if (filterOperator==FilterOperator.ne)   {  
-                        criteria.add(Restrictions.ne(propertyName, value));   
-                    } else if (filterOperator==FilterOperator.gt)   {  
-                        criteria.add(Restrictions.gt(propertyName, value));                         
-                    } else if (filterOperator==FilterOperator.ge)   {  
-                        criteria.add(Restrictions.ge(propertyName, value));                         
-                    } else if (filterOperator==FilterOperator.lt)   {  
-                        criteria.add(Restrictions.lt(propertyName, value));                         
-                    } else if (filterOperator==FilterOperator.le)   {  
-                        criteria.add(Restrictions.le(propertyName, value)); 
-                    } else if (filterOperator==FilterOperator.like)   {  
-                        criteria.add(Restrictions.like(propertyName, value));                         
-                    } else {
-                        throw new RuntimeException("El nombre del operador no es válido:"+filterOperator );
-                    }
-                }
-            }
-
-            if (orders != null) {
-                for (Order order : orders) {
-                    org.hibernate.criterion.Order criteriaOrder;
-
-                    switch (order.getOrderDirection()) {
-                        case Ascending:
-                            criteriaOrder = org.hibernate.criterion.Order.asc(order.getFieldName());
-                            break;
-                        case Descending:
-                            criteriaOrder = org.hibernate.criterion.Order.desc(order.getFieldName());
-                            break;
-                        default:
-                            throw new RuntimeException("orderField.getOrder() desconocido" + order.getOrderDirection());
-                    }
-                    criteria.addOrder(criteriaOrder);
-                }
-            }
+            String sqlPartFrom = " FROM " + getEntityMetaData().getType().getSimpleName() + " e ";
+            String sqlPartWhere=sqlPartWhere(filters);
+            String sqlPartOrderBy = sqlPartOrder(orders);
 
             List results;
             int totalPages;
             if ((pageSize == Integer.MAX_VALUE) && (pageNumber == 0)) {
                 //Si el tamaño de página es tan gande (el máximo), seguro que no hace falta paginar
-                results = criteria.list();
+                Query queryDatos = session.createQuery("SELECT  e " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
+                setFilterParameters(queryDatos, filters);
+                results = queryDatos.list();
+                
                 totalPages = 1;
             } else {
-                CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
+                Query queryDatos = session.createQuery("SELECT  e " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
+                queryDatos.setMaxResults(pageSize);
+                queryDatos.setFirstResult(pageSize * pageNumber);
+                setFilterParameters(queryDatos, filters);
+                results = queryDatos.list();
 
-                Projection originalProjection = criteriaImpl.getProjection();
-                ResultTransformer originalResultTransformer = criteriaImpl.getResultTransformer();
-
-                criteria.setProjection(Projections.rowCount());
-                Long totalCount = (Long) criteria.uniqueResult();
-
-                criteria.setProjection(originalProjection);
-                criteria.setResultTransformer(originalResultTransformer);
-
-                criteria.setMaxResults(pageSize);
-                criteria.setFirstResult(pageSize * pageNumber);
-
-                results = criteria.list();
+                //Vamos ahora a calcular el total de páginas
+                Query queryCount = session.createQuery("SELECT  COUNT(e) " + sqlPartFrom + " " + sqlPartWhere.toString());
+                setFilterParameters(queryCount, filters);
+                Long totalCount = (Long) queryCount.uniqueResult();
 
                 if (totalCount == 0) {
                     totalPages = 0;
@@ -555,6 +506,111 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
+    }
+
+    /**
+     * Establecer los parámetros de las consultas de Query
+     *
+     * @param query
+     * @param filters
+     */
+    private void setFilterParameters(Query query, List<Filter> filters) {
+        if (filters != null) {
+            for (int i = 0; i < filters.size(); i++) {
+                Object value = filters.get(i).getValue();
+                if (value instanceof Object[]) {
+                    query.setParameterList("bind" + i, (Object[]) value);
+                } else if (value instanceof Collection) {
+                    query.setParameterList("bind" + i, (Collection) value);
+                } else {
+                    query.setParameter("bind" + i, value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Obtener la parte de la SQL relativa al ORDER BY
+     *
+     * @param orders
+     * @return
+     */
+    private String sqlPartOrder(List<Order> orders) {
+        StringBuilder sbOrder = new StringBuilder();
+        if ((orders != null) && (orders.size() > 0)) {
+            sbOrder.append(" ORDER BY ");
+            for (int i = 0; i < orders.size(); i++) {
+                Order order = orders.get(i);
+
+                if (i > 0) {
+                    sbOrder.append(",");
+                }
+
+                sbOrder.append(order.getFieldName());
+
+                switch (order.getOrderDirection()) {
+                    case Ascending:
+                        sbOrder.append(" ASC ");
+                        break;
+                    case Descending:
+                        sbOrder.append(" DESC ");
+                        break;
+                    default:
+                        throw new RuntimeException("orderField.getOrder() desconocido" + order.getOrderDirection());
+                }
+
+            }
+        }
+
+        return sbOrder.toString();
+    }
+
+    /**
+     * Obtener la parte relativa al WHERE
+     * @param filters
+     * @return 
+     */
+    private String sqlPartWhere(List<Filter> filters) {
+
+        StringBuilder sqlWhere = new StringBuilder();
+        sqlWhere.append(" WHERE 1=1 ");
+
+        if (filters != null) {
+            for (int i = 0; i < filters.size(); i++) {
+                Filter filter = filters.get(i);
+                Object value = filter.getValue();
+                String propertyName = filter.getPropertyName();
+                FilterOperator filterOperator = filter.getFilterOperator();
+
+                sqlWhere.append(" AND " + propertyName + " ");
+                if (filterOperator == FilterOperator.eq) {
+                    if (value instanceof Object[]) {
+                        sqlWhere.append(" in (:bind" + i + ")");
+                    } else if (value instanceof Collection) {
+                        sqlWhere.append(" in (:bind" + i + ")");
+                    } else {
+                        sqlWhere.append(" = :bind" + i + "");
+                    }
+                } else if (filterOperator == FilterOperator.ne) {
+                    sqlWhere.append(" != :bind" + i + "");
+                } else if (filterOperator == FilterOperator.gt) {
+                    sqlWhere.append(" > :bind" + i + "");
+                } else if (filterOperator == FilterOperator.ge) {
+                    sqlWhere.append(" >= :bind" + i + "");
+                } else if (filterOperator == FilterOperator.lt) {
+                    sqlWhere.append(" < :bind" + i + "");
+                } else if (filterOperator == FilterOperator.le) {
+                    sqlWhere.append(" <= :bind" + i + "");
+                } else if (filterOperator == FilterOperator.like) {
+                    sqlWhere.append(" like :bind" + i + "");
+                } else {
+                    throw new RuntimeException("El nombre del operador no es válido:" + filterOperator);
+                }
+            }
+        }
+
+        return sqlWhere.toString();
+
     }
 
 }
