@@ -55,6 +55,7 @@ public class ConstraintViolation {
     private String createMessage(String value, Type constraintViolationType) {
         Map<Type,String> messageTemplates=new HashMap<Type,String>();
         messageTemplates.put(Type.DuplicateEntry, "El dato '%s' ya existe");
+        messageTemplates.put(Type.CannotDeleteByForeignKeyConstraint, "No es posible borra la información ya que hay datos relacionados");
 
        return String.format(messageTemplates.get(constraintViolationType), value);
     }
@@ -63,7 +64,8 @@ public class ConstraintViolation {
      * Tipos de restricciones que se comprueban.
      */
     public enum Type {
-        DuplicateEntry
+        DuplicateEntry,
+        CannotDeleteByForeignKeyConstraint
     }
 
 }

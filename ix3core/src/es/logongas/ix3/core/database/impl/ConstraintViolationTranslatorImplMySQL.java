@@ -43,8 +43,9 @@ public class ConstraintViolationTranslatorImplMySQL implements ConstraintViolati
                 //retornamos el propio mensaje.
                 return new ConstraintViolation(null,message);
             }
+        } else if ((errorCode == 1451) && (sqlState.equals("23000"))) {
+            return new ConstraintViolation(null, null,ConstraintViolation.Type.CannotDeleteByForeignKeyConstraint);
         } else {
-            //No sabemos nada de ese error así que debe no retornamos nada
             return null;
         }
     }
