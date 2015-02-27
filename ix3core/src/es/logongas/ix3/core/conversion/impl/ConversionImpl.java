@@ -34,6 +34,17 @@ public class ConversionImpl implements Conversion {
                 return null;
             }
 
+            if (type.isEnum()==true) {
+               Enum[] enums=(Enum[])type.getEnumConstants();
+               for(Enum enumerado: enums) {
+                   if (enumerado.name().equals(value)) {
+                       return enumerado;
+                   }
+               }
+               
+               throw new RuntimeException("El valor '"+ value + "' no forma parte del enumerado:" + type.getName());
+               
+            }
             if ((type == Boolean.TYPE) || (type == Boolean.class)) {
                 return getBooleanFromObject(value);
             }
