@@ -26,5 +26,8 @@ public enum FilterOperator {
     ge,
     lt,
     le,
-    like
+    like,
+    llike,
+    liker,
+    lliker
 }

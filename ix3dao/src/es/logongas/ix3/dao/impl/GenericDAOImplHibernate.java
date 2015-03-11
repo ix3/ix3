@@ -542,7 +542,20 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     private void setFilterParameters(Query query, List<Filter> filters) {
         if (filters != null) {
             for (int i = 0; i < filters.size(); i++) {
-                Object value = filters.get(i).getValue();
+                Filter filter=filters.get(i);
+                Object value = filter.getValue();
+                
+                if (filter.getFilterOperator()==FilterOperator.llike) {
+                    value="%"+filter.getValue()+"";
+                } else if (filter.getFilterOperator()==FilterOperator.liker) {
+                    value=""+filter.getValue()+"%";
+                } else if (filter.getFilterOperator()==FilterOperator.lliker) {
+                    value="%"+filter.getValue()+"%";
+                } else  {
+                    value=filter.getValue();
+                }
+                
+                
                 if (value instanceof Object[]) {
                     query.setParameterList("bind" + i, (Object[]) value);
                 } else if (value instanceof Collection) {
@@ -628,6 +641,12 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                     sqlWhere.append(" <= :bind" + i + "");
                 } else if (filterOperator == FilterOperator.like) {
                     sqlWhere.append(" like :bind" + i + "");
+                } else if (filterOperator == FilterOperator.llike) {
+                    sqlWhere.append(" like :bind" + i + ""); 
+                } else if (filterOperator == FilterOperator.liker) {
+                    sqlWhere.append(" like :bind" + i + "");     
+                } else if (filterOperator == FilterOperator.lliker) {
+                    sqlWhere.append(" like :bind" + i + "");                    
                 } else {
                     throw new RuntimeException("El nombre del operador no es válido:" + filterOperator);
                 }
