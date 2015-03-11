@@ -48,6 +48,10 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     @Autowired
     protected SessionFactory sessionFactory;
+    
+    @Autowired
+    protected SessionFactory sessionFactory2;    
+    
     @Autowired
     protected MetaDataFactory metaDataFactory;
     @Autowired
@@ -275,6 +279,27 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         }
     }
 
+    @Override
+    final public EntityType readOriginal(PrimaryKeyType id) throws BusinessException {
+        Session session = sessionFactory2.getCurrentSession();
+        try {
+            this.preRead(session, id);
+            EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
+            this.postRead(session, id, entity);
+            return entity;
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (javax.validation.ConstraintViolationException cve) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+        } catch (org.hibernate.exception.ConstraintViolationException cve) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }    
+    
     @Override
     final public boolean delete(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
