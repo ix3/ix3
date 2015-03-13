@@ -6,7 +6,7 @@
     <id name="idIdentity">
       <generator class="identity"/>
     </id>
-    <natural-id>
+    <natural-id mutable="true">
       <property name="login"/>
     </natural-id>
     <property name="name"/>
