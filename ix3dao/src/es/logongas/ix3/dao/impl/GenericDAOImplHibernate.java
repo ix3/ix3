@@ -28,6 +28,7 @@ import es.logongas.ix3.util.ReflectionUtil;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -43,15 +44,16 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.transform.ResultTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
 public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializable> implements GenericDAO<EntityType, PrimaryKeyType> {
 
     @Autowired
     protected SessionFactory sessionFactory;
-    
+
     @Autowired
-    protected SessionFactory sessionFactory2;    
-    
+    protected SessionFactory sessionFactory2;
+
     @Autowired
     protected MetaDataFactory metaDataFactory;
     @Autowired
@@ -72,6 +74,10 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         this.entityType = entityType;
     }
 
+    private MetaData getEntityMetaData() {
+        return metaDataFactory.getMetaData(entityType);
+    }    
+    
     @Override
     final public EntityType create() throws BusinessException {
         return create(null);
@@ -279,6 +285,31 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         }
     }
 
+
+    @Override
+    final public EntityType readByNaturalKey(Object naturalKey) throws BusinessException {
+        Session session = sessionFactory.getCurrentSession();
+        try {
+
+            this.preReadByNaturalKey(session, naturalKey);
+            EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(naturalKey);
+            this.postReadByNaturalKey(session, naturalKey, entity);
+            return entity;
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (javax.validation.ConstraintViolationException cve) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+        } catch (org.hibernate.exception.ConstraintViolationException cve) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+    }
+    
+    
     @Override
     final public EntityType readOriginal(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory2.getCurrentSession();
@@ -298,8 +329,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }    
-    
+    }
+
     @Override
     final public boolean delete(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
@@ -408,8 +439,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
         Session session = sessionFactory.getCurrentSession();
         try {
-            String sqlPartFrom = " FROM " + getEntityMetaData().getType().getSimpleName() + " e ";
-            String sqlPartWhere=sqlPartWhere(filters);
+            String sqlPartFrom = sqlPartFrom(filters);
+            String sqlPartWhere = sqlPartWhere(filters);
             String sqlPartOrderBy = sqlPartOrder(orders);
 
             List results;
@@ -419,7 +450,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 Query queryDatos = session.createQuery("SELECT  e " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
                 setFilterParameters(queryDatos, filters);
                 results = queryDatos.list();
-                
+
                 totalPages = 1;
             } else {
                 Query queryDatos = session.createQuery("SELECT  e " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
@@ -429,7 +460,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 results = queryDatos.list();
 
                 //Vamos ahora a calcular el total de páginas
-                Query queryCount = session.createQuery("SELECT  COUNT(e) " + sqlPartFrom + " " + sqlPartWhere.toString());
+                Query queryCount = session.createQuery("SELECT  COUNT(e) " + sqlPartFrom + " " + sqlPartWhere);
                 setFilterParameters(queryCount, filters);
                 Long totalCount = (Long) queryCount.uniqueResult();
 
@@ -455,33 +486,222 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     }
 
-    @Override
-    final public EntityType readByNaturalKey(Object naturalKey) throws BusinessException {
-        Session session = sessionFactory.getCurrentSession();
-        try {
 
-            this.preReadByNaturalKey(session, naturalKey);
-            EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(naturalKey);
-            this.postReadByNaturalKey(session, naturalKey, entity);
-            return entity;
-        } catch (BusinessException ex) {
-            throw ex;
-        } catch (javax.validation.ConstraintViolationException cve) {
-            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
-        } catch (org.hibernate.exception.ConstraintViolationException cve) {
-            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
-        } catch (RuntimeException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+
+    /**
+     * Obtener la parte de la SQL relativa al ORDER BY
+     *
+     * @param orders
+     * @return
+     */
+    private String sqlPartFrom(List<Filter> filters) {
+        StringBuilder sbFrom = new StringBuilder();
+
+        sbFrom.append(" FROM " + getEntityMetaData().getType().getSimpleName() + " e ");
+
+        if (filters != null) {
+            List<JoinProperty> joinsProperties = getJoinsProperties(filters);
+            for (int i = 0; i < joinsProperties.size(); i++) {
+                JoinProperty joinProperty = joinsProperties.get(i);
+
+                if ((joinProperty.join != null) && (joinProperty.join.isEmpty() == false)) {
+                    sbFrom.append(" JOIN e." + joinProperty.join + " j" + i + " ");
+                }
+
+            }
         }
 
+        return sbFrom.toString();
     }
 
-    private MetaData getEntityMetaData() {
-        return metaDataFactory.getMetaData(entityType);
+    /**
+     * Obtener la parte relativa al WHERE
+     *
+     * @param filters
+     * @return
+     */
+    private String sqlPartWhere(List<Filter> filters) {
+
+        StringBuilder sqlWhere = new StringBuilder();
+        sqlWhere.append(" WHERE 1=1 ");
+
+        if (filters != null) {
+
+            List<JoinProperty> joinsProperties = getJoinsProperties(filters);
+
+            for (int i = 0; i < filters.size(); i++) {
+                Filter filter = filters.get(i);
+                JoinProperty joinProperty = joinsProperties.get(i);
+
+                Object value = filter.getValue();
+                String propertyName;
+                if ((joinProperty.join != null) && (joinProperty.join.isEmpty() == false)) {
+                    propertyName = "j" + i + "." + joinProperty.property;
+                } else {
+                    propertyName = "e."+filter.getPropertyName();
+                }
+                FilterOperator filterOperator = filter.getFilterOperator();
+
+                sqlWhere.append(" AND " + propertyName + " ");
+                if (filterOperator == FilterOperator.eq) {
+                    if (value instanceof Object[]) {
+                        sqlWhere.append(" in (:bind" + i + ")");
+                    } else if (value instanceof Collection) {
+                        sqlWhere.append(" in (:bind" + i + ")");
+                    } else {
+                        sqlWhere.append(" = :bind" + i + "");
+                    }
+                } else if (filterOperator == FilterOperator.ne) {
+                    sqlWhere.append(" != :bind" + i + "");
+                } else if (filterOperator == FilterOperator.gt) {
+                    sqlWhere.append(" > :bind" + i + "");
+                } else if (filterOperator == FilterOperator.ge) {
+                    sqlWhere.append(" >= :bind" + i + "");
+                } else if (filterOperator == FilterOperator.lt) {
+                    sqlWhere.append(" < :bind" + i + "");
+                } else if (filterOperator == FilterOperator.le) {
+                    sqlWhere.append(" <= :bind" + i + "");
+                } else if (filterOperator == FilterOperator.like) {
+                    sqlWhere.append(" like :bind" + i + "");
+                } else if (filterOperator == FilterOperator.llike) {
+                    sqlWhere.append(" like :bind" + i + "");
+                } else if (filterOperator == FilterOperator.liker) {
+                    sqlWhere.append(" like :bind" + i + "");
+                } else if (filterOperator == FilterOperator.lliker) {
+                    sqlWhere.append(" like :bind" + i + "");
+                } else {
+                    throw new RuntimeException("El nombre del operador no es válido:" + filterOperator);
+                }
+            }
+        }
+
+        return sqlWhere.toString();
+
     }
 
+    private List<JoinProperty> getJoinsProperties(List<Filter> filters) {
+        List<JoinProperty> joinsProperties = new ArrayList<JoinProperty>();
+
+        for (int i = 0; i < filters.size(); i++) {
+            Filter filter = filters.get(i);
+
+            joinsProperties.add(getJoinProperty(filter));
+        }
+
+        return joinsProperties;
+    }
+
+    private JoinProperty getJoinProperty(Filter filter) {
+        JoinProperty joinProperty = new JoinProperty();
+
+        String[] propertiesName = filter.getPropertyName().split("\\.");
+
+        MetaData currentMetaData = getEntityMetaData();
+        int splitIndex = -1;
+        for (int i = 0; i < propertiesName.length; i++) {
+            currentMetaData = currentMetaData.getPropertyMetaData(propertiesName[i]);
+            if (currentMetaData.isCollection() == true) {
+                
+                if (splitIndex!=-1) {
+                    throw new RuntimeException("No se permite mas de una colección en un filtro where: "+filter.getPropertyName() + " la primera es:" + propertiesName[splitIndex] + " y la segunda es:"+propertiesName[i]);
+                }
+                
+                splitIndex = i;
+            }
+        }
+
+        if (splitIndex == -1) {
+            joinProperty.join = null;
+            joinProperty.property = filter.getPropertyName();
+        } else {
+            joinProperty.join = StringUtils.collectionToDelimitedString(Arrays.asList(Arrays.copyOfRange(propertiesName, 0, splitIndex + 1)), ".");
+            joinProperty.property = StringUtils.collectionToDelimitedString(Arrays.asList(Arrays.copyOfRange(propertiesName, splitIndex+1, propertiesName.length)), ".");
+        }
+
+        return joinProperty;
+    }
+
+    /**
+     * En una HQL contiene los datos del JOIN del FROM y de las propiedades del WHERE
+     * Esto se hace pq es necesario para buscar datos en colecciones
+     * http://stackoverflow.com/questions/24750754/org-hibernate-queryexception-illegal-attempt-to-dereference-collection
+     */
+    private class JoinProperty {
+
+        String join;
+        String property;
+    }
+
+    /**
+     * Obtener la parte de la SQL relativa al ORDER BY
+     *
+     * @param orders
+     * @return
+     */
+    private String sqlPartOrder(List<Order> orders) {
+        StringBuilder sbOrder = new StringBuilder();
+        if ((orders != null) && (orders.size() > 0)) {
+            sbOrder.append(" ORDER BY ");
+            for (int i = 0; i < orders.size(); i++) {
+                Order order = orders.get(i);
+
+                if (i > 0) {
+                    sbOrder.append(",");
+                }
+
+                sbOrder.append(order.getFieldName());
+
+                switch (order.getOrderDirection()) {
+                    case Ascending:
+                        sbOrder.append(" ASC ");
+                        break;
+                    case Descending:
+                        sbOrder.append(" DESC ");
+                        break;
+                    default:
+                        throw new RuntimeException("orderField.getOrder() desconocido" + order.getOrderDirection());
+                }
+
+            }
+        }
+
+        return sbOrder.toString();
+    }
+    
+    /**
+     * Establecer los parámetros de las consultas de Query
+     *
+     * @param query
+     * @param filters
+     */
+    private void setFilterParameters(Query query, List<Filter> filters) {
+        if (filters != null) {
+            for (int i = 0; i < filters.size(); i++) {
+                Filter filter = filters.get(i);
+                Object value = filter.getValue();
+
+                if (filter.getFilterOperator() == FilterOperator.llike) {
+                    value = "%" + filter.getValue() + "";
+                } else if (filter.getFilterOperator() == FilterOperator.liker) {
+                    value = "" + filter.getValue() + "%";
+                } else if (filter.getFilterOperator() == FilterOperator.lliker) {
+                    value = "%" + filter.getValue() + "%";
+                } else {
+                    value = filter.getValue();
+                }
+
+                if (value instanceof Object[]) {
+                    query.setParameterList("bind" + i, (Object[]) value);
+                } else if (value instanceof Collection) {
+                    query.setParameterList("bind" + i, (Collection) value);
+                } else {
+                    query.setParameter("bind" + i, value);
+                }
+            }
+        }
+    }    
+    
+    
     protected void postCreate(Session session, EntityType entity) throws BusinessException {
     }
 
@@ -533,128 +753,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
     }
 
-    /**
-     * Establecer los parámetros de las consultas de Query
-     *
-     * @param query
-     * @param filters
-     */
-    private void setFilterParameters(Query query, List<Filter> filters) {
-        if (filters != null) {
-            for (int i = 0; i < filters.size(); i++) {
-                Filter filter=filters.get(i);
-                Object value = filter.getValue();
-                
-                if (filter.getFilterOperator()==FilterOperator.llike) {
-                    value="%"+filter.getValue()+"";
-                } else if (filter.getFilterOperator()==FilterOperator.liker) {
-                    value=""+filter.getValue()+"%";
-                } else if (filter.getFilterOperator()==FilterOperator.lliker) {
-                    value="%"+filter.getValue()+"%";
-                } else  {
-                    value=filter.getValue();
-                }
-                
-                
-                if (value instanceof Object[]) {
-                    query.setParameterList("bind" + i, (Object[]) value);
-                } else if (value instanceof Collection) {
-                    query.setParameterList("bind" + i, (Collection) value);
-                } else {
-                    query.setParameter("bind" + i, value);
-                }
-            }
-        }
-    }
-
-    /**
-     * Obtener la parte de la SQL relativa al ORDER BY
-     *
-     * @param orders
-     * @return
-     */
-    private String sqlPartOrder(List<Order> orders) {
-        StringBuilder sbOrder = new StringBuilder();
-        if ((orders != null) && (orders.size() > 0)) {
-            sbOrder.append(" ORDER BY ");
-            for (int i = 0; i < orders.size(); i++) {
-                Order order = orders.get(i);
-
-                if (i > 0) {
-                    sbOrder.append(",");
-                }
-
-                sbOrder.append(order.getFieldName());
-
-                switch (order.getOrderDirection()) {
-                    case Ascending:
-                        sbOrder.append(" ASC ");
-                        break;
-                    case Descending:
-                        sbOrder.append(" DESC ");
-                        break;
-                    default:
-                        throw new RuntimeException("orderField.getOrder() desconocido" + order.getOrderDirection());
-                }
-
-            }
-        }
-
-        return sbOrder.toString();
-    }
-
-    /**
-     * Obtener la parte relativa al WHERE
-     * @param filters
-     * @return 
-     */
-    private String sqlPartWhere(List<Filter> filters) {
-
-        StringBuilder sqlWhere = new StringBuilder();
-        sqlWhere.append(" WHERE 1=1 ");
-
-        if (filters != null) {
-            for (int i = 0; i < filters.size(); i++) {
-                Filter filter = filters.get(i);
-                Object value = filter.getValue();
-                String propertyName = filter.getPropertyName();
-                FilterOperator filterOperator = filter.getFilterOperator();
-
-                sqlWhere.append(" AND " + propertyName + " ");
-                if (filterOperator == FilterOperator.eq) {
-                    if (value instanceof Object[]) {
-                        sqlWhere.append(" in (:bind" + i + ")");
-                    } else if (value instanceof Collection) {
-                        sqlWhere.append(" in (:bind" + i + ")");
-                    } else {
-                        sqlWhere.append(" = :bind" + i + "");
-                    }
-                } else if (filterOperator == FilterOperator.ne) {
-                    sqlWhere.append(" != :bind" + i + "");
-                } else if (filterOperator == FilterOperator.gt) {
-                    sqlWhere.append(" > :bind" + i + "");
-                } else if (filterOperator == FilterOperator.ge) {
-                    sqlWhere.append(" >= :bind" + i + "");
-                } else if (filterOperator == FilterOperator.lt) {
-                    sqlWhere.append(" < :bind" + i + "");
-                } else if (filterOperator == FilterOperator.le) {
-                    sqlWhere.append(" <= :bind" + i + "");
-                } else if (filterOperator == FilterOperator.like) {
-                    sqlWhere.append(" like :bind" + i + "");
-                } else if (filterOperator == FilterOperator.llike) {
-                    sqlWhere.append(" like :bind" + i + ""); 
-                } else if (filterOperator == FilterOperator.liker) {
-                    sqlWhere.append(" like :bind" + i + "");     
-                } else if (filterOperator == FilterOperator.lliker) {
-                    sqlWhere.append(" like :bind" + i + "");                    
-                } else {
-                    throw new RuntimeException("El nombre del operador no es válido:" + filterOperator);
-                }
-            }
-        }
-
-        return sqlWhere.toString();
-
-    }
-
+    
+    
 }
