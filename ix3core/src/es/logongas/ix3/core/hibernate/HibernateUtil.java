@@ -17,6 +17,7 @@ package es.logongas.ix3.core.hibernate;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.service.ServiceRegistry;
@@ -32,10 +33,10 @@ public class HibernateUtil {
         configuration.configure();
         configuration.setProperty("hibernate.current_session_context_class", "thread");
 
-        ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
+        ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         sessionFactory = configuration.buildSessionFactory(serviceRegistry);
 
-        ServiceRegistry serviceRegistry2 = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
+        ServiceRegistry serviceRegistry2 = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         sessionFactory2 = configuration.buildSessionFactory(serviceRegistry2);
 
         //new org.hibernate.tool.hbm2ddl.SchemaExport(configuration).setOutputFile("script.sql").setDelimiter(";").create(true, false);
@@ -56,7 +57,6 @@ public class HibernateUtil {
         Session session2 = sessionFactory2.openSession();
         ThreadLocalSessionContext.bind(session2);
     }
-
 
     public static SessionFactory getSessionFactory() {
         if (sessionFactory==null)  {

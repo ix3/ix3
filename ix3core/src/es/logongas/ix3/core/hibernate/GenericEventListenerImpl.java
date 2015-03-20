@@ -16,6 +16,7 @@
 package es.logongas.ix3.core.hibernate;
 
 import org.hibernate.event.spi.*;
+import org.hibernate.persister.entity.EntityPersister;
 
 public class GenericEventListenerImpl implements PreInsertEventListener,PreLoadEventListener,PreUpdateEventListener,PreDeleteEventListener,PostInsertEventListener,PostLoadEventListener,PostUpdateEventListener,PostDeleteEventListener {
 
@@ -87,6 +88,11 @@ public class GenericEventListenerImpl implements PreInsertEventListener,PreLoadE
         if (entity instanceof PostDeleteEventListener) {
             ((PostDeleteEventListener)entity).onPostDelete(pde);
         }
+    }
+
+    @Override
+    public boolean requiresPostCommitHanding(EntityPersister ep) {
+        return true;
     }
 
 }
