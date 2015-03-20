@@ -88,7 +88,12 @@ public class CRUDServiceImpl<EntityType,PrimaryKeyType extends Serializable> imp
     public EntityType read(PrimaryKeyType primaryKey) throws BusinessException {
         return getDAO().read(primaryKey);
     }
-
+    
+    @Override
+    public EntityType readOriginal(PrimaryKeyType primaryKey) throws BusinessException {
+        return getDAO().readOriginal(primaryKey);
+    }
+    
     @Override
     public boolean update(EntityType entity) throws BusinessException {
         return getDAO().update(entity);
@@ -103,7 +108,12 @@ public class CRUDServiceImpl<EntityType,PrimaryKeyType extends Serializable> imp
     public EntityType readByNaturalKey(Object value) throws BusinessException {
         return getDAO().readByNaturalKey(value);
     }
-
+    
+    @Override
+    public EntityType readOriginalByNaturalKey(Object value) throws BusinessException {
+        return getDAO().readOriginalByNaturalKey(value);
+    }
+    
     @Override
     public List search(List<Filter> filters) throws BusinessException {
         return getDAO().search(filters);
