@@ -34,15 +34,10 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
+import org.hibernate.CacheMode;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.internal.CriteriaImpl;
-import org.hibernate.transform.ResultTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
@@ -311,11 +306,41 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     
     
     @Override
+    final public EntityType readOriginalByNaturalKey(Object naturalKey) throws BusinessException {
+        Session session = sessionFactory2.getCurrentSession();
+        try {
+            session.setCacheMode(CacheMode.IGNORE);
+            this.preReadByNaturalKey(session, naturalKey);
+            EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(naturalKey);
+            if (entity!=null) {
+                session.evict(entity);
+            }
+            this.postReadByNaturalKey(session, naturalKey, entity);
+            return entity;
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (javax.validation.ConstraintViolationException cve) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+        } catch (org.hibernate.exception.ConstraintViolationException cve) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+    }    
+    
+    @Override
     final public EntityType readOriginal(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory2.getCurrentSession();
         try {
+            session.setCacheMode(CacheMode.IGNORE);            
             this.preRead(session, id);
             EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
+            if (entity!=null) {
+                session.evict(entity);
+            }
             this.postRead(session, id, entity);
             return entity;
         } catch (BusinessException ex) {

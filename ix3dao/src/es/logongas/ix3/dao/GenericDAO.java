@@ -33,12 +33,13 @@ public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable> {
     EntityType create(Map<String,Object> initialProperties) throws BusinessException;
     void insert(EntityType entity) throws BusinessException;
     EntityType read(PrimaryKeyType primaryKey) throws BusinessException;
+    EntityType readOriginal(PrimaryKeyType primaryKey) throws BusinessException;
     boolean update(EntityType entity) throws BusinessException;
     boolean delete(PrimaryKeyType primaryKey) throws BusinessException;
     EntityType readByNaturalKey(Object value) throws BusinessException;
+    EntityType readOriginalByNaturalKey(Object value) throws BusinessException;
     List<EntityType> search(List<Filter> filters) throws BusinessException;
     List<EntityType> search(List<Filter> filters,List<Order> orders) throws BusinessException;
     Page<EntityType> pageableSearch(List<Filter> filters,int pageNumber,int pageSize) throws BusinessException;
     Page<EntityType> pageableSearch(List<Filter> filters,List<Order> orders,int pageNumber,int pageSize) throws BusinessException;   
-    EntityType readOriginal(PrimaryKeyType primaryKey) throws BusinessException;
 }
