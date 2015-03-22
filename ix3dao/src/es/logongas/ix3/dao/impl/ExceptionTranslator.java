@@ -67,7 +67,7 @@ public class ExceptionTranslator {
         if (constraintViolation == null) {
             throw cve;
         } else {
-            businessMessage = new BusinessMessage(null,constraintViolation.getMessage());
+            businessMessage = new BusinessMessage(constraintViolation.getMessage());
         }
 
         businessMessages.add(businessMessage);
