@@ -25,6 +25,10 @@ public class BusinessMessage {
         this.message = message;
     }
 
+    public BusinessMessage(String message) {
+        this.propertyName = null;
+        this.message = message;
+    }
 
 
     @Override
