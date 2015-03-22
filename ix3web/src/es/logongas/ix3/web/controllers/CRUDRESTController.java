@@ -88,7 +88,7 @@ public class CRUDRESTController extends AbstractRESTController {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
-                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+                    throw new BusinessException("No existe la entidad " + entityName);
                 }
 
                 List<String> expand = getExpand(httpServletRequest.getParameter(PARAMETER_EXPAND));
@@ -112,7 +112,7 @@ public class CRUDRESTController extends AbstractRESTController {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
-                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+                    throw new BusinessException("No existe la entidad " + entityName);
                 }
                 CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 List<Filter> filters = getFiltersSearchFromParameters(httpServletRequest, metaData);
@@ -145,7 +145,7 @@ public class CRUDRESTController extends AbstractRESTController {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
-                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+                    throw new BusinessException("No existe la entidad " + entityName);
                 }
                 CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 Map<String, Object> filter = getFilterNamedSearchFromParameters(crudService, namedSearch, removeDollarParameters(httpServletRequest.getParameterMap()));
@@ -167,7 +167,7 @@ public class CRUDRESTController extends AbstractRESTController {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
-                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+                    throw new BusinessException("No existe la entidad " + entityName);
                 }
                 CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 Object entity = crudService.read(id);
@@ -189,13 +189,13 @@ public class CRUDRESTController extends AbstractRESTController {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
-                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+                    throw new BusinessException("No existe la entidad " + entityName);
                 }
                 if (metaData.getPropertiesMetaData().get(child) == null) {
-                    throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "' no existe la propiedad '" + child + "'"));
+                    throw new BusinessException("En la entidad '" + entityName + "' no existe la propiedad '" + child + "'");
                 }
                 if (metaData.getPropertiesMetaData().get(child).isCollection() == false) {
-                    throw new BusinessException(new BusinessMessage(null, "En la entidad '" + entityName + "'  la propiedad '" + child + "' no es una colección"));
+                    throw new BusinessException("En la entidad '" + entityName + "'  la propiedad '" + child + "' no es una colección");
                 }
 
                 CRUDService crudService=crudServiceFactory.getService(metaData.getType());
@@ -225,7 +225,7 @@ public class CRUDRESTController extends AbstractRESTController {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
-                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+                    throw new BusinessException("No existe la entidad " + entityName);
                 }
                 CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 Map<String, Object> initialProperties = getPropertiesFromParameters(metaData, removeDollarParameters(httpServletRequest.getParameterMap()));
@@ -246,7 +246,7 @@ public class CRUDRESTController extends AbstractRESTController {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
-                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+                    throw new BusinessException("No existe la entidad " + entityName);
                 }
                 CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
@@ -269,7 +269,7 @@ public class CRUDRESTController extends AbstractRESTController {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
-                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+                    throw new BusinessException("No existe la entidad " + entityName);
                 }
                 CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
@@ -293,12 +293,12 @@ public class CRUDRESTController extends AbstractRESTController {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
-                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad " + entityName));
+                    throw new BusinessException("No existe la entidad " + entityName);
                 }
                 CRUDService crudService=crudServiceFactory.getService(metaData.getType());
                 boolean deletedSuccess = crudService.delete(id);
                 if (deletedSuccess == false) {
-                    throw new BusinessException(new BusinessMessage(null, "No existe la entidad a borrar"));
+                    throw new BusinessException("No existe la entidad a borrar");
                 }
 
                 return null;
@@ -392,7 +392,7 @@ public class CRUDRESTController extends AbstractRESTController {
 
         Method method = ReflectionUtil.getMethod(crudService.getClass(), methodName);
         if (method == null) {
-            throw new BusinessException(new BusinessMessage(null, "No existe el método " + methodName + " en la clase " + crudService.getClass().getName()));
+            throw new BusinessException("No existe el método " + methodName + " en la clase " + crudService.getClass().getName());
         }
 
         NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(crudService.getClass(), methodName, NamedSearch.class);
@@ -450,20 +450,20 @@ public class CRUDRESTController extends AbstractRESTController {
                 try {
                     primaryKey = (Serializable) conversion.convertFromString(stringParameterValue, primaryKeyType);
                 } catch (Exception ex) {
-                    throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro no tiene el formato adecuado para ser una PK:" + stringParameterValue));
+                    throw new BusinessException("El " + i + "º parámetro no tiene el formato adecuado para ser una PK:" + stringParameterValue);
                 }
 
                 //Y finalmente Leemos la entidad en función de la clave primaria
                 CRUDService crudServiceParameter = crudServiceFactory.getService(parameterType);
                 parameterValue = crudServiceParameter.read(primaryKey);
                 if (parameterValue == null) {
-                    throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro con valor '" + stringParameterValue + "' no es de ninguna entidad."));
+                    throw new BusinessException("El " + i + "º parámetro con valor '" + stringParameterValue + "' no es de ninguna entidad.");
                 }
             } else {
                 try {
                     parameterValue = conversion.convertFromString(stringParameterValue, parameterType);
                 } catch (Exception ex) {
-                    throw new BusinessException(new BusinessMessage(null, "El " + i + "º parámetro no tiene el formato adecuado:" + stringParameterValue));
+                    throw new BusinessException("El " + i + "º parámetro no tiene el formato adecuado:" + stringParameterValue);
                 }
             }
 
@@ -615,7 +615,7 @@ public class CRUDRESTController extends AbstractRESTController {
 
             Method method = ReflectionUtil.getMethod(crudService.getClass(), namedSearch);
             if (method == null) {
-                throw new BusinessException(new BusinessMessage(null, "No existe el método " + namedSearch + " en la clase de Servicio: " + crudService.getClass().getName()));
+                throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio: " + crudService.getClass().getName());
             }
 
             NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(crudService.getClass(), namedSearch, NamedSearch.class);

@@ -58,7 +58,7 @@ public class SesionRESTController extends AbstractRESTController {
                 Principal principal = authenticationManager.authenticate(credentialImplLoginPassword);
 
                 if (principal == null) {
-                    throw new BusinessException(new BusinessMessage(null, "El usuario o contraseña no son válidos"));
+                    throw new BusinessException("El usuario o contraseña no son válidos");
                 }
 
                 //Creamos la sesión y la el sid
