@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package es.logongas.ix3.core.database.impl;
 
 import com.googlecode.flyway.core.Flyway;
@@ -34,25 +33,29 @@ import org.w3c.dom.NodeList;
  */
 public class DatabaseMigrationImplFlywayHibernate implements DatabaseMigration {
 
-
     @Override
     public void migrate(List<String> locations) {
-        String dataSourceName=getDataSourceNameFromHibernate();
-        DataSource dataSource=getDataSource(dataSourceName);
-        
-        Flyway flyway = new Flyway();
-        flyway.setOutOfOrder(true);
-        flyway.setDataSource(dataSource);
-        flyway.setLocations((String[])locations.toArray(new String[0]));
-        flyway.setEncoding("utf-8");
-        flyway.migrate();
-    }
+        String dataSourceName = getDataSourceNameFromHibernate();
+        DataSource dataSource = getDataSource(dataSourceName);
 
+        try {
+            Flyway flyway = new Flyway();
+            flyway.setOutOfOrder(true);
+            flyway.setDataSource(dataSource);
+            flyway.setLocations((String[]) locations.toArray(new String[0]));
+            flyway.setEncoding("utf-8");
+            flyway.migrate();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ex;
+        }
+    }
 
     /**
      * Obtiene un dataource a partir de su nombre
+     *
      * @param dataSourceName
-     * @return 
+     * @return
      */
     public DataSource getDataSource(String dataSourceName) {
 
@@ -73,7 +76,8 @@ public class DatabaseMigrationImplFlywayHibernate implements DatabaseMigration {
 
     /**
      * Obtiene el nombre del datasource que usa hibernate
-     * @return 
+     *
+     * @return
      */
     private String getDataSourceNameFromHibernate() {
         try {
@@ -83,12 +87,12 @@ public class DatabaseMigrationImplFlywayHibernate implements DatabaseMigration {
             documentBuilderFactory.setFeature("http://xml.org/sax/features/namespaces", false);
             documentBuilderFactory.setFeature("http://xml.org/sax/features/validation", false);
             documentBuilderFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
-            documentBuilderFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);          
+            documentBuilderFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
             DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
             Document document = documentBuilder.parse(DatabaseMigrationImplFlywayHibernate.class.getResourceAsStream("/hibernate.cfg.xml"));
-            
+
             document.getDocumentElement().normalize();
-            
+
             NodeList nodeList = document.getElementsByTagName("property");
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
@@ -99,13 +103,13 @@ public class DatabaseMigrationImplFlywayHibernate implements DatabaseMigration {
                     }
                 }
             }
-            
+
             return null;
-            
+
         } catch (RuntimeException rex) {
             throw rex;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }    
+    }
 }
