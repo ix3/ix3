@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.GenericDAO;
+import es.logongas.ix3.dao.metadata.CollectionType;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.util.ReflectionUtil;
@@ -31,7 +32,9 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -238,12 +241,25 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                             Collection currentCollection = (Collection) getValueFromBean(entity, propertyName);
 
                             //Borramos todos los elementos para añadir despues los que vienen desde JSON
-                            currentCollection.clear();
-
+                            if (currentCollection!=null) {
+                                currentCollection.clear();
+                            } else {
+                                //Si no hay coleccion hay que crearla aqui
+                                if (propertyMetaData.getCollectionType()==CollectionType.List) {
+                                    currentCollection=new ArrayList();
+                                } else if (propertyMetaData.getCollectionType()==CollectionType.Set) {
+                                    currentCollection=new HashSet();
+                                } else {
+                                    throw new RuntimeException("El tipo coneccion no es válida:" + propertyMetaData.getCollectionType());
+                                }
+                                setValueToBean(entity, currentCollection, propertyName);
+                            }
                             //Añadimos los elementos que vienen desde JSON
-                            for (Object rawValue : rawCollection) {
-                                Object value = readEntity(rawValue, propertyMetaData);
-                                currentCollection.add(value);
+                            if (rawCollection!=null) {
+                                for (Object rawValue : rawCollection) {
+                                    Object value = readEntity(rawValue, propertyMetaData);
+                                    currentCollection.add(value);
+                                }
                             }
                         } else {
                             //NO hamos nada pq las colecciones Lazy no se cargan
@@ -256,13 +272,21 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                             Map currentMap = (Map) getValueFromBean(entity, propertyName);
 
                             //Borramos todos los elementos para añadir despues los que vienen desde JSON
-                            currentMap.clear();
+                            if (currentMap!=null) {
+                                currentMap.clear();
+                            } else {
+                                //Si no hay coleccion hay que crearla qui
+                                currentMap=new HashMap();
+                                setValueToBean(entity, currentMap, propertyName);
+                            }
 
                             //Añadimos los elementos que vienen desde JSON
-                            for (Object key : rawMap.keySet()) {
-                                Object rawValue = rawMap.get(key);
-                                Object value = readEntity(rawValue, propertyMetaData);
-                                currentMap.put(key, value);
+                            if (rawMap!=null) {
+                                for (Object key : rawMap.keySet()) {
+                                    Object rawValue = rawMap.get(key);
+                                    Object value = readEntity(rawValue, propertyMetaData);
+                                    currentMap.put(key, value);
+                                }
                             }
                         } else {
                             //NO hamos nada pq las colecciones Lazy no se cargan
