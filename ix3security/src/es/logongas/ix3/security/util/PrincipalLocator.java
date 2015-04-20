@@ -23,22 +23,10 @@ import es.logongas.ix3.security.authentication.Principal;
  * Utilidades de seguridad para poder obtener el usuario activo
  * @author Lorenzo
  */
-public class SecurityUtil {
+public interface PrincipalLocator {
 
-    private static final ThreadLocal<Principal> principalThreadLocal = new ThreadLocal<Principal>();
-
-    public static void bindPrincipalToThread(Principal principal) {
-        principalThreadLocal.set(principal);
-    }
-
-
-    public static Principal getPrincipal() {
-        return principalThreadLocal.get();
-    }
-
-
-    public static void unbindPrincipalFromThread() {
-        principalThreadLocal.remove();
-    }
+    public void bindPrincipal(Principal principal);
+    public Principal getPrincipal();
+    public void unbindPrincipal();
 
 }

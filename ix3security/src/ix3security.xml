@@ -23,7 +23,4 @@ limitations under the License.
 ">
 
 
-
-    <bean class="es.logongas.ix3.security.util.SecurityUtil" factory-method="getPrincipal" scope="prototype"  />
-
 </beans>
