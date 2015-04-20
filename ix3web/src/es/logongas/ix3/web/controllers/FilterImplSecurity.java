@@ -19,7 +19,7 @@ import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.security.authentication.Principal;
 import es.logongas.ix3.security.authorization.AuthorizationManager;
-import es.logongas.ix3.security.util.SecurityUtil;
+import es.logongas.ix3.security.util.PrincipalLocator;
 import java.io.IOException;
 import java.io.Serializable;
 import javax.servlet.Filter;
@@ -45,6 +45,9 @@ public class FilterImplSecurity implements Filter {
 
     @Autowired
     AuthorizationManager authorizationManager;
+    
+    @Autowired
+    PrincipalLocator principalLocator;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -78,10 +81,10 @@ public class FilterImplSecurity implements Filter {
 
         if (authorizationManager.authorized(principal, "URL", getSecureURI(uri, httpServletRequest.getContextPath()), method, httpServletRequest.getParameterMap()) == true) {
             try {
-                SecurityUtil.bindPrincipalToThread(principal);
+                principalLocator.bindPrincipal(principal);
                 filterChain.doFilter(servletRequest, servletResponse);
             }finally {
-                SecurityUtil.unbindPrincipalFromThread();
+                principalLocator.unbindPrincipal();
             }
         } else {
             httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
