@@ -15,7 +15,6 @@
  */
 package es.logongas.ix3.core.hibernate;
 
-import es.logongas.ix3.core.hibernate.GenericEventListenerImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
