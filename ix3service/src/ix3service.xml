@@ -29,4 +29,7 @@ limitations under the License.
         <property name="implBasePackageName"       value="Nombre del paquete de las implementaciones de los interfaces Service" />
     </bean>-->    
     
+    <bean class="es.logongas.ix3.service.rules.impl.RuleEngineFactoryImpl" />
+    <bean class="es.logongas.ix3.service.rules.impl.hibernate.ApplicationContextProvider"  />
+    
 </beans>
