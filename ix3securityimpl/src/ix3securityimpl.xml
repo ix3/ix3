@@ -38,5 +38,7 @@ limitations under the License.
             </list>
         </property>
     </bean>-->
-
+    
+    <bean class="es.logongas.ix3.security.util.PrincipalLocatorImplThreadLocal"  />
+    
 </beans>
