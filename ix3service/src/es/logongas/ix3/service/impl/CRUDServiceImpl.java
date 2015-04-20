@@ -24,8 +24,9 @@ import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.core.Page;
 import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.TransactionManager;
-import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.security.util.PrincipalLocator;
 import es.logongas.ix3.service.CRUDService;
+import es.logongas.ix3.service.rules.RuleEngineFactory;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -42,14 +43,14 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class CRUDServiceImpl<EntityType,PrimaryKeyType extends Serializable> implements CRUDService<EntityType,PrimaryKeyType> {
     @Autowired
-    protected Principal  principal;
+    protected PrincipalLocator principalLocator;
     
     @Autowired 
     protected DAOFactory daoFactory;
 
     @Autowired
     protected TransactionManager transactionManager;
-    
+       
     Class entityType;
 
     protected final Log log = LogFactory.getLog(getClass());
