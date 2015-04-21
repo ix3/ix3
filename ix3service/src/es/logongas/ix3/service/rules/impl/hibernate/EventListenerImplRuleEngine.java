@@ -18,17 +18,14 @@ package es.logongas.ix3.service.rules.impl.hibernate;
 
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
-import es.logongas.ix3.dao.GenericDAO;
-import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.security.util.PrincipalLocator;
 import es.logongas.ix3.service.rules.RuleGroupPredefined;
 import es.logongas.ix3.service.rules.RuleContext;
 import es.logongas.ix3.service.rules.RuleEngine;
 import es.logongas.ix3.service.rules.RuleEngineFactory;
-import es.logongas.ix3.util.ReflectionUtil;
+import es.logongas.ix3.service.rules.impl.RuleContextImpl;
 import es.logongas.ix3.util.UnckeckException;
-import java.io.Serializable;
 import org.hibernate.EntityMode;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
@@ -73,11 +70,10 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
     public boolean onPreInsert(PreInsertEvent pie) {
         autowired();
         EntityMode entityMode = pie.getPersister().getEntityMode();
+        
+        RuleContext ruleContext = new RuleContextImpl(pie.getEntity(), null, principalLocator.getPrincipal());
 
-        Object entity = pie.getEntity();
-        Object originalEntity = null;
-
-        fireRules(entity, originalEntity, entityMode, RuleGroupPredefined.PreInsert.class, RuleGroupPredefined.PreSave.class);
+        fireRules(ruleContext, entityMode, RuleGroupPredefined.PreInsert.class, RuleGroupPredefined.PreSave.class);
 
         return false;
     }
@@ -87,10 +83,10 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
         autowired();
         EntityMode entityMode = ple.getPersister().getEntityMode();
 
-        Object entity = ple.getEntity();
-        Object originalEntity = null;
+        RuleContext ruleContext = new RuleContextImpl(ple.getEntity(), null, principalLocator.getPrincipal());
 
-        fireRules(entity, originalEntity, entityMode, RuleGroupPredefined.PreRead.class);
+
+        fireRules(ruleContext, entityMode, RuleGroupPredefined.PreRead.class);
     }
 
     @Override
@@ -98,10 +94,9 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
         autowired();
         EntityMode entityMode = pue.getPersister().getEntityMode();
 
-        Object entity = pue.getEntity();
-        Object originalEntity = getOriginalEntity(entity, entityMode);
-
-        fireRules(entity, originalEntity, entityMode, RuleGroupPredefined.PreUpdate.class, RuleGroupPredefined.PreSave.class);
+        RuleContext ruleContext = new RuleContextImplLazy(pue.getEntity(), principalLocator.getPrincipal(),daoFactory, metaDataFactory);
+        
+        fireRules(ruleContext, entityMode, RuleGroupPredefined.PreUpdate.class, RuleGroupPredefined.PreSave.class);
 
         return false;
     }
@@ -111,10 +106,9 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
         autowired();
         EntityMode entityMode = pde.getPersister().getEntityMode();
 
-        Object entity = pde.getEntity();
-        Object originalEntity = getOriginalEntity(entity, entityMode);
+        RuleContext ruleContext = new RuleContextImplLazy(pde.getEntity(), principalLocator.getPrincipal(),daoFactory, metaDataFactory);
 
-        fireRules(entity, originalEntity, entityMode, RuleGroupPredefined.PreDelete.class);
+        fireRules(ruleContext, entityMode, RuleGroupPredefined.PreDelete.class);
 
         return false;
     }
@@ -124,10 +118,10 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
         autowired();
         EntityMode entityMode = pie.getPersister().getEntityMode();
 
-        Object entity = pie.getEntity();
-        Object originalEntity = null;
+        RuleContext ruleContext = new RuleContextImpl(pie.getEntity(), null, principalLocator.getPrincipal());
 
-        fireRules(entity, originalEntity, entityMode, RuleGroupPredefined.PostInsert.class, RuleGroupPredefined.PostSave.class);
+
+        fireRules(ruleContext, entityMode, RuleGroupPredefined.PostInsert.class, RuleGroupPredefined.PostSave.class);
 
     }
 
@@ -136,10 +130,10 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
         autowired();
         EntityMode entityMode = ple.getPersister().getEntityMode();
 
-        Object entity = ple.getEntity();
-        Object originalEntity = null;
+        RuleContext ruleContext = new RuleContextImpl(ple.getEntity(), null, principalLocator.getPrincipal());
 
-        fireRules(entity, originalEntity, entityMode, RuleGroupPredefined.PostRead.class);
+
+        fireRules(ruleContext, entityMode, RuleGroupPredefined.PostRead.class);
         
     }
 
@@ -148,10 +142,9 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
         autowired();
         EntityMode entityMode = pue.getPersister().getEntityMode();
 
-        Object entity = pue.getEntity();
-        Object originalEntity = getOriginalEntity(entity, entityMode);
+        RuleContext ruleContext = new RuleContextImplLazy(pue.getEntity(), principalLocator.getPrincipal(),daoFactory, metaDataFactory);
 
-        fireRules(entity, originalEntity, entityMode, RuleGroupPredefined.PostUpdate.class, RuleGroupPredefined.PostSave.class);
+        fireRules(ruleContext, entityMode, RuleGroupPredefined.PostUpdate.class, RuleGroupPredefined.PostSave.class);
     }
 
     @Override
@@ -159,10 +152,9 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
         autowired();
         EntityMode entityMode = pde.getPersister().getEntityMode();
 
-        Object entity = pde.getEntity();
-        Object originalEntity = getOriginalEntity(entity, entityMode);
+        RuleContext ruleContext = new RuleContextImplLazy(pde.getEntity(), principalLocator.getPrincipal(),daoFactory, metaDataFactory);
 
-        fireRules(entity, originalEntity, entityMode, RuleGroupPredefined.PostDelete.class);
+        fireRules(ruleContext, entityMode, RuleGroupPredefined.PostDelete.class);
     }
 
     @Override
@@ -170,42 +162,20 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
         return true;
     }
 
-    private void fireRules(Object entity, Object originalEntity, EntityMode mode, Class<?>... groups) {
-        if (entity == null || mode != EntityMode.POJO) {
+    private void fireRules(RuleContext ruleContext, EntityMode mode, Class<?>... groups) {
+        if (ruleContext.getEntity() == null || mode != EntityMode.POJO) {
             return;
         }
 
-        RuleContext ruleContext = new RuleContext(entity, originalEntity, principalLocator.getPrincipal());
-
         try {
-            RuleEngine ruleEngine = ruleEngineFactory.getRuleEngine(entity.getClass());
-            ruleEngine.fireConstraintRules(entity, ruleContext, groups);
-            ruleEngine.fireActionRules(entity, ruleContext, groups);
+            RuleEngine ruleEngine = ruleEngineFactory.getRuleEngine(ruleContext.getEntity() .getClass());
+            ruleEngine.fireConstraintRules(ruleContext.getEntity(), ruleContext, groups);
+            ruleEngine.fireActionRules(ruleContext.getEntity(), ruleContext, groups);
         } catch (BusinessException ex) {
             UnckeckException.throwCkeckedExceptionAsUnckeckedException(ex);
         }
     }
 
-    private Object getOriginalEntity(Object entity, EntityMode mode) {
-        if (entity == null || mode != EntityMode.POJO) {
-            return null;
-        }
-
-        MetaData metaData = metaDataFactory.getMetaData(entity.getClass());
-        GenericDAO genericDAO = daoFactory.getDAO(entity.getClass());
-
-        Serializable primaryKey = (Serializable) ReflectionUtil.getValueFromBean(entity, metaData.getPrimaryKeyPropertyName());
-
-        try {
-            Object originalEntity = genericDAO.readOriginal(primaryKey);
-            
-            return originalEntity;
-        } catch (BusinessException ex) {
-            UnckeckException.throwCkeckedExceptionAsUnckeckedException(ex);
-            
-            return null;
-        }
-    }
 
     private void autowired() {
         if (autowired==false) {

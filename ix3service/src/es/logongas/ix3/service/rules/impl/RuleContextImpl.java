@@ -15,32 +15,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package es.logongas.ix3.service.rules;
+package es.logongas.ix3.service.rules.impl;
 
+import es.logongas.ix3.service.rules.*;
 import es.logongas.ix3.security.authentication.Principal;
 
 /**
  *
  * @author logongas
+ * @param <T>
  */
-public interface RuleContext<T> {
+public class RuleContextImpl<T> implements RuleContext<T> {
+    private final T entity;
+    private final T originalEntity;
+    private final Principal principal;
+
+    public RuleContextImpl(T entity, T originalEntity, Principal principal) {
+        this.entity = entity;
+        this.originalEntity = originalEntity;
+        this.principal = principal;
+    }
 
     /**
      * @return the entity
      */
-    public T getEntity();
+    @Override
+    public T getEntity() {
+        return entity;
+    }
 
 
     /**
      * @return the originalEntity
      */
-    public T getOriginalEntity();
-
+    @Override
+    public T getOriginalEntity() {
+        return originalEntity;
+    }
 
     /**
      * @return the principal
      */
-    public Principal getPrincipal(); 
-    
+    @Override
+    public Principal getPrincipal() {
+        return principal;
+    }    
     
 }
