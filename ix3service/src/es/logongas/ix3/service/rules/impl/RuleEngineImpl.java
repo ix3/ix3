@@ -92,7 +92,7 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
                         result = (Boolean) method.invoke(rulesObject, ruleContext);
                         
                     } else {
-                        throw new RuntimeException("El método " + method.getName() + " solo puede tener 0 o 1 argumentos");
+                        throw new RuntimeException("El método " + method.getName() + " solo puede tener 0 o 1 argumentos pero tiene:" + numArgs);
                     }
 
                     if (result == false) {
@@ -156,8 +156,23 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
             ActionRule actionRule = method.getAnnotation(ActionRule.class);
 
             if (isExecuteRuleByGroup(actionRule.groups(), groups)) {
-                try {
-                    method.invoke(rulesObject, ruleContext);
+                try {                   
+                    int numArgs=method.getParameterTypes().length;
+                    if (numArgs==0) {
+                        method.invoke(rulesObject);
+                    } else if (numArgs==1) {
+                        Class argumenType=method.getParameterTypes()[0];
+                        
+                        if (RuleContext.class.isAssignableFrom(argumenType)==false) {
+                            throw new RuntimeException("El método " + method.getName() + " debe tener el único argumento del tipo:" + RuleContext.class.getName() );
+                        }
+                        
+                        method.invoke(rulesObject, ruleContext);
+                        
+                    } else {
+                        throw new RuntimeException("El método " + method.getName() + " solo puede tener 0 o 1 argumentos pero tiene:" + numArgs);
+                    }
+                    
                 } catch (IllegalAccessException | IllegalArgumentException ex) {
                     throw new RuntimeException(ex);
                 } catch (InvocationTargetException ex) {
