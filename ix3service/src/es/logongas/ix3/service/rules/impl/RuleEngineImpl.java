@@ -78,7 +78,22 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
 
             if (isExecuteRuleByGroup(constraintRule.groups(), groups)) {
                 try {
-                    boolean result = (Boolean) method.invoke(rulesObject, ruleContext);
+                    int numArgs=method.getParameterTypes().length;
+                    boolean result;
+                    if (numArgs==0) {
+                        result = (Boolean) method.invoke(rulesObject);
+                    } else if (numArgs==1) {
+                        Class argumenType=method.getParameterTypes()[0];
+                        
+                        if (RuleContext.class.isAssignableFrom(argumenType)==false) {
+                            throw new RuntimeException("El método " + method.getName() + " debe tener el único argumento del tipo:" + RuleContext.class.getName() );
+                        }
+                        
+                        result = (Boolean) method.invoke(rulesObject, ruleContext);
+                        
+                    } else {
+                        throw new RuntimeException("El método " + method.getName() + " solo puede tener 0 o 1 argumentos");
+                    }
 
                     if (result == false) {
 
@@ -93,7 +108,7 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
                 } catch (IllegalAccessException ex) {
                     throw new RuntimeException(ex);
                 } catch (IllegalArgumentException ex) {
-                    Logger.getLogger(RuleEngineImpl.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new RuntimeException(ex);
                 } catch (InvocationTargetException ex) {
                     Throwable cause = ex.getCause();
                     if (cause instanceof BusinessException) {
