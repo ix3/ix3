@@ -32,5 +32,7 @@ import java.lang.annotation.Target;
 public @interface ActionRule  {
     int priority() default 0;
     
+    boolean disabled() default false;
+    
     Class<?>[] groups();
 }

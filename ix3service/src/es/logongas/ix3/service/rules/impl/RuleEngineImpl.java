@@ -30,8 +30,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -76,7 +74,7 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
         for (Method method : methods) {
             ConstraintRule constraintRule = method.getAnnotation(ConstraintRule.class);
 
-            if (isExecuteRuleByGroup(constraintRule.groups(), groups)) {
+            if (isExecuteConstrainRule(constraintRule, groups)) {
                 try {
                     int numArgs=method.getParameterTypes().length;
                     boolean result;
@@ -155,7 +153,7 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
         for (Method method : methods) {
             ActionRule actionRule = method.getAnnotation(ActionRule.class);
 
-            if (isExecuteRuleByGroup(actionRule.groups(), groups)) {
+            if (isExecuteActionRule(actionRule, groups)) {
                 try {                   
                     int numArgs=method.getParameterTypes().length;
                     if (numArgs==0) {
@@ -227,6 +225,37 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
         return new BusinessMessage(filedName, message);
     }
 
+    private boolean isExecuteConstrainRule(ConstraintRule constraintRule, Class<?>[] groups) {    
+        
+        if (constraintRule.disabled()==true) {
+            return false;
+        } 
+        
+        if (isExecuteRuleByGroup(constraintRule.groups(),groups)==false) {
+            return false;
+        }
+        
+        
+        return true;
+    
+    }
+    
+    private boolean isExecuteActionRule(ActionRule actionRule, Class<?>[] groups) {    
+        
+        if (actionRule.disabled()==true) {
+            return false;
+        } 
+        
+        if (isExecuteRuleByGroup(actionRule.groups(),groups)==false) {
+            return false;
+        }
+        
+        
+        return true;
+    
+    }    
+    
+    
     private boolean isExecuteRuleByGroup(Class<?>[] constraintGroups, Class<?>[] executeGroups) {
         if ((constraintGroups == null) || (constraintGroups.length == 0)) {
             return true;

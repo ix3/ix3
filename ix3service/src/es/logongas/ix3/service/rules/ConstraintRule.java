@@ -36,6 +36,8 @@ public @interface ConstraintRule {
     String fieldName() default "";
     boolean stopOnFail() default false;
     
+    boolean disabled() default false;
+    
     Class<?>[] groups() default {};
 }
 
