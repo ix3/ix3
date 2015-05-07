@@ -27,6 +27,7 @@ public class RuleGroupPredefined {
     public static class PreDelete {}
     public static class PreInsertOrUpdate {}
     public static class PreInsertOrUpdateOrDelete {}
+    public static class PreUpdateOrDelete {}
     
     
     public static class PostRead {}
@@ -35,4 +36,5 @@ public class RuleGroupPredefined {
     public static class PostDelete {}    
     public static class PostInsertOrUpdate {}    
     public static class PostInsertOrUpdateOrDelete {}    
+    public static class PostUpdateOrDelete {}    
 }
