@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package es.logongas.ix3.dao.impl;
 
 import es.logongas.ix3.core.annotations.Label;
@@ -31,16 +30,17 @@ import org.springframework.util.StringUtils;
 
 /**
  * Clase de utilidad para generar BusinessMessages a partir de excepciones Java.
+ *
  * @author Lorenzo
  */
 public class ExceptionTranslator {
-    
+
     @Autowired
     ConstraintViolationTranslator constraintViolationTranslator;
-    
+
     public List<BusinessMessage> getBusinessMessages(javax.validation.ConstraintViolationException cve) {
         List<BusinessMessage> businessMessages = new ArrayList<BusinessMessage>();
-        
+
         for (ConstraintViolation constraintViolation : cve.getConstraintViolations()) {
             String propertyName;
             String message;
@@ -50,7 +50,7 @@ public class ExceptionTranslator {
 
             businessMessages.add(new BusinessMessage(propertyName, message));
         }
-        
+
         return businessMessages;
     }
 
@@ -58,9 +58,19 @@ public class ExceptionTranslator {
         List<BusinessMessage> businessMessages = new ArrayList<BusinessMessage>();
         BusinessMessage businessMessage;
 
-        String message = cve.getMessage();
-        int errorCode = cve.getErrorCode();
-        String sqlState = cve.getSQLState();
+        String message;
+        int errorCode;
+        String sqlState;
+
+        if (cve.getSQLException() != null) {
+            message = cve.getSQLException().getLocalizedMessage();
+            errorCode = cve.getSQLException().getErrorCode();
+            sqlState = cve.getSQLException().getSQLState();
+        } else {
+            message = cve.getLocalizedMessage();
+            errorCode = cve.getErrorCode();
+            sqlState = cve.getSQLState();
+        }
 
         es.logongas.ix3.core.database.ConstraintViolation constraintViolation = constraintViolationTranslator.translate(message, errorCode, sqlState);
 
@@ -71,10 +81,10 @@ public class ExceptionTranslator {
         }
 
         businessMessages.add(businessMessage);
-        
+
         return businessMessages;
     }
-    
+
     private String getPropertyNameFromPath(Class clazz, Path path) {
         StringBuilder sb = new StringBuilder();
         if (path != null) {
@@ -154,7 +164,6 @@ public class ExceptionTranslator {
             return new ClassAndLabel(field.getType(), null);
         }
 
-
     }
 
     private ClassAndLabel getMethodLabel(Class clazz, String methodName) {
@@ -174,7 +183,6 @@ public class ExceptionTranslator {
             return new ClassAndLabel(method.getReturnType(), null);
         }
 
-
     }
 
     private class ClassAndLabel {
@@ -187,6 +195,5 @@ public class ExceptionTranslator {
             this.label = label;
         }
     }
-    
-    
+
 }
