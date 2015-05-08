@@ -25,6 +25,7 @@ import es.logongas.ix3.service.rules.RuleContext;
 import es.logongas.ix3.service.rules.RuleEngine;
 import es.logongas.ix3.service.rules.RuleEngineFactory;
 import es.logongas.ix3.service.rules.impl.RuleContextImpl;
+import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.util.UnckeckException;
 import org.hibernate.EntityMode;
 import org.hibernate.event.spi.PostDeleteEvent;
@@ -74,7 +75,7 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
 
         RuleContext ruleContext = new RuleContextImpl(pie.getEntity(), null, principalLocator.getPrincipal());
 
-        fireRules(ruleContext, entityMode, RuleGroupPredefined.PreInsert.class, RuleGroupPredefined.PreInsertOrUpdate.class, RuleGroupPredefined.PreInsertOrUpdateOrDelete.class);
+        fireRules(ruleContext, pie.getPersister(), pie.getState(), entityMode, RuleGroupPredefined.PreInsert.class, RuleGroupPredefined.PreInsertOrUpdate.class, RuleGroupPredefined.PreInsertOrUpdateOrDelete.class);
 
         return false;
     }
@@ -86,7 +87,7 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
 
         RuleContext ruleContext = new RuleContextImpl(ple.getEntity(), null, principalLocator.getPrincipal());
 
-        fireRules(ruleContext, entityMode, RuleGroupPredefined.PreRead.class);
+        fireRules(ruleContext, ple.getPersister(), ple.getState(), entityMode, RuleGroupPredefined.PreRead.class);
     }
 
     @Override
@@ -96,7 +97,7 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
 
         RuleContext ruleContext = new RuleContextImplLazy(pue.getEntity(), principalLocator.getPrincipal(), daoFactory, metaDataFactory);
 
-        fireRules(ruleContext, entityMode, RuleGroupPredefined.PreUpdate.class, RuleGroupPredefined.PreInsertOrUpdate.class, RuleGroupPredefined.PreUpdateOrDelete.class, RuleGroupPredefined.PreInsertOrUpdateOrDelete.class);
+        fireRules(ruleContext, pue.getPersister(), pue.getState(), entityMode, RuleGroupPredefined.PreUpdate.class, RuleGroupPredefined.PreInsertOrUpdate.class, RuleGroupPredefined.PreUpdateOrDelete.class, RuleGroupPredefined.PreInsertOrUpdateOrDelete.class);
 
         return false;
     }
@@ -108,7 +109,7 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
 
         RuleContext ruleContext = new RuleContextImplLazy(pde.getEntity(), principalLocator.getPrincipal(), daoFactory, metaDataFactory);
 
-        fireRules(ruleContext, entityMode, RuleGroupPredefined.PreDelete.class, RuleGroupPredefined.PreInsertOrUpdateOrDelete.class, RuleGroupPredefined.PreUpdateOrDelete.class);
+        fireRules(ruleContext, pde.getPersister(), null, entityMode, RuleGroupPredefined.PreDelete.class, RuleGroupPredefined.PreInsertOrUpdateOrDelete.class, RuleGroupPredefined.PreUpdateOrDelete.class);
 
         return false;
     }
@@ -120,7 +121,7 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
 
         RuleContext ruleContext = new RuleContextImpl(pie.getEntity(), null, principalLocator.getPrincipal());
 
-        fireRules(ruleContext, entityMode, RuleGroupPredefined.PostInsert.class, RuleGroupPredefined.PostInsertOrUpdate.class, RuleGroupPredefined.PostInsertOrUpdateOrDelete.class);
+        fireRules(ruleContext, pie.getPersister(), pie.getState(), entityMode, RuleGroupPredefined.PostInsert.class, RuleGroupPredefined.PostInsertOrUpdate.class, RuleGroupPredefined.PostInsertOrUpdateOrDelete.class);
 
     }
 
@@ -131,7 +132,7 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
 
         RuleContext ruleContext = new RuleContextImpl(ple.getEntity(), null, principalLocator.getPrincipal());
 
-        fireRules(ruleContext, entityMode, RuleGroupPredefined.PostRead.class);
+        fireRules(ruleContext, ple.getPersister(), null, entityMode, RuleGroupPredefined.PostRead.class);
 
     }
 
@@ -142,7 +143,7 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
 
         RuleContext ruleContext = new RuleContextImplLazy(pue.getEntity(), principalLocator.getPrincipal(), daoFactory, metaDataFactory);
 
-        fireRules(ruleContext, entityMode, RuleGroupPredefined.PostUpdate.class, RuleGroupPredefined.PostInsertOrUpdate.class, RuleGroupPredefined.PostUpdateOrDelete.class, RuleGroupPredefined.PostInsertOrUpdateOrDelete.class);
+        fireRules(ruleContext, pue.getPersister(), pue.getState(), entityMode, RuleGroupPredefined.PostUpdate.class, RuleGroupPredefined.PostInsertOrUpdate.class, RuleGroupPredefined.PostUpdateOrDelete.class, RuleGroupPredefined.PostInsertOrUpdateOrDelete.class);
     }
 
     @Override
@@ -152,7 +153,7 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
 
         RuleContext ruleContext = new RuleContextImplLazy(pde.getEntity(), principalLocator.getPrincipal(), daoFactory, metaDataFactory);
 
-        fireRules(ruleContext, entityMode, RuleGroupPredefined.PostDelete.class, RuleGroupPredefined.PostInsertOrUpdateOrDelete.class, RuleGroupPredefined.PostUpdateOrDelete.class);
+        fireRules(ruleContext, pde.getPersister(), null, entityMode, RuleGroupPredefined.PostDelete.class, RuleGroupPredefined.PostInsertOrUpdateOrDelete.class, RuleGroupPredefined.PostUpdateOrDelete.class);
     }
 
     @Override
@@ -160,15 +161,20 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
         return true;
     }
 
-    private void fireRules(RuleContext ruleContext, EntityMode mode, Class<?>... groups) {
+    private void fireRules(RuleContext ruleContext, EntityPersister entityPersister, Object[] state, EntityMode mode, Class<?>... groups) {
         if (ruleContext.getEntity() == null || mode != EntityMode.POJO) {
             return;
         }
 
         try {
+            stateToEntity(state, ruleContext.getEntity(), entityPersister);
+
             RuleEngine ruleEngine = ruleEngineFactory.getRuleEngine(ruleContext.getEntity().getClass());
             ruleEngine.fireConstraintRules(ruleContext.getEntity(), ruleContext, groups);
             ruleEngine.fireActionRules(ruleContext.getEntity(), ruleContext, groups);
+            
+            entityToState(ruleContext.getEntity(), state, entityPersister);
+
         } catch (BusinessException ex) {
             UnckeckException.throwCkeckedExceptionAsUnckeckedException(ex);
         }
@@ -180,5 +186,41 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
             autowired = true;
         }
     }
+
+
+    private void stateToEntity(Object[] state, Object entity, EntityPersister entityPersister) {
+        
+        if (state==null) {
+            return;
+        }
+        
+        String[] propertyNames=entityPersister.getPropertyNames();
+        
+        for(int i=0;i<propertyNames.length;i++) {
+            Object value=state[i];
+            
+            ReflectionUtil.setValueToBean(entity, propertyNames[i], value);
+            
+        }
+        
+    }
+
+    private void entityToState(Object entity, Object[] state, EntityPersister entityPersister) {
+        
+        if (state==null) {
+            return;
+        }        
+        
+        String[] propertyNames=entityPersister.getPropertyNames();
+        
+        for(int i=0;i<propertyNames.length;i++) {
+            Object value=ReflectionUtil.getValueFromBean(entity, propertyNames[i]);
+            
+            state[i]=value;
+            
+        }
+    }    
+
+
 
 }
