@@ -167,12 +167,14 @@ public class EventListenerImplRuleEngine implements PreInsertEventListener, PreL
         }
 
         try {
-            stateToEntity(state, ruleContext.getEntity(), entityPersister);
-
-            RuleEngine ruleEngine = ruleEngineFactory.getRuleEngine(ruleContext.getEntity().getClass());
-            ruleEngine.fireConstraintRules(ruleContext.getEntity(), ruleContext, groups);
-            ruleEngine.fireActionRules(ruleContext.getEntity(), ruleContext, groups);
             
+            RuleEngine ruleEngine = ruleEngineFactory.getRuleEngine(ruleContext.getEntity().getClass());
+            
+            stateToEntity(state, ruleContext.getEntity(), entityPersister);
+            ruleEngine.fireConstraintRules(ruleContext.getEntity(), ruleContext, groups);
+            
+            stateToEntity(state, ruleContext.getEntity(), entityPersister); //Lo pasamos por segunda vez pq así seguro que las validaciones no cambian el estado.
+            ruleEngine.fireActionRules(ruleContext.getEntity(), ruleContext, groups);
             entityToState(ruleContext.getEntity(), state, entityPersister);
 
         } catch (BusinessException ex) {
