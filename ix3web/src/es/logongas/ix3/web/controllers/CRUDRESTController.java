@@ -33,6 +33,7 @@ import es.logongas.ix3.web.controllers.metadata.Metadata;
 import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
 import es.logongas.ix3.web.json.JsonReader;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -71,12 +72,12 @@ public class CRUDRESTController extends AbstractRESTController {
 
     @Autowired
     private MetaDataFactory metaDataFactory;
-    
+
     @Autowired
     private Conversion conversion;
-    
+
     @Autowired
-    private CRUDServiceFactory crudServiceFactory;    
+    private CRUDServiceFactory crudServiceFactory;
 
     @RequestMapping(value = {"/{entityName}/" + PATH_METADATA}, method = RequestMethod.GET, produces = "application/json")
     public void metadata(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
@@ -114,7 +115,7 @@ public class CRUDRESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException("No existe la entidad " + entityName);
                 }
-                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 List<Filter> filters = getFiltersSearchFromParameters(httpServletRequest, metaData);
                 List<Order> orders = getOrders(metaData, httpServletRequest.getParameter(PARAMETER_ORDERBY));
                 Integer pageSize = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGESIZE));
@@ -147,9 +148,9 @@ public class CRUDRESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException("No existe la entidad " + entityName);
                 }
-                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 Map<String, Object> filter = getFilterNamedSearchFromParameters(crudService, namedSearch, removeDollarParameters(httpServletRequest.getParameterMap()));
-                Object result = executeNamedSearch(crudService,namedSearch, filter);
+                Object result = executeNamedSearch(crudService, namedSearch, filter);
 
                 return new CommandResult(metaData.getType(), result);
 
@@ -169,7 +170,7 @@ public class CRUDRESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException("No existe la entidad " + entityName);
                 }
-                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 Object entity = crudService.read(id);
 
                 return new CommandResult(metaData.getType(), entity);
@@ -198,7 +199,7 @@ public class CRUDRESTController extends AbstractRESTController {
                     throw new BusinessException("En la entidad '" + entityName + "'  la propiedad '" + child + "' no es una colección");
                 }
 
-                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 Object entity = crudService.read(id);
                 Object childData;
                 if (entity != null) {
@@ -227,7 +228,7 @@ public class CRUDRESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException("No existe la entidad " + entityName);
                 }
-                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 Map<String, Object> initialProperties = getPropertiesFromParameters(metaData, removeDollarParameters(httpServletRequest.getParameterMap()));
                 Object entity = crudService.create(initialProperties);
 
@@ -248,7 +249,7 @@ public class CRUDRESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException("No existe la entidad " + entityName);
                 }
-                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
                 Object entity = jsonReader.fromJson(jsonIn);
                 crudService.insert(entity);
@@ -271,7 +272,7 @@ public class CRUDRESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException("No existe la entidad " + entityName);
                 }
-                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
                 Object entity = jsonReader.fromJson(jsonIn);
                 crudService.update(entity);
@@ -295,7 +296,7 @@ public class CRUDRESTController extends AbstractRESTController {
                 if (metaData == null) {
                     throw new BusinessException("No existe la entidad " + entityName);
                 }
-                CRUDService crudService=crudServiceFactory.getService(metaData.getType());
+                CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 boolean deletedSuccess = crudService.delete(id);
                 if (deletedSuccess == false) {
                     throw new BusinessException("No existe la entidad a borrar");
@@ -361,8 +362,8 @@ public class CRUDRESTController extends AbstractRESTController {
         Enumeration<String> enumeration = httpServletRequest.getParameterNames();
         while (enumeration.hasMoreElements()) {
             String rawPropertyName = enumeration.nextElement();
-            Filter filter=getFilterFromPropertyName(rawPropertyName);
-            
+            Filter filter = getFilterFromPropertyName(rawPropertyName);
+
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(filter.getPropertyName());
             if (propertyMetaData != null) {
                 Class propertyType = propertyMetaData.getType();
@@ -607,7 +608,7 @@ public class CRUDRESTController extends AbstractRESTController {
         return newParameters;
     }
 
-    private Object executeNamedSearch(CRUDService crudService,String namedSearch, Map<String, Object> filter) throws BusinessException {
+    private Object executeNamedSearch(CRUDService crudService, String namedSearch, Map<String, Object> filter) throws BusinessException {
         try {
             if (filter == null) {
                 filter = new HashMap<String, Object>();
@@ -654,6 +655,16 @@ public class CRUDRESTController extends AbstractRESTController {
             Object result = method.invoke(crudService, args.toArray());
 
             return result;
+
+        } catch (InvocationTargetException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof BusinessException) {
+                BusinessException businessException = (BusinessException) cause;
+
+                throw businessException;
+            } else {
+                throw new RuntimeException(cause);
+            }
         } catch (RuntimeException ex) {
             throw ex;
         } catch (BusinessException ex) {
@@ -662,41 +673,40 @@ public class CRUDRESTController extends AbstractRESTController {
             throw new RuntimeException(ex);
         }
     }
-    
+
     private Filter getFilterFromPropertyName(String rawPropertyName) {
         FilterOperator filterOperator;
         String propertyName;
-        
+
         if (rawPropertyName.endsWith("__")) {
-            filterOperator=null;
-            propertyName=null;
-            
-            for(FilterOperator searcherfilterOperator: FilterOperator.values()) {
-                String end="__"+searcherfilterOperator.name().toUpperCase()+"__";
+            filterOperator = null;
+            propertyName = null;
+
+            for (FilterOperator searcherfilterOperator : FilterOperator.values()) {
+                String end = "__" + searcherfilterOperator.name().toUpperCase() + "__";
                 if (rawPropertyName.endsWith(end)) {
-                    filterOperator=searcherfilterOperator;
+                    filterOperator = searcherfilterOperator;
                     propertyName = rawPropertyName.substring(0, rawPropertyName.length() - end.length());
                     break;
                 }
             }
-            
-            if (filterOperator==null) {
+
+            if (filterOperator == null) {
                 if (rawPropertyName.matches("__[a-zA-Z]__$")) {
-                    throw new RuntimeException("El formato del modificado no es valido:"+rawPropertyName);
+                    throw new RuntimeException("El formato del modificado no es valido:" + rawPropertyName);
                 } else {
-                    filterOperator=FilterOperator.eq;
-                    propertyName=rawPropertyName;
+                    filterOperator = FilterOperator.eq;
+                    propertyName = rawPropertyName;
                 }
             }
-            
+
         } else {
-            filterOperator=FilterOperator.eq;
-            propertyName=rawPropertyName;
+            filterOperator = FilterOperator.eq;
+            propertyName = rawPropertyName;
         }
-        
-        return new Filter(propertyName,null, filterOperator);
-        
+
+        return new Filter(propertyName, null, filterOperator);
+
     }
-        
-    
+
 }
