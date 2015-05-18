@@ -44,7 +44,6 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
     private static final ExpressionParser expressionParser = new SpelExpressionParser();
     private static final TemplateParserContext templateParserContext = new TemplateParserContext("${", "}");
 
-    
     @Override
     public void fireConstraintRules(Object rulesObject, RuleContext<T> ruleContext, Class<?>... groups) throws BusinessException {
         List<Method> methods = getRuleMethods(rulesObject, ConstraintRule.class);
@@ -76,19 +75,19 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
 
             if (isExecuteConstrainRule(constraintRule, groups)) {
                 try {
-                    int numArgs=method.getParameterTypes().length;
+                    int numArgs = method.getParameterTypes().length;
                     boolean result;
-                    if (numArgs==0) {
+                    if (numArgs == 0) {
                         result = (Boolean) method.invoke(rulesObject);
-                    } else if (numArgs==1) {
-                        Class argumenType=method.getParameterTypes()[0];
-                        
-                        if (RuleContext.class.isAssignableFrom(argumenType)==false) {
-                            throw new RuntimeException("El método " + method.getName() + " debe tener el único argumento del tipo:" + RuleContext.class.getName() );
+                    } else if (numArgs == 1) {
+                        Class argumenType = method.getParameterTypes()[0];
+
+                        if (RuleContext.class.isAssignableFrom(argumenType) == false) {
+                            throw new RuntimeException("El método " + method.getName() + " debe tener el único argumento del tipo:" + RuleContext.class.getName());
                         }
-                        
+
                         result = (Boolean) method.invoke(rulesObject, ruleContext);
-                        
+
                     } else {
                         throw new RuntimeException("El método " + method.getName() + " solo puede tener 0 o 1 argumentos pero tiene:" + numArgs);
                     }
@@ -124,7 +123,7 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
         }
 
     }
-    
+
     @Override
     public void fireActionRules(Object rulesObject, RuleContext<T> ruleContext, Class<?>... groups) throws BusinessException {
         List<Method> methods = getRuleMethods(rulesObject, ActionRule.class);
@@ -154,23 +153,23 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
             ActionRule actionRule = method.getAnnotation(ActionRule.class);
 
             if (isExecuteActionRule(actionRule, groups)) {
-                try {                   
-                    int numArgs=method.getParameterTypes().length;
-                    if (numArgs==0) {
+                try {
+                    int numArgs = method.getParameterTypes().length;
+                    if (numArgs == 0) {
                         method.invoke(rulesObject);
-                    } else if (numArgs==1) {
-                        Class argumenType=method.getParameterTypes()[0];
-                        
-                        if (RuleContext.class.isAssignableFrom(argumenType)==false) {
-                            throw new RuntimeException("El método " + method.getName() + " debe tener el único argumento del tipo:" + RuleContext.class.getName() );
+                    } else if (numArgs == 1) {
+                        Class argumenType = method.getParameterTypes()[0];
+
+                        if (RuleContext.class.isAssignableFrom(argumenType) == false) {
+                            throw new RuntimeException("El método " + method.getName() + " debe tener el único argumento del tipo:" + RuleContext.class.getName());
                         }
-                        
+
                         method.invoke(rulesObject, ruleContext);
-                        
+
                     } else {
                         throw new RuntimeException("El método " + method.getName() + " solo puede tener 0 o 1 argumentos pero tiene:" + numArgs);
                     }
-                    
+
                 } catch (IllegalAccessException | IllegalArgumentException ex) {
                     throw new RuntimeException(ex);
                 } catch (InvocationTargetException ex) {
@@ -179,6 +178,8 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
                         BusinessException businessException = (BusinessException) cause;
 
                         throw businessException;
+                    } else {
+                        throw new RuntimeException(cause);
                     }
                 }
             }
@@ -225,37 +226,34 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
         return new BusinessMessage(filedName, message);
     }
 
-    private boolean isExecuteConstrainRule(ConstraintRule constraintRule, Class<?>[] groups) {    
-        
-        if (constraintRule.disabled()==true) {
-            return false;
-        } 
-        
-        if (isExecuteRuleByGroup(constraintRule.groups(),groups)==false) {
+    private boolean isExecuteConstrainRule(ConstraintRule constraintRule, Class<?>[] groups) {
+
+        if (constraintRule.disabled() == true) {
             return false;
         }
-        
-        
+
+        if (isExecuteRuleByGroup(constraintRule.groups(), groups) == false) {
+            return false;
+        }
+
         return true;
-    
+
     }
-    
-    private boolean isExecuteActionRule(ActionRule actionRule, Class<?>[] groups) {    
-        
-        if (actionRule.disabled()==true) {
-            return false;
-        } 
-        
-        if (isExecuteRuleByGroup(actionRule.groups(),groups)==false) {
+
+    private boolean isExecuteActionRule(ActionRule actionRule, Class<?>[] groups) {
+
+        if (actionRule.disabled() == true) {
             return false;
         }
-        
-        
+
+        if (isExecuteRuleByGroup(actionRule.groups(), groups) == false) {
+            return false;
+        }
+
         return true;
-    
-    }    
-    
-    
+
+    }
+
     private boolean isExecuteRuleByGroup(Class<?>[] constraintGroups, Class<?>[] executeGroups) {
         if ((constraintGroups == null) || (constraintGroups.length == 0)) {
             return true;
