@@ -20,5 +20,5 @@ package es.logongas.ix3.dao;
  * @author Lorenzo González
  */
 public interface DAOFactory {
-    GenericDAO getDAO(Class EntityClass);
+     <T> GenericDAO<T,Integer> getDAO(Class<T> entityClass);
 }

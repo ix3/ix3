@@ -54,7 +54,7 @@ public class DAOFactoryImplHibernate implements DAOFactory {
      * @return El DAO de la entidad
      */
     @Override
-    public GenericDAO getDAO(Class entityClass) {
+    public <T> GenericDAO<T,Integer> getDAO(Class<T> entityClass) {
         FactoryHelper<GenericDAO> factoryHelper = new FactoryHelper<GenericDAO>(domainBasePackageName, interfaceBasePackageName, implBasePackageName,implSubPackageName, interfaceSufix, implSufix, defaultImplClass, context);
 
         return factoryHelper.getImpl(entityClass);
