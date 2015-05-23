@@ -24,7 +24,17 @@ public class CommandResult {
     private Object result;
     private int httpSuccessStatus;
     private boolean cache;
-    
+
+    public CommandResult(Object result) {
+        if (result==null) {
+            this.resultClass = Object.class;
+        } else {
+            this.resultClass = result.getClass();
+        }
+        this.result = result;
+        this.httpSuccessStatus=200;
+        this.cache=false; 
+    }
     
 
     public CommandResult(Class resultClass, Object result) {
