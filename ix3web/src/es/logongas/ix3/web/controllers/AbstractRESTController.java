@@ -106,15 +106,15 @@ public class AbstractRESTController {
     }
     
     
-    private void noCache(HttpServletResponse httpServletResponse) {
+    public void noCache(HttpServletResponse httpServletResponse) {
         httpServletResponse.setHeader("Cache-Control", "no-cache");
     }
 
-    private void cache(HttpServletResponse httpServletResponse) {
+    public void cache(HttpServletResponse httpServletResponse) {
         cache(httpServletResponse, 60);
     }
 
-    private void cache(HttpServletResponse httpServletResponse, long expireSeconds) {
+    public void cache(HttpServletResponse httpServletResponse, long expireSeconds) {
         httpServletResponse.setHeader("Cache-Control", "private, no-transform, max-age=" + expireSeconds);
     }    
 }
