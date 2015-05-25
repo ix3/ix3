@@ -436,21 +436,42 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     @Override
     final public List<EntityType> search(List<Filter> filters) throws BusinessException {
-        return search(filters, null);
+        return search(filters,false);
     }
 
     @Override
     final public List<EntityType> search(List<Filter> filters, List<Order> orders) throws BusinessException {
-        return pageableSearch(filters, orders, 0, Integer.MAX_VALUE).getContent();
+        return pageableSearch(filters, orders, 0, Integer.MAX_VALUE,false).getContent();
     }
 
     @Override
     public Page<EntityType> pageableSearch(List<Filter> filters, int pageNumber, int pageSize) throws BusinessException {
-        return pageableSearch(filters, null, pageNumber, pageSize);
+        return pageableSearch(filters, null, pageNumber, pageSize,false);
     }
 
     @Override
     public Page<EntityType> pageableSearch(List<Filter> filters, List<Order> orders, int pageNumber, int pageSize) throws BusinessException {
+        return pageableSearch(filters, orders, pageNumber, pageSize, false);
+    }    
+    
+    
+    @Override
+    final public List<EntityType> search(List<Filter> filters,boolean distinct) throws BusinessException {
+        return search(filters, null,distinct);
+    }
+
+    @Override
+    final public List<EntityType> search(List<Filter> filters, List<Order> orders,boolean distinct) throws BusinessException {
+        return pageableSearch(filters, orders, 0, Integer.MAX_VALUE,distinct).getContent();
+    }
+
+    @Override
+    public Page<EntityType> pageableSearch(List<Filter> filters, int pageNumber, int pageSize,boolean distinct) throws BusinessException {
+        return pageableSearch(filters, null, pageNumber, pageSize,distinct);
+    }
+
+    @Override
+    public Page<EntityType> pageableSearch(List<Filter> filters, List<Order> orders, int pageNumber, int pageSize,boolean distinct) throws BusinessException {
 
         if (pageNumber < 0) {
             throw new RuntimeException("El agumento pageNumber no pude ser negativo");
@@ -467,25 +488,28 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             String sqlPartFrom = sqlPartFrom(filters);
             String sqlPartWhere = sqlPartWhere(filters);
             String sqlPartOrderBy = sqlPartOrder(orders);
+            String sqlPartSelectObject = sqlPartSelectObject(distinct);
+            String sqlPartSelectCount = sqlPartSelectCount(distinct);
+            
 
             List results;
             int totalPages;
             if ((pageSize == Integer.MAX_VALUE) && (pageNumber == 0)) {
                 //Si el tamaño de página es tan gande (el máximo), seguro que no hace falta paginar
-                Query queryDatos = session.createQuery("SELECT  e " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
+                Query queryDatos = session.createQuery(sqlPartSelectObject + " " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
                 setFilterParameters(queryDatos, filters);
                 results = queryDatos.list();
 
                 totalPages = 1;
             } else {
-                Query queryDatos = session.createQuery("SELECT  e " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
+                Query queryDatos = session.createQuery(sqlPartSelectObject + " " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
                 queryDatos.setMaxResults(pageSize);
                 queryDatos.setFirstResult(pageSize * pageNumber);
                 setFilterParameters(queryDatos, filters);
                 results = queryDatos.list();
 
                 //Vamos ahora a calcular el total de páginas
-                Query queryCount = session.createQuery("SELECT  COUNT(e) " + sqlPartFrom + " " + sqlPartWhere);
+                Query queryCount = session.createQuery(sqlPartSelectCount + " " + sqlPartFrom + " " + sqlPartWhere);
                 setFilterParameters(queryCount, filters);
                 Long totalCount = (Long) queryCount.uniqueResult();
 
@@ -511,8 +535,33 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     }
 
-
-
+    
+    
+    private String sqlPartSelectObject(boolean distinct) {
+        String select;
+        
+        if (distinct==true) {
+            select= "SELECT DISTINCT e ";
+        } else {
+            select= "SELECT e ";
+        }
+        
+        return select;
+    }
+    
+    private String sqlPartSelectCount(boolean distinct) {
+        String select;
+        
+        if (distinct==true) {
+            select= "SELECT COUNT(DISTINCT e) ";
+        } else {
+            select= "SELECT COUNT(e) ";
+        }
+        
+        return select;
+    }    
+    
+    
     /**
      * Obtener la parte de la SQL relativa al ORDER BY
      *
