@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class AbstractRESTController {
+public class AbstractRESTController extends AbstractController {
 
     protected final String PARAMETER_EXPAND = "$expand";
     
@@ -104,17 +104,5 @@ public class AbstractRESTController {
             return Arrays.asList(expand.split(","));
         }
     }
-    
-    
-    public void noCache(HttpServletResponse httpServletResponse) {
-        httpServletResponse.setHeader("Cache-Control", "no-cache");
-    }
-
-    public void cache(HttpServletResponse httpServletResponse) {
-        cache(httpServletResponse, 60);
-    }
-
-    public void cache(HttpServletResponse httpServletResponse, long expireSeconds) {
-        httpServletResponse.setHeader("Cache-Control", "private, no-transform, max-age=" + expireSeconds);
-    }    
+   
 }
