@@ -66,6 +66,7 @@ public class CRUDRESTController extends AbstractRESTController {
     private final String PARAMETER_ORDERBY = "$orderby";
     private final String PARAMETER_PAGENUMBER = "$pagenumber";
     private final String PARAMETER_PAGESIZE = "$pagesize";
+    private final String PARAMETER_DISTINCT = "$distinct";
     private final String PATH_METADATA = "$metadata";
     private final String PATH_NAMEDSEARCH = "$namedsearch";
     private final String PATH_CREATE = "$create";
@@ -120,11 +121,12 @@ public class CRUDRESTController extends AbstractRESTController {
                 List<Order> orders = getOrders(metaData, httpServletRequest.getParameter(PARAMETER_ORDERBY));
                 Integer pageSize = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGESIZE));
                 Integer pageNumber = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGENUMBER));
+                boolean distinct = getBooleanFromString(httpServletRequest.getParameter(PARAMETER_DISTINCT));
                 Object entity;
                 if ((pageSize == null) && (pageNumber == null)) {
-                    entity = crudService.search(filters, orders);
+                    entity = crudService.search(filters, orders,distinct);
                 } else if ((pageSize != null) && (pageNumber != null)) {
-                    entity = crudService.pageableSearch(filters, orders, pageNumber, pageSize);
+                    entity = crudService.pageableSearch(filters, orders, pageNumber, pageSize,distinct);
                 } else {
                     throw new RuntimeException("Los datos de la paginacion no son correctos, es necesario los 2 datos:" + PARAMETER_PAGENUMBER + " y " + PARAMETER_PAGESIZE);
                 }
@@ -489,6 +491,35 @@ public class CRUDRESTController extends AbstractRESTController {
             return Integer.parseInt(s);
         }
     }
+    
+    /**
+     * Obtiene un boolean a partir de un null
+     *
+     * @param s El String que se transforma en un Integer
+     * @return Si el string es null se retornará false, sino se retornará el
+     * booleano
+     */
+    private boolean getBooleanFromString(String s) {
+        if (s == null) {
+            return false;
+        } else if (s.equals("0")) {
+            return false;
+        } else if (s.equals("no")) {
+            return false;
+        } else if (s.equals("false")) {
+            return false;
+        } else if (s.equals("1")) {
+            return true;
+        } else if (s.equals("yes")) {
+            return true;
+        } else if (s.equals("true")) {
+            return true;
+        } else if (s.equals("si")) {
+            return true;            
+        } else {
+            throw new RuntimeException("El String no se puede transformar a booleano:" + s);
+        }
+    }    
 
     /**
      * Esta función quita aquellos parametros que viene nen la petición http que
