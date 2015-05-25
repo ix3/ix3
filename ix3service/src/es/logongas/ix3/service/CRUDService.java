@@ -45,4 +45,9 @@ public interface CRUDService<EntityType,PrimaryKeyType extends Serializable> ext
     List<EntityType> search(List<Filter> filters,List<Order> orders) throws BusinessException;
     Page<EntityType> pageableSearch(List<Filter> filters,int pageNumber,int pageSize) throws BusinessException;
     Page<EntityType> pageableSearch(List<Filter> filters,List<Order> orders,int pageNumber,int pageSize) throws BusinessException; 
+    List<EntityType> search(List<Filter> filters, boolean distinct) throws BusinessException;
+    List<EntityType> search(List<Filter> filters,List<Order> orders, boolean distinct) throws BusinessException;
+    Page<EntityType> pageableSearch(List<Filter> filters,int pageNumber,int pageSize, boolean distinct) throws BusinessException;
+    Page<EntityType> pageableSearch(List<Filter> filters,List<Order> orders,int pageNumber,int pageSize, boolean distinct) throws BusinessException;    
+    
 }

@@ -134,4 +134,25 @@ public class CRUDServiceImpl<EntityType,PrimaryKeyType extends Serializable> imp
     public Page pageableSearch(List<Filter> filters, List<Order> orders, int pageNumber, int pageSize) throws BusinessException {
         return getDAO().pageableSearch(filters, orders, pageNumber, pageSize);
     }
+    
+    @Override
+    public List search(List<Filter> filters, boolean distinct) throws BusinessException {
+        return getDAO().search(filters, distinct);
+    }
+
+    @Override
+    public List<EntityType> search(List<Filter> filters, List<Order> orders, boolean distinct) throws BusinessException {
+        return getDAO().search(filters, orders, distinct);
+    }
+
+    @Override
+    public Page pageableSearch(List<Filter> filters, int pageNumber, int pageSize, boolean distinct) throws BusinessException {
+        return getDAO().pageableSearch(filters, pageNumber, pageSize, distinct);
+    }
+
+    @Override
+    public Page pageableSearch(List<Filter> filters, List<Order> orders, int pageNumber, int pageSize, boolean distinct) throws BusinessException {
+        return getDAO().pageableSearch(filters, orders, pageNumber, pageSize, distinct);
+    }    
+    
 }
