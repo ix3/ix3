@@ -93,7 +93,7 @@ public class ExceptionTranslator {
                 ClassAndLabel clazzAndCaption = getSingleCaption(currentClazz, node.getName());
                 if (clazzAndCaption.label != null) {
                     if (sb.length() != 0) {
-                        sb.append(".");
+                        sb.append(" ");
                     }
                     if (node.isInIterable()) {
                         if (node.getIndex() != null) {
