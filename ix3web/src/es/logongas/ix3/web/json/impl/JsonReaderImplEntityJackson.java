@@ -187,6 +187,10 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
     private void populateEntity(Object entity, Object jsonObj, MetaData metaData) throws BusinessException {
 
+        if (jsonObj==null) {
+            return;
+        }
+        
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
@@ -226,7 +230,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                                 throw new RuntimeException(ex);
                             }
                         }
-                        populateEntity(component, rawValue, propertyMetaData);
+                            populateEntity(component, rawValue, propertyMetaData);
                         break;
                     }
                     default:
