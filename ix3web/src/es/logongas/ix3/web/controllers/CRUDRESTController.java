@@ -456,11 +456,15 @@ public class CRUDRESTController extends AbstractRESTController {
                     throw new BusinessException("El " + i + "º parámetro no tiene el formato adecuado para ser una PK:" + stringParameterValue);
                 }
 
-                //Y finalmente Leemos la entidad en función de la clave primaria
-                CRUDService crudServiceParameter = crudServiceFactory.getService(parameterType);
-                parameterValue = crudServiceParameter.read(primaryKey);
-                if (parameterValue == null) {
-                    throw new BusinessException("El " + i + "º parámetro con valor '" + stringParameterValue + "' no es de ninguna entidad.");
+                if (primaryKey==null) {
+                    parameterValue=null;
+                } else {
+                    //Y finalmente Leemos la entidad en función de la clave primaria
+                    CRUDService crudServiceParameter = crudServiceFactory.getService(parameterType);
+                    parameterValue = crudServiceParameter.read(primaryKey);
+                    if (parameterValue == null) {
+                        throw new BusinessException("El " + i + "º parámetro con valor '" + stringParameterValue + "' no es de ninguna entidad.");
+                    }
                 }
             } else {
                 try {
