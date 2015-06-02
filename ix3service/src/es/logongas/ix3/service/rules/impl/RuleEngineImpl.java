@@ -22,6 +22,8 @@ import es.logongas.ix3.service.rules.ActionRule;
 import es.logongas.ix3.service.rules.ConstraintRule;
 import es.logongas.ix3.service.rules.RuleContext;
 import es.logongas.ix3.service.rules.RuleEngine;
+import es.logongas.ix3.util.ReflectionUtil;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -30,9 +32,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.Valid;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.util.ReflectionUtils;
 
 /**
  *
@@ -70,6 +74,17 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
 
         });
 
+        List<Field> fields=getRuleFields(rulesObject);
+        for (Field field : fields) {
+            RuleContextImplDelegate ruleContextImplDelegate=new RuleContextImplDelegate(ruleContext, field.getName());
+            
+            if (ruleContextImplDelegate.getEntity()!=null) {
+                this.fireConstraintRules(ruleContextImplDelegate.getEntity(), ruleContextImplDelegate, groups);
+            }
+        }        
+        
+        
+        
         for (Method method : methods) {
             ConstraintRule constraintRule = method.getAnnotation(ConstraintRule.class);
 
@@ -149,6 +164,16 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
 
         });
 
+        List<Field> fields=getRuleFields(rulesObject);
+        for (Field field : fields) {
+            RuleContextImplDelegate ruleContextImplDelegate=new RuleContextImplDelegate(ruleContext, field.getName());
+            
+            if (ruleContextImplDelegate.getEntity()!=null) {
+                this.fireActionRules(ruleContextImplDelegate.getEntity(), ruleContextImplDelegate, groups);
+            }
+        }          
+        
+        
         for (Method method : methods) {
             ActionRule actionRule = method.getAnnotation(ActionRule.class);
 
@@ -217,6 +242,28 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
         }
 
         return new ArrayList<Method>(ruleMethods.values());
+    }
+    
+    
+    private List<Field> getRuleFields(Object rulesObject) {
+        final List<Field> fields=new ArrayList<Field>();
+        
+        if (rulesObject==null) {
+            return fields;
+        }
+        
+        ReflectionUtils.doWithFields(rulesObject.getClass(), new ReflectionUtils.FieldCallback() {
+
+            @Override
+            public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
+                if (field.getAnnotation(Valid.class)!=null) {
+                    fields.add(field);
+                }
+            }
+        });
+        
+        
+        return fields;
     }
 
     private BusinessMessage getBusinessMessage(ConstraintRule constraintRule, RuleContext<T> ruleContext) {
