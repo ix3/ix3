@@ -16,13 +16,14 @@
 package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.core.BusinessMessage;
 import es.logongas.ix3.service.NamedSearch;
 import es.logongas.ix3.core.OrderDirection;
 import es.logongas.ix3.core.Order;
+import es.logongas.ix3.core.PageRequest;
 import es.logongas.ix3.core.conversion.Conversion;
 import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.FilterOperator;
+import es.logongas.ix3.dao.SearchResponse;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.metadata.MetaType;
@@ -33,6 +34,7 @@ import es.logongas.ix3.web.controllers.metadata.Metadata;
 import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
 import es.logongas.ix3.web.json.JsonReader;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -67,8 +69,8 @@ public class CRUDRESTController extends AbstractRESTController {
     private final String PARAMETER_PAGENUMBER = "$pagenumber";
     private final String PARAMETER_PAGESIZE = "$pagesize";
     private final String PARAMETER_DISTINCT = "$distinct";
+    private final String PARAMETER_NAMEDSEARCH = "$namedsearch";
     private final String PATH_METADATA = "$metadata";
-    private final String PATH_NAMEDSEARCH = "$namedsearch";
     private final String PATH_CREATE = "$create";
 
     @Autowired
@@ -117,47 +119,39 @@ public class CRUDRESTController extends AbstractRESTController {
                     throw new BusinessException("No existe la entidad " + entityName);
                 }
                 CRUDService crudService = crudServiceFactory.getService(metaData.getType());
-                List<Filter> filters = getFiltersSearchFromParameters(httpServletRequest, metaData);
+
                 List<Order> orders = getOrders(metaData, httpServletRequest.getParameter(PARAMETER_ORDERBY));
-                Integer pageSize = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGESIZE));
-                Integer pageNumber = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGENUMBER));
-                boolean distinct = getBooleanFromString(httpServletRequest.getParameter(PARAMETER_DISTINCT));
-                Object entity;
-                if ((pageSize == null) && (pageNumber == null)) {
-                    entity = crudService.search(filters, orders,distinct);
-                } else if ((pageSize != null) && (pageNumber != null)) {
-                    entity = crudService.pageableSearch(filters, orders, pageNumber, pageSize,distinct);
+                PageRequest pageRequest = getPageRequest(httpServletRequest);
+                SearchResponse searchResponse = getSearchResponse(httpServletRequest);
+                String namedSearch = httpServletRequest.getParameter(PARAMETER_NAMEDSEARCH);
+
+                Object result;
+                if ((namedSearch != null) && (namedSearch.trim().equals("") == false)) {
+                    switch (getNamedSearchType(crudService, namedSearch)) {
+                        case FILTER:
+                            List<Filter> filters = getFiltersSearchFromWebParameters(httpServletRequest, metaData);
+                            result = executeNamedSearchFilters(crudService, namedSearch, filters, pageRequest, orders, searchResponse);
+                            break;
+                        case PARAMETERS:
+                            Map<String, Object> parameters = getParametersSearchFromWebParameters(httpServletRequest, crudService, namedSearch);
+                            result = executeNamedSearchParameters(crudService, namedSearch, parameters, pageRequest, orders, searchResponse);
+                            break;
+                        default:
+                            throw new RuntimeException("El tipo del name search es desconocido:" + getNamedSearchType(crudService, namedSearch));
+                    }
                 } else {
-                    throw new RuntimeException("Los datos de la paginacion no son correctos, es necesario los 2 datos:" + PARAMETER_PAGENUMBER + " y " + PARAMETER_PAGESIZE);
+                    List<Filter> filters = getFiltersSearchFromWebParameters(httpServletRequest, metaData);
+                    if (pageRequest == null) {
+                        result = crudService.search(filters, orders, searchResponse);
+                    } else {
+                        result = crudService.pageableSearch(filters, orders, pageRequest, searchResponse);
+                    }
                 }
-
-                return new CommandResult(metaData.getType(), entity);
-
-            }
-        });
-
-    }
-
-    @RequestMapping(value = {"/{entityName}/" + PATH_NAMEDSEARCH + "/{namedSearch}"}, method = RequestMethod.GET, produces = "application/json")
-    public void namedSearch(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("namedSearch") String namedSearch) {
-
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
-
-            @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
-
-                MetaData metaData = metaDataFactory.getMetaData(entityName);
-                if (metaData == null) {
-                    throw new BusinessException("No existe la entidad " + entityName);
-                }
-                CRUDService crudService = crudServiceFactory.getService(metaData.getType());
-                Map<String, Object> filter = getFilterNamedSearchFromParameters(crudService, namedSearch, removeDollarParameters(httpServletRequest.getParameterMap()));
-                Object result = executeNamedSearch(crudService, namedSearch, filter);
-
                 return new CommandResult(metaData.getType(), result);
 
             }
         });
+
     }
 
     @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, produces = "application/json")
@@ -359,7 +353,28 @@ public class CRUDRESTController extends AbstractRESTController {
         return orders;
     }
 
-    private List<Filter> getFiltersSearchFromParameters(HttpServletRequest httpServletRequest, MetaData metaData) {
+    private PageRequest getPageRequest(HttpServletRequest httpServletRequest) {
+        Integer pageNumber = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGENUMBER));
+        Integer pageSize = getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGESIZE));
+
+        if ((pageNumber == null) && (pageSize == null)) {
+            return null;
+        } else if ((pageNumber != null) && (pageSize != null)) {
+            return new PageRequest(pageNumber, pageSize);
+        } else {
+            throw new RuntimeException("Debe estar los 2 números para paginar pero solo está uno de ellos:" + getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGENUMBER)) + "-" + getIntegerFromString(httpServletRequest.getParameter(PARAMETER_PAGESIZE)));
+        }
+    }
+
+    private SearchResponse getSearchResponse(HttpServletRequest httpServletRequest) {
+        boolean distinct = getBooleanFromString(httpServletRequest.getParameter(PARAMETER_DISTINCT));
+
+        SearchResponse searchResponse = new SearchResponse(distinct);
+
+        return searchResponse;
+    }
+
+    private List<Filter> getFiltersSearchFromWebParameters(HttpServletRequest httpServletRequest, MetaData metaData) {
         List<Filter> filters = new ArrayList<Filter>();
         Enumeration<String> enumeration = httpServletRequest.getParameterNames();
         while (enumeration.hasMoreElements()) {
@@ -390,30 +405,16 @@ public class CRUDRESTController extends AbstractRESTController {
         return filters;
     }
 
-    private Map<String, Object> getFilterNamedSearchFromParameters(CRUDService crudService, String methodName, Map<String, String[]> parametersMap) throws BusinessException {
-        Map<String, Object> filter = new HashMap<String, Object>();
+    private Map<String, Object> getParametersSearchFromWebParameters(HttpServletRequest httpServletRequest, CRUDService crudService, String methodName) throws BusinessException {
+        Map<String, Object> parameters = new HashMap<String, Object>();
 
         Method method = ReflectionUtil.getMethod(crudService.getClass(), methodName);
         if (method == null) {
             throw new BusinessException("No existe el método " + methodName + " en la clase " + crudService.getClass().getName());
         }
 
-        NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(crudService.getClass(), methodName, NamedSearch.class);
-        if (namedSearchAnnotation == null) {
-            //Vemos si alguno de sus interfaces la tiene
-            Class[] interfaces = crudService.getClass().getInterfaces();
+        NamedSearch namedSearchAnnotation = getAnnotation(crudService.getClass(), methodName, NamedSearch.class);
 
-            for (Class interfaze : interfaces) {
-                namedSearchAnnotation = ReflectionUtil.getAnnotation(interfaze, methodName, NamedSearch.class);
-                if (namedSearchAnnotation != null) {
-                    break;
-                }
-            }
-
-            if (namedSearchAnnotation == null) {
-                throw new RuntimeException("No es posible llamar al método '" + crudService.getClass().getName() + "." + methodName + "' si no contiene la anotacion NamedSearch");
-            }
-        }
 
         String[] parameterNames = namedSearchAnnotation.parameterNames();
         if ((parameterNames == null) && (method.getParameterTypes().length > 0)) {
@@ -424,21 +425,22 @@ public class CRUDRESTController extends AbstractRESTController {
             throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + crudService.getClass().getName() + "." + methodName);
         }
 
+        Map<String, String[]> webParameters=removeDollarParameters(httpServletRequest.getParameterMap());
         for (int i = 0; i < method.getParameterTypes().length; i++) {
             String parameterName = parameterNames[i];
             Class parameterType = method.getParameterTypes()[i];
             String stringParameterValue;
             Object parameterValue;
 
-            if (parametersMap.get(parameterName) == null) {
+            if (webParameters.get(parameterName) == null) {
                 stringParameterValue = "";
             } else {
 
-                if (parametersMap.get(parameterName).length != 1) {
-                    throw new RuntimeException("El parametro de la petición http '" + parameterName + "' solo puede teenr un único valor pero tiene:" + parametersMap.get(parameterName).length);
+                if (webParameters.get(parameterName).length != 1) {
+                    throw new RuntimeException("El parametro de la petición http '" + parameterName + "' solo puede teenr un único valor pero tiene:" + webParameters.get(parameterName).length);
                 }
 
-                stringParameterValue = parametersMap.get(parameterName)[0];
+                stringParameterValue = webParameters.get(parameterName)[0];
             }
 
             MetaData metaDataParameter = metaDataFactory.getMetaData(parameterType);
@@ -456,8 +458,8 @@ public class CRUDRESTController extends AbstractRESTController {
                     throw new BusinessException("El " + i + "º parámetro no tiene el formato adecuado para ser una PK:" + stringParameterValue);
                 }
 
-                if (primaryKey==null) {
-                    parameterValue=null;
+                if (primaryKey == null) {
+                    parameterValue = null;
                 } else {
                     //Y finalmente Leemos la entidad en función de la clave primaria
                     CRUDService crudServiceParameter = crudServiceFactory.getService(parameterType);
@@ -474,11 +476,11 @@ public class CRUDRESTController extends AbstractRESTController {
                 }
             }
 
-            filter.put(parameterName, parameterValue);
+            parameters.put(parameterName, parameterValue);
 
         }
 
-        return filter;
+        return parameters;
     }
 
     /**
@@ -495,7 +497,7 @@ public class CRUDRESTController extends AbstractRESTController {
             return Integer.parseInt(s);
         }
     }
-    
+
     /**
      * Obtiene un boolean a partir de un null
      *
@@ -519,11 +521,11 @@ public class CRUDRESTController extends AbstractRESTController {
         } else if (s.equals("true")) {
             return true;
         } else if (s.equals("si")) {
-            return true;            
+            return true;
         } else {
             throw new RuntimeException("El String no se puede transformar a booleano:" + s);
         }
-    }    
+    }
 
     /**
      * Esta función quita aquellos parametros que viene nen la petición http que
@@ -643,50 +645,107 @@ public class CRUDRESTController extends AbstractRESTController {
         return newParameters;
     }
 
-    private Object executeNamedSearch(CRUDService crudService, String namedSearch, Map<String, Object> filter) throws BusinessException {
+    private Object executeNamedSearchParameters(CRUDService crudService, String namedSearch, Map<String, Object> filter, PageRequest pageRequest, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
         try {
             if (filter == null) {
                 filter = new HashMap<String, Object>();
             }
-
+            if (orders==null) {
+                orders=new ArrayList<Order>();
+            }
+            
             Method method = ReflectionUtil.getMethod(crudService.getClass(), namedSearch);
             if (method == null) {
                 throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio: " + crudService.getClass().getName());
             }
 
-            NamedSearch namedSearchAnnotation = ReflectionUtil.getAnnotation(crudService.getClass(), namedSearch, NamedSearch.class);
-            if (namedSearchAnnotation == null) {
-                //Vemos si alguno de sus interfaces la tiene
-                Class[] interfaces = crudService.getClass().getInterfaces();
-
-                for (Class interfaze : interfaces) {
-                    namedSearchAnnotation = ReflectionUtil.getAnnotation(interfaze, namedSearch, NamedSearch.class);
-                    if (namedSearchAnnotation != null) {
-                        break;
-                    }
-                }
-
-                if (namedSearchAnnotation == null) {
-                    throw new RuntimeException("No es posible llamar al método '" + crudService.getClass().getName() + "." + namedSearch + "' si no contiene la anotacion NamedSearch");
-                }
-            }
-
+            NamedSearch namedSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, NamedSearch.class);
             String[] parameterNames = namedSearchAnnotation.parameterNames();
             if ((parameterNames == null) && (method.getParameterTypes().length > 0)) {
                 throw new RuntimeException("Es necesario la lista de nombre de parametros para la anotación NameSearch del método:" + crudService.getClass().getName() + "." + namedSearch);
             }
 
-            if (method.getParameterTypes().length != parameterNames.length) {
+            List args = new ArrayList();
+            for (int i = 0; i < method.getParameterTypes().length; i++) {
+                Class parameterClass = method.getParameterTypes()[i];
+                if (parameterClass.isAssignableFrom(PageRequest.class) == true) {
+                    args.add(pageRequest);
+                } else if (parameterClass.isAssignableFrom(orders.getClass()) == true) {
+                    args.add(orders);
+                } else if (parameterClass.isAssignableFrom(SearchResponse.class) == true) {
+                    args.add(searchResponse);
+                } else {
+                    Object parameterValue = filter.get(parameterNames[i]);
+                    args.add(parameterValue);
+                }
+
+            }
+
+            if (method.getParameterTypes().length != args.size()) {
                 throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + crudService.getClass().getName() + "." + namedSearch);
             }
 
-            List args = new ArrayList();
-            for (int i = 0; i < method.getParameterTypes().length; i++) {
-                Object parameterValue = filter.get(parameterNames[i]);
+            Object result = method.invoke(crudService, args.toArray());
 
-                args.add(parameterValue);
+            return result;
+
+        } catch (InvocationTargetException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof BusinessException) {
+                BusinessException businessException = (BusinessException) cause;
+
+                throw businessException;
+            } else {
+                throw new RuntimeException(cause);
+            }
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private Object executeNamedSearchFilters(CRUDService crudService, String namedSearch, List<Filter> filters, PageRequest pageRequest, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
+        try {
+            
+            if (filters==null) {
+                filters=new ArrayList<Filter>();
+            }
+            
+            if (orders==null) {
+                orders=new ArrayList<Order>();
+            }
+            
+            
+            Method method = ReflectionUtil.getMethod(crudService.getClass(), namedSearch);
+            if (method == null) {
+                throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio: " + crudService.getClass().getName());
             }
 
+            NamedSearch namedSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, NamedSearch.class);
+
+            List args = new ArrayList();
+            for (int i = 0; i < method.getParameterTypes().length; i++) {
+                Class parameterClass = method.getParameterTypes()[i];
+                if (parameterClass.isAssignableFrom(filters.getClass()) == true) {
+                    args.add(filters);
+                } else if (parameterClass.isAssignableFrom(PageRequest.class) == true) {
+                    args.add(pageRequest);
+                } else if (parameterClass.isAssignableFrom(orders.getClass()) == true) {
+                    args.add(orders);
+                } else if (parameterClass.isAssignableFrom(SearchResponse.class) == true) {
+                    args.add(searchResponse);
+                } else {
+                    throw new RuntimeException("El tipo del argumento no es válido");
+                }
+            }
+
+            if (method.getParameterTypes().length != args.size()) {
+                throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + crudService.getClass().getName() + "." + namedSearch);
+            }            
+            
             Object result = method.invoke(crudService, args.toArray());
 
             return result;
@@ -742,6 +801,44 @@ public class CRUDRESTController extends AbstractRESTController {
 
         return new Filter(propertyName, null, filterOperator);
 
+    }
+
+    private enum NameSearchType {
+        PARAMETERS,
+        FILTER
+    }
+
+    private NameSearchType getNamedSearchType(CRUDService crudService, String namedSearch) throws BusinessException {
+        NamedSearch namedSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, NamedSearch.class);
+        if (namedSearchAnnotation == null) {
+            throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio o no tiene la anotacion NamedSearch: " + crudService.getClass().getName());
+        }
+
+        if (namedSearchAnnotation.useFilters() == true) {
+            return NameSearchType.FILTER;
+        } else {
+            return NameSearchType.PARAMETERS;
+        }
+
+    }
+
+    private <T extends Annotation> T getAnnotation(Class clazz, String methodName, Class<T> annotationClass) {
+
+        T annotation = ReflectionUtil.getAnnotation(clazz, methodName, annotationClass);
+        if (annotation == null) {
+            //Vemos si alguno de sus interfaces la tiene
+            Class[] interfaces = clazz.getInterfaces();
+
+            for (Class interfaze : interfaces) {
+                annotation = ReflectionUtil.getAnnotation(interfaze, methodName, annotationClass);
+                if (annotation != null) {
+                    break;
+                }
+            }
+
+        }
+
+        return annotation;
     }
 
 }
