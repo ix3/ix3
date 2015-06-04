@@ -18,6 +18,8 @@ package es.logongas.ix3.service.rules.impl;
 
 import es.logongas.ix3.service.rules.RuleEngine;
 import es.logongas.ix3.service.rules.RuleEngineFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
 /**
  *
@@ -25,9 +27,16 @@ import es.logongas.ix3.service.rules.RuleEngineFactory;
  */
 public class RuleEngineFactoryImpl implements RuleEngineFactory {
 
+    @Autowired
+    ApplicationContext applicationContext;
+    
     @Override
     public <T> RuleEngine<T> getRuleEngine(Class<T> clazz) {
-        return new RuleEngineImpl<T>();
+        RuleEngine ruleEngine=new RuleEngineImpl<T>();
+        
+        applicationContext.getAutowireCapableBeanFactory().autowireBean(ruleEngine);
+        
+        return ruleEngine;
     }
     
 }

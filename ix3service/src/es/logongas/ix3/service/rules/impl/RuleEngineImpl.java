@@ -18,6 +18,9 @@ package es.logongas.ix3.service.rules.impl;
 
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.core.BusinessMessage;
+import es.logongas.ix3.dao.metadata.MetaData;
+import es.logongas.ix3.dao.metadata.MetaDataFactory;
+import es.logongas.ix3.dao.metadata.MetaType;
 import es.logongas.ix3.service.rules.ActionRule;
 import es.logongas.ix3.service.rules.ConstraintRule;
 import es.logongas.ix3.service.rules.RuleContext;
@@ -33,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -48,6 +52,10 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
     private static final ExpressionParser expressionParser = new SpelExpressionParser();
     private static final TemplateParserContext templateParserContext = new TemplateParserContext("${", "}");
 
+    @Autowired
+    MetaDataFactory metaDataFactory;
+    
+    
     @Override
     public void fireConstraintRules(Object rulesObject, RuleContext<T> ruleContext, Class<?>... groups) throws BusinessException {
         List<Method> methods = getRuleMethods(rulesObject, ConstraintRule.class);
@@ -76,11 +84,11 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
 
         List<Field> fields=getRuleFields(rulesObject);
         for (Field field : fields) {
-            RuleContextImplDelegate ruleContextImplDelegate=new RuleContextImplDelegate(ruleContext, field.getName());
-            
-            if (ruleContextImplDelegate.getEntity()!=null) {
-                this.fireConstraintRules(ruleContextImplDelegate.getEntity(), ruleContextImplDelegate, groups);
-            }
+                RuleContextImplDelegate ruleContextImplDelegate=new RuleContextImplDelegate(ruleContext, field.getName());
+
+                if (ruleContextImplDelegate.getEntity()!=null) {
+                    this.fireConstraintRules(ruleContextImplDelegate.getEntity(), ruleContextImplDelegate, groups);
+                }
         }        
         
         
@@ -252,12 +260,17 @@ public class RuleEngineImpl<T> implements RuleEngine<T> {
             return fields;
         }
         
+        final MetaData metaData=metaDataFactory.getMetaData(rulesObject);
+        
+                    
         ReflectionUtils.doWithFields(rulesObject.getClass(), new ReflectionUtils.FieldCallback() {
 
             @Override
             public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
                 if (field.getAnnotation(Valid.class)!=null) {
-                    fields.add(field);
+                    if ((metaData==null) || (metaData.getPropertyMetaData(field.getName()).getMetaType())!=MetaType.Entity) {                    
+                        fields.add(field);
+                    }
                 }
             }
         });
