@@ -38,4 +38,6 @@ public @interface NamedSearch {
      */
     String[] parameterNames() default {};
     
+    boolean useFilters() default false;
+    
 }
