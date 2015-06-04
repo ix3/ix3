@@ -19,8 +19,10 @@ import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.Page;
+import es.logongas.ix3.core.PageRequest;
 import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.FilterOperator;
+import es.logongas.ix3.dao.SearchResponse;
 import es.logongas.ix3.dao.TransactionManager;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
@@ -71,8 +73,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     private MetaData getEntityMetaData() {
         return metaDataFactory.getMetaData(entityType);
-    }    
-    
+    }
+
     @Override
     final public EntityType create() throws BusinessException {
         return create(null);
@@ -303,7 +305,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         }
 
     }
-    
+
     
     @Override
     final public EntityType readOriginalByNaturalKey(Object naturalKey) throws BusinessException {
@@ -312,7 +314,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             session.setCacheMode(CacheMode.IGNORE);
             this.preReadByNaturalKey(session, naturalKey);
             EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(naturalKey);
-            if (entity!=null) {
+            if (entity != null) {
                 session.evict(entity);
             }
             this.postReadByNaturalKey(session, naturalKey, entity);
@@ -329,16 +331,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new RuntimeException(ex);
         }
 
-    }    
-    
+    }
+
     @Override
     final public EntityType readOriginal(PrimaryKeyType id) throws BusinessException {
         Session session = sessionFactory2.getCurrentSession();
         try {
-            session.setCacheMode(CacheMode.IGNORE);            
+            session.setCacheMode(CacheMode.IGNORE);
             this.preRead(session, id);
             EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
-            if (entity!=null) {
+            if (entity != null) {
                 session.evict(entity);
             }
             this.postRead(session, id, entity);
@@ -436,49 +438,42 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     @Override
     final public List<EntityType> search(List<Filter> filters) throws BusinessException {
-        return search(filters,false);
+        return search(filters, new SearchResponse(false));
     }
 
     @Override
     final public List<EntityType> search(List<Filter> filters, List<Order> orders) throws BusinessException {
-        return pageableSearch(filters, orders, 0, Integer.MAX_VALUE,false).getContent();
+        return pageableSearch(filters, orders, null, new SearchResponse(false)).getContent();
     }
 
     @Override
-    public Page<EntityType> pageableSearch(List<Filter> filters, int pageNumber, int pageSize) throws BusinessException {
-        return pageableSearch(filters, null, pageNumber, pageSize,false);
+    public Page<EntityType> pageableSearch(List<Filter> filters, PageRequest pageRequest) throws BusinessException {
+        return pageableSearch(filters, null, pageRequest, new SearchResponse(false));
     }
 
     @Override
-    public Page<EntityType> pageableSearch(List<Filter> filters, List<Order> orders, int pageNumber, int pageSize) throws BusinessException {
-        return pageableSearch(filters, orders, pageNumber, pageSize, false);
-    }    
-    
-    
-    @Override
-    final public List<EntityType> search(List<Filter> filters,boolean distinct) throws BusinessException {
-        return search(filters, null,distinct);
+    public Page<EntityType> pageableSearch(List<Filter> filters, List<Order> orders, PageRequest pageRequest) throws BusinessException {
+        return pageableSearch(filters, orders, pageRequest, new SearchResponse(false));
     }
 
     @Override
-    final public List<EntityType> search(List<Filter> filters, List<Order> orders,boolean distinct) throws BusinessException {
-        return pageableSearch(filters, orders, 0, Integer.MAX_VALUE,distinct).getContent();
+    final public List<EntityType> search(List<Filter> filters, SearchResponse searchResponse) throws BusinessException {
+        return search(filters, null, searchResponse);
     }
 
     @Override
-    public Page<EntityType> pageableSearch(List<Filter> filters, int pageNumber, int pageSize,boolean distinct) throws BusinessException {
-        return pageableSearch(filters, null, pageNumber, pageSize,distinct);
+    final public List<EntityType> search(List<Filter> filters, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
+        return pageableSearch(filters, orders, null, searchResponse).getContent();
     }
 
     @Override
-    public Page<EntityType> pageableSearch(List<Filter> filters, List<Order> orders, int pageNumber, int pageSize,boolean distinct) throws BusinessException {
+    public Page<EntityType> pageableSearch(List<Filter> filters, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
+        return pageableSearch(filters, null, pageRequest, searchResponse);
+    }
 
-        if (pageNumber < 0) {
-            throw new RuntimeException("El agumento pageNumber no pude ser negativo");
-        }
-        if (pageSize < 1) {
-            throw new RuntimeException("El agumento pageNumber debe ser mayor que 0");
-        }
+    @Override
+    public Page<EntityType> pageableSearch(List<Filter> filters, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
+
         if (orders == null) {
             orders = new ArrayList<Order>();
         }
@@ -488,39 +483,37 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             String sqlPartFrom = sqlPartFrom(filters);
             String sqlPartWhere = sqlPartWhere(filters);
             String sqlPartOrderBy = sqlPartOrder(orders);
-            String sqlPartSelectObject = sqlPartSelectObject(distinct);
-            String sqlPartSelectCount = sqlPartSelectCount(distinct);
-            
+            String sqlPartSelectObject = sqlPartSelectObject(searchResponse);
+            String sqlPartSelectCount = sqlPartSelectCount(searchResponse);
 
-            List results;
-            int totalPages;
-            if ((pageSize == Integer.MAX_VALUE) && (pageNumber == 0)) {
-                //Si el tamaño de página es tan gande (el máximo), seguro que no hace falta paginar
+            Page page;
+            if (pageRequest == null) {
                 Query queryDatos = session.createQuery(sqlPartSelectObject + " " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
                 setFilterParameters(queryDatos, filters);
-                results = queryDatos.list();
+                List results = queryDatos.list();
 
-                totalPages = 1;
+                page = new PageImpl(results, Integer.MAX_VALUE, 0, 1);
             } else {
                 Query queryDatos = session.createQuery(sqlPartSelectObject + " " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
-                queryDatos.setMaxResults(pageSize);
-                queryDatos.setFirstResult(pageSize * pageNumber);
+                queryDatos.setMaxResults(pageRequest.getPageSize());
+                queryDatos.setFirstResult(pageRequest.getPageSize() * pageRequest.getPageNumber());
                 setFilterParameters(queryDatos, filters);
-                results = queryDatos.list();
+                List results = queryDatos.list();
 
                 //Vamos ahora a calcular el total de páginas
                 Query queryCount = session.createQuery(sqlPartSelectCount + " " + sqlPartFrom + " " + sqlPartWhere);
                 setFilterParameters(queryCount, filters);
                 Long totalCount = (Long) queryCount.uniqueResult();
 
+                int totalPages;
                 if (totalCount == 0) {
                     totalPages = 0;
                 } else {
-                    totalPages = (int) (Math.ceil(((double) totalCount) / ((double) pageSize)));
+                    totalPages = (int) (Math.ceil(((double) totalCount) / ((double) pageRequest.getPageSize())));
                 }
-            }
 
-            Page page = new PageImpl(results, pageSize, pageNumber, totalPages);
+                page = new PageImpl(results, pageRequest.getPageSize(), pageRequest.getPageNumber(), totalPages);
+            }
 
             return page;
         } catch (javax.validation.ConstraintViolationException cve) {
@@ -535,33 +528,30 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     }
 
-    
-    
-    private String sqlPartSelectObject(boolean distinct) {
+    private String sqlPartSelectObject(SearchResponse searchResponse) {
         String select;
-        
-        if (distinct==true) {
-            select= "SELECT DISTINCT e ";
+
+        if ((searchResponse != null) && (searchResponse.isDistinct() == true)) {
+            select = "SELECT DISTINCT e ";
         } else {
-            select= "SELECT e ";
+            select = "SELECT e ";
         }
-        
+
         return select;
     }
-    
-    private String sqlPartSelectCount(boolean distinct) {
+
+    private String sqlPartSelectCount(SearchResponse searchResponse) {
         String select;
-        
-        if (distinct==true) {
-            select= "SELECT COUNT(DISTINCT e) ";
+
+        if ((searchResponse != null) && (searchResponse.isDistinct() == true)) {
+            select = "SELECT COUNT(DISTINCT e) ";
         } else {
-            select= "SELECT COUNT(e) ";
+            select = "SELECT COUNT(e) ";
         }
-        
+
         return select;
-    }    
-    
-    
+    }
+
     /**
      * Obtener la parte de la SQL relativa al ORDER BY
      *
@@ -612,7 +602,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 if ((joinProperty.join != null) && (joinProperty.join.isEmpty() == false)) {
                     propertyName = "j" + i + "." + joinProperty.property;
                 } else {
-                    propertyName = "e."+filter.getPropertyName();
+                    propertyName = "e." + filter.getPropertyName();
                 }
                 FilterOperator filterOperator = filter.getFilterOperator();
 
@@ -675,11 +665,11 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         for (int i = 0; i < propertiesName.length; i++) {
             currentMetaData = currentMetaData.getPropertyMetaData(propertiesName[i]);
             if (currentMetaData.isCollection() == true) {
-                
-                if (splitIndex!=-1) {
-                    throw new RuntimeException("No se permite mas de una colección en un filtro where: "+filter.getPropertyName() + " la primera es:" + propertiesName[splitIndex] + " y la segunda es:"+propertiesName[i]);
+
+                if (splitIndex != -1) {
+                    throw new RuntimeException("No se permite mas de una colección en un filtro where: " + filter.getPropertyName() + " la primera es:" + propertiesName[splitIndex] + " y la segunda es:" + propertiesName[i]);
                 }
-                
+
                 splitIndex = i;
             }
         }
@@ -689,15 +679,15 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             joinProperty.property = filter.getPropertyName();
         } else {
             joinProperty.join = StringUtils.collectionToDelimitedString(Arrays.asList(Arrays.copyOfRange(propertiesName, 0, splitIndex + 1)), ".");
-            joinProperty.property = StringUtils.collectionToDelimitedString(Arrays.asList(Arrays.copyOfRange(propertiesName, splitIndex+1, propertiesName.length)), ".");
+            joinProperty.property = StringUtils.collectionToDelimitedString(Arrays.asList(Arrays.copyOfRange(propertiesName, splitIndex + 1, propertiesName.length)), ".");
         }
 
         return joinProperty;
     }
 
     /**
-     * En una HQL contiene los datos del JOIN del FROM y de las propiedades del WHERE
-     * Esto se hace pq es necesario para buscar datos en colecciones
+     * En una HQL contiene los datos del JOIN del FROM y de las propiedades del
+     * WHERE Esto se hace pq es necesario para buscar datos en colecciones
      * http://stackoverflow.com/questions/24750754/org-hibernate-queryexception-illegal-attempt-to-dereference-collection
      */
     private class JoinProperty {
@@ -741,7 +731,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
         return sbOrder.toString();
     }
-    
+
     /**
      * Establecer los parámetros de las consultas de Query
      *
@@ -773,8 +763,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 }
             }
         }
-    }    
-    
+    }
+
     
     protected void postCreate(Session session, EntityType entity) throws BusinessException {
     }

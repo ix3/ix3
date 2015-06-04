@@ -18,6 +18,7 @@ package es.logongas.ix3.dao;
 import es.logongas.ix3.core.Page;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.core.PageRequest;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -40,10 +41,10 @@ public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable> {
     EntityType readOriginalByNaturalKey(Object value) throws BusinessException;
     List<EntityType> search(List<Filter> filters) throws BusinessException;
     List<EntityType> search(List<Filter> filters,List<Order> orders) throws BusinessException;
-    Page<EntityType> pageableSearch(List<Filter> filters,int pageNumber,int pageSize) throws BusinessException;
-    Page<EntityType> pageableSearch(List<Filter> filters,List<Order> orders,int pageNumber,int pageSize) throws BusinessException;  
-    List<EntityType> search(List<Filter> filters,boolean distinct) throws BusinessException;
-    List<EntityType> search(List<Filter> filters,List<Order> orders,boolean distinct) throws BusinessException;
-    Page<EntityType> pageableSearch(List<Filter> filters,int pageNumber,int pageSize,boolean distinct) throws BusinessException;
-    Page<EntityType> pageableSearch(List<Filter> filters,List<Order> orders,int pageNumber,int pageSize,boolean distinct) throws BusinessException;       
+    Page<EntityType> pageableSearch(List<Filter> filters,PageRequest pageRequest) throws BusinessException;
+    Page<EntityType> pageableSearch(List<Filter> filters,List<Order> orders,PageRequest pageRequest) throws BusinessException;  
+    List<EntityType> search(List<Filter> filters,SearchResponse searchResponse) throws BusinessException;
+    List<EntityType> search(List<Filter> filters,List<Order> orders,SearchResponse searchResponse) throws BusinessException;
+    Page<EntityType> pageableSearch(List<Filter> filters,PageRequest pageRequest,SearchResponse searchResponse) throws BusinessException;
+    Page<EntityType> pageableSearch(List<Filter> filters,List<Order> orders,PageRequest pageRequest,SearchResponse searchResponse) throws BusinessException;       
 }
