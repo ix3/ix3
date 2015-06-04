@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package es.logongas.ix3.service.impl;
 
 import es.logongas.ix3.core.BusinessException;
@@ -22,7 +20,9 @@ import es.logongas.ix3.core.Order;
 import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.core.Page;
+import es.logongas.ix3.core.PageRequest;
 import es.logongas.ix3.dao.Filter;
+import es.logongas.ix3.dao.SearchResponse;
 import es.logongas.ix3.dao.TransactionManager;
 import es.logongas.ix3.security.util.PrincipalLocator;
 import es.logongas.ix3.service.CRUDService;
@@ -36,47 +36,46 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * 
+ *
  * @author Lorenzo
  * @param <EntityType>
- * @param <PrimaryKeyType> 
+ * @param <PrimaryKeyType>
  */
-public class CRUDServiceImpl<EntityType,PrimaryKeyType extends Serializable> implements CRUDService<EntityType,PrimaryKeyType> {
+public class CRUDServiceImpl<EntityType, PrimaryKeyType extends Serializable> implements CRUDService<EntityType, PrimaryKeyType> {
+
     @Autowired
     protected PrincipalLocator principalLocator;
-    
-    @Autowired 
+
+    @Autowired
     protected DAOFactory daoFactory;
 
     @Autowired
     protected TransactionManager transactionManager;
-       
+
     Class entityType;
 
     protected final Log log = LogFactory.getLog(getClass());
 
     public CRUDServiceImpl() {
         entityType = (Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        
+
     }
 
     public CRUDServiceImpl(Class<EntityType> entityType) {
         this.entityType = entityType;
-    }    
-    
-    
-    protected GenericDAO<EntityType,PrimaryKeyType> getDAO() {
+    }
+
+    protected GenericDAO<EntityType, PrimaryKeyType> getDAO() {
         return daoFactory.getDAO(entityType);
     }
 
-    
     @Override
     public EntityType create() throws BusinessException {
         return getDAO().create();
     }
 
     @Override
-    public EntityType create(Map<String,Object> initialProperties) throws BusinessException {
+    public EntityType create(Map<String, Object> initialProperties) throws BusinessException {
         return getDAO().create(initialProperties);
     }
 
@@ -89,12 +88,12 @@ public class CRUDServiceImpl<EntityType,PrimaryKeyType extends Serializable> imp
     public EntityType read(PrimaryKeyType primaryKey) throws BusinessException {
         return getDAO().read(primaryKey);
     }
-    
+
     @Override
     public EntityType readOriginal(PrimaryKeyType primaryKey) throws BusinessException {
         return getDAO().readOriginal(primaryKey);
     }
-    
+
     @Override
     public boolean update(EntityType entity) throws BusinessException {
         return getDAO().update(entity);
@@ -109,12 +108,12 @@ public class CRUDServiceImpl<EntityType,PrimaryKeyType extends Serializable> imp
     public EntityType readByNaturalKey(Object value) throws BusinessException {
         return getDAO().readByNaturalKey(value);
     }
-    
+
     @Override
     public EntityType readOriginalByNaturalKey(Object value) throws BusinessException {
         return getDAO().readOriginalByNaturalKey(value);
     }
-    
+
     @Override
     public List search(List<Filter> filters) throws BusinessException {
         return getDAO().search(filters);
@@ -126,33 +125,33 @@ public class CRUDServiceImpl<EntityType,PrimaryKeyType extends Serializable> imp
     }
 
     @Override
-    public Page pageableSearch(List<Filter> filters, int pageNumber, int pageSize) throws BusinessException {
-        return getDAO().pageableSearch(filters, pageNumber, pageSize);
+    public Page pageableSearch(List<Filter> filters, PageRequest pageRequest) throws BusinessException {
+        return getDAO().pageableSearch(filters, pageRequest);
     }
 
     @Override
-    public Page pageableSearch(List<Filter> filters, List<Order> orders, int pageNumber, int pageSize) throws BusinessException {
-        return getDAO().pageableSearch(filters, orders, pageNumber, pageSize);
-    }
-    
-    @Override
-    public List search(List<Filter> filters, boolean distinct) throws BusinessException {
-        return getDAO().search(filters, distinct);
+    public Page pageableSearch(List<Filter> filters, List<Order> orders, PageRequest pageRequest) throws BusinessException {
+        return getDAO().pageableSearch(filters, orders, pageRequest);
     }
 
     @Override
-    public List<EntityType> search(List<Filter> filters, List<Order> orders, boolean distinct) throws BusinessException {
-        return getDAO().search(filters, orders, distinct);
+    public List search(List<Filter> filters, SearchResponse searchResponse) throws BusinessException {
+        return getDAO().search(filters, searchResponse);
     }
 
     @Override
-    public Page pageableSearch(List<Filter> filters, int pageNumber, int pageSize, boolean distinct) throws BusinessException {
-        return getDAO().pageableSearch(filters, pageNumber, pageSize, distinct);
+    public List<EntityType> search(List<Filter> filters, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
+        return getDAO().search(filters, orders, searchResponse);
     }
 
     @Override
-    public Page pageableSearch(List<Filter> filters, List<Order> orders, int pageNumber, int pageSize, boolean distinct) throws BusinessException {
-        return getDAO().pageableSearch(filters, orders, pageNumber, pageSize, distinct);
-    }    
-    
+    public Page pageableSearch(List<Filter> filters, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
+        return getDAO().pageableSearch(filters, pageRequest, searchResponse);
+    }
+
+    @Override
+    public Page pageableSearch(List<Filter> filters, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
+        return getDAO().pageableSearch(filters, orders, pageRequest, searchResponse);
+    }
+
 }
