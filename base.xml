@@ -16,7 +16,7 @@
 		
 		<!-- Tarea de sonar -->
         <taskdef resource="org/sonar/ant/antlib.xml"></taskdef> 
-        <property file="./sonar-project.properties"/> 
+ 
     </target> 
 	
     <macrodef name="publishRelease">
