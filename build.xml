@@ -9,6 +9,18 @@
 
 	<target name="publish" depends="-configureAnt,ask-data,create-tag,publish-release">
 	</target>
+
+    <target name="sonar" depends="-configureAnt" >
+		<property file="./sonar-project.properties"/>
+        <!-- Estas propeiudades se deben actualizar según el servidor de sonar a usar -->
+        <property name="sonar.host.url" value="http://sonar.fpempresa.net" />
+        <property name="sonar.jdbc.url" value="jdbc:postgresql://localhost/sonar" />
+        <property name="sonar.jdbc.username" value="" />
+        <property name="sonar.jdbc.password" value="" />
+	
+        <!-- Antes de ejecutar la tarea quizas haya que hacer un tunel ssh al servidor de sonar -->
+        <sonar />        
+    </target>	
 	
 	<target name="ask-data" depends="-configureAnt">
 		<echo>Datos para poder desplegar</echo>
