@@ -32,6 +32,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.logging.Log;
@@ -282,7 +283,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         }
     }
 
-
     @Override
     final public EntityType readByNaturalKey(Object naturalKey) throws BusinessException {
         Session session = sessionFactory.getCurrentSession();
@@ -306,7 +306,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     }
 
-    
     @Override
     final public EntityType readOriginalByNaturalKey(Object naturalKey) throws BusinessException {
         Session session = sessionFactory2.getCurrentSession();
@@ -486,33 +485,18 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             String sqlPartSelectObject = sqlPartSelectObject(searchResponse);
             String sqlPartSelectCount = sqlPartSelectCount(searchResponse);
 
+            String sqlData = sqlPartSelectObject + " " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy;
+            String sqlCount = sqlPartSelectCount + " " + sqlPartFrom + " " + sqlPartWhere;
+
             Page page;
             if (pageRequest == null) {
-                Query queryDatos = session.createQuery(sqlPartSelectObject + " " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
-                setFilterParameters(queryDatos, filters);
+                Query queryDatos = session.createQuery(sqlData);
+                setParameters(queryDatos, new HashMap<Object, Object>(getParameterFromFilters(filters)));
                 List results = queryDatos.list();
 
                 page = new PageImpl(results, Integer.MAX_VALUE, 0, 1);
             } else {
-                Query queryDatos = session.createQuery(sqlPartSelectObject + " " + sqlPartFrom + " " + sqlPartWhere + " " + sqlPartOrderBy);
-                queryDatos.setMaxResults(pageRequest.getPageSize());
-                queryDatos.setFirstResult(pageRequest.getPageSize() * pageRequest.getPageNumber());
-                setFilterParameters(queryDatos, filters);
-                List results = queryDatos.list();
-
-                //Vamos ahora a calcular el total de páginas
-                Query queryCount = session.createQuery(sqlPartSelectCount + " " + sqlPartFrom + " " + sqlPartWhere);
-                setFilterParameters(queryCount, filters);
-                Long totalCount = (Long) queryCount.uniqueResult();
-
-                int totalPages;
-                if (totalCount == 0) {
-                    totalPages = 0;
-                } else {
-                    totalPages = (int) (Math.ceil(((double) totalCount) / ((double) pageRequest.getPageSize())));
-                }
-
-                page = new PageImpl(results, pageRequest.getPageSize(), pageRequest.getPageNumber(), totalPages);
+                page = getPaginatedQuery(sqlData, sqlCount, pageRequest, getParameterFromFilters(filters));
             }
 
             return page;
@@ -738,7 +722,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
      * @param query
      * @param filters
      */
-    private void setFilterParameters(Query query, List<Filter> filters) {
+    private Map<String, Object> getParameterFromFilters(List<Filter> filters) {
+        Map<String, Object> namedParameters = new HashMap<String, Object>();
+
         if (filters != null) {
             for (int i = 0; i < filters.size(); i++) {
                 Filter filter = filters.get(i);
@@ -754,18 +740,113 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                     value = filter.getValue();
                 }
 
-                if (value instanceof Object[]) {
-                    query.setParameterList("bind" + i, (Object[]) value);
-                } else if (value instanceof Collection) {
-                    query.setParameterList("bind" + i, (Collection) value);
+                namedParameters.put("bind" + i, value);
+            }
+        }
+
+        return namedParameters;
+    }
+
+    /**
+     * Crea una consulta pagina retornando la página que se solicita.
+     * @param sqlData La SQL para Obtener los datos.
+     * @param sqlCount La SQL para Obtener le Nº total de filas que retornaría sqlData. Se pasa para optimizar.
+     * @param pageRequest La página que se solicita.
+     * @param parameters La lista de parámetros se establecen por la posición en la lista
+     * @return La pagina
+     */
+    protected Page<EntityType> getPaginatedQuery(String sqlData, String sqlCount, PageRequest pageRequest, List<Object> parameters) {
+        Map<Object, Object> indexParameters = new HashMap<Object, Object>();
+        for (int i = 0; i < parameters.size(); i++) {
+            indexParameters.put(i, parameters.get(i));
+        }
+
+        return getGenericPaginatedQuery(sqlData, sqlCount, pageRequest, indexParameters);
+    }
+
+    /**
+     * Crea una consulta pagina retornando la página que se solicita.
+     * @param sqlData La SQL para Obtener los datos.
+     * @param sqlCount La SQL para Obtener le Nº total de filas que retornaría sqlData. Se pasa para optimizar.
+     * @param pageRequest La página que se solicita.
+     * @param parameters La lista de parámetros se por el nombre del parámetro de la clave del Map.
+     * @return La pagina
+     */    
+    protected Page<EntityType> getPaginatedQuery(String sqlData, String sqlCount, PageRequest pageRequest, Map<String, Object> parameters) {
+        Map<Object, Object> namedParameters = new HashMap<Object, Object>();
+        namedParameters.putAll(parameters);
+
+        return getGenericPaginatedQuery(sqlData, sqlCount, pageRequest, namedParameters);
+    }
+
+    /**
+     * Crea una consulta pagina retornando la página que se solicita.
+     * @param sqlData La SQL para Obtener los datos.
+     * @param sqlCount La SQL para Obtener le Nº total de filas que retornaría sqlData. Se pasa para optimizar.
+     * @param pageRequest La página que se solicita.
+     * @param parameters El map debe ser del tipo Map<String,Object> o Map<Integer,Object>. Y se pondrán los parámetros por nombre o por posición.
+     * @return La pagina
+     */
+    private Page<EntityType> getGenericPaginatedQuery(String sqlData, String sqlCount, PageRequest pageRequest, Map<Object, Object> parameters) {
+        Session session = sessionFactory.getCurrentSession();
+
+        Query queryDatos = session.createQuery(sqlData);
+        queryDatos.setMaxResults(pageRequest.getPageSize());
+        queryDatos.setFirstResult(pageRequest.getPageSize() * pageRequest.getPageNumber());
+        setParameters(queryDatos, parameters);
+        List<EntityType> results = (List<EntityType>) queryDatos.list();
+
+        //Vamos ahora a calcular el total de páginas
+        Query queryCount = session.createQuery(sqlCount);
+        setParameters(queryCount, parameters);
+        Long totalCount = (Long) queryCount.uniqueResult();
+
+        int totalPages;
+        if (totalCount == 0) {
+            totalPages = 0;
+        } else {
+            totalPages = (int) (Math.ceil(((double) totalCount) / ((double) pageRequest.getPageSize())));
+        }
+
+        Page<EntityType> page = new PageImpl<EntityType>(results, pageRequest.getPageSize(), pageRequest.getPageNumber(), totalPages);
+
+        return page;
+    }
+
+    /**
+     * Pone los parámetros en una Query
+     * @param query La Query a la que se le pone los parámetros.
+     * @param parameters El map debe ser del tipo Map<String,Object> o Map<Integer,Object>. Y se pondrán los parámetros por nombre o por posición.
+     */
+    private void setParameters(Query query, Map<Object, Object> parameters) {
+        if (parameters != null) {
+            for (Map.Entry<Object, Object> entry : parameters.entrySet()) {
+                Object value = entry.getValue();
+                Object parameterKey = entry.getKey();
+
+                if (parameterKey == null) {
+                    throw new NullPointerException("El nombre de un parámetro no puede ser null");
+                }
+
+                if (parameterKey instanceof Number) {
+                    Number parameterIndex = (Number) parameterKey;
+                    query.setParameter(parameterIndex.intValue(), value);
+                } else if (parameterKey instanceof String) {
+                    String parameterName = (String) parameterKey;
+                    if (value instanceof Object[]) {
+                        query.setParameterList(parameterName, (Object[]) value);
+                    } else if (value instanceof Collection) {
+                        query.setParameterList(parameterName, (Collection) value);
+                    } else {
+                        query.setParameter(parameterName, value);
+                    }
                 } else {
-                    query.setParameter("bind" + i, value);
+                    throw new RuntimeException("La clave debe ser de tipo String o Number");
                 }
             }
         }
     }
 
-    
     protected void postCreate(Session session, EntityType entity) throws BusinessException {
     }
 
@@ -817,6 +898,4 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
     }
 
-    
-    
 }
