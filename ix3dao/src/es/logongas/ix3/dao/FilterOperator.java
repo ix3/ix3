@@ -29,5 +29,6 @@ public enum FilterOperator {
     like,
     llike,
     liker,
-    lliker
+    lliker,
+    isnull
 }

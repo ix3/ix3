@@ -590,33 +590,39 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 }
                 FilterOperator filterOperator = filter.getFilterOperator();
 
-                sqlWhere.append(" AND " + propertyName + " ");
+                sqlWhere.append(" AND ");
                 if (filterOperator == FilterOperator.eq) {
                     if (value instanceof Object[]) {
-                        sqlWhere.append(" in (:bind" + i + ")");
+                        sqlWhere.append(propertyName + " in (:bind" + i + ")");
                     } else if (value instanceof Collection) {
-                        sqlWhere.append(" in (:bind" + i + ")");
+                        sqlWhere.append(propertyName + " in (:bind" + i + ")");
                     } else {
-                        sqlWhere.append(" = :bind" + i + "");
+                        sqlWhere.append(propertyName + " = :bind" + i + "");
                     }
                 } else if (filterOperator == FilterOperator.ne) {
-                    sqlWhere.append(" != :bind" + i + "");
+                    sqlWhere.append(propertyName + " != :bind" + i + "");
                 } else if (filterOperator == FilterOperator.gt) {
-                    sqlWhere.append(" > :bind" + i + "");
+                    sqlWhere.append(propertyName + " > :bind" + i + "");
                 } else if (filterOperator == FilterOperator.ge) {
-                    sqlWhere.append(" >= :bind" + i + "");
+                    sqlWhere.append(propertyName + " >= :bind" + i + "");
                 } else if (filterOperator == FilterOperator.lt) {
-                    sqlWhere.append(" < :bind" + i + "");
+                    sqlWhere.append(propertyName + " < :bind" + i + "");
                 } else if (filterOperator == FilterOperator.le) {
-                    sqlWhere.append(" <= :bind" + i + "");
+                    sqlWhere.append(propertyName + " <= :bind" + i + "");
                 } else if (filterOperator == FilterOperator.like) {
-                    sqlWhere.append(" like :bind" + i + "");
+                    sqlWhere.append(propertyName + " like :bind" + i + "");
                 } else if (filterOperator == FilterOperator.llike) {
-                    sqlWhere.append(" like :bind" + i + "");
+                    sqlWhere.append(propertyName + " like :bind" + i + "");
                 } else if (filterOperator == FilterOperator.liker) {
-                    sqlWhere.append(" like :bind" + i + "");
+                    sqlWhere.append(propertyName + " like :bind" + i + "");
                 } else if (filterOperator == FilterOperator.lliker) {
-                    sqlWhere.append(" like :bind" + i + "");
+                    sqlWhere.append(propertyName + " like :bind" + i + "");
+                } else if (filterOperator == FilterOperator.isnull) {
+                    if (filter.getValue()==Boolean.TRUE) {
+                        sqlWhere.append("(" + propertyName + " IS NULL) ");
+                    } else {
+                        sqlWhere.append("(" + propertyName + " IS NOT NULL) ");
+                    }
                 } else {
                     throw new RuntimeException("El nombre del operador no es válido:" + filterOperator);
                 }
@@ -732,15 +738,21 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
                 if (filter.getFilterOperator() == FilterOperator.llike) {
                     value = "%" + filter.getValue() + "";
+                    namedParameters.put("bind" + i, value);
                 } else if (filter.getFilterOperator() == FilterOperator.liker) {
                     value = "" + filter.getValue() + "%";
+                    namedParameters.put("bind" + i, value);
                 } else if (filter.getFilterOperator() == FilterOperator.lliker) {
                     value = "%" + filter.getValue() + "%";
+                    namedParameters.put("bind" + i, value);
+                } else if (filter.getFilterOperator() == FilterOperator.isnull) {
+                    //No hay que añadir nada pq este operador no necesita parámetro
                 } else {
                     value = filter.getValue();
+                    namedParameters.put("bind" + i, value);
                 }
 
-                namedParameters.put("bind" + i, value);
+                
             }
         }
 
