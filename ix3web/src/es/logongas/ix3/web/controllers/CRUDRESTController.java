@@ -386,13 +386,24 @@ public class CRUDRESTController extends AbstractRESTController {
                 Class propertyType = propertyMetaData.getType();
                 String[] parameterValues = httpServletRequest.getParameterValues(rawPropertyName);
                 if (parameterValues.length == 1) {
-                    Object value = conversion.convertFromString(parameterValues[0], propertyType);
+                    Object value;
+                    if (filter.getFilterOperator() == FilterOperator.isnull) {
+                        value = conversion.convertFromString(parameterValues[0], Boolean.class);
+                    } else {
+                        value = conversion.convertFromString(parameterValues[0], propertyType);
+                    }
                     if (value != null) {
                         filter.setValue(value);
                         filters.add(filter);
                     }
+
                 } else {
                     List<Object> values = new ArrayList<Object>();
+                    
+                    if (filter.getFilterOperator() == FilterOperator.isnull) {
+                        throw new RuntimeException("No se permiten varios valores con el operador 'isnull'");
+                    }
+                    
                     for (String parameterValue : parameterValues) {
                         values.add(conversion.convertFromString(parameterValue, propertyType));
                     }
@@ -415,7 +426,6 @@ public class CRUDRESTController extends AbstractRESTController {
 
         NamedSearch namedSearchAnnotation = getAnnotation(crudService.getClass(), methodName, NamedSearch.class);
 
-
         String[] parameterNames = namedSearchAnnotation.parameterNames();
         if ((parameterNames == null) && (method.getParameterTypes().length > 0)) {
             throw new RuntimeException("Es necesario la lista de nombre de parametros para la anotación NameSearch del método:" + crudService.getClass().getName() + "." + methodName);
@@ -425,7 +435,7 @@ public class CRUDRESTController extends AbstractRESTController {
             throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + crudService.getClass().getName() + "." + methodName);
         }
 
-        Map<String, String[]> webParameters=removeDollarParameters(httpServletRequest.getParameterMap());
+        Map<String, String[]> webParameters = removeDollarParameters(httpServletRequest.getParameterMap());
         for (int i = 0; i < method.getParameterTypes().length; i++) {
             String parameterName = parameterNames[i];
             Class parameterType = method.getParameterTypes()[i];
@@ -650,10 +660,10 @@ public class CRUDRESTController extends AbstractRESTController {
             if (filter == null) {
                 filter = new HashMap<String, Object>();
             }
-            if (orders==null) {
-                orders=new ArrayList<Order>();
+            if (orders == null) {
+                orders = new ArrayList<Order>();
             }
-            
+
             Method method = ReflectionUtil.getMethod(crudService.getClass(), namedSearch);
             if (method == null) {
                 throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio: " + crudService.getClass().getName());
@@ -709,16 +719,15 @@ public class CRUDRESTController extends AbstractRESTController {
 
     private Object executeNamedSearchFilters(CRUDService crudService, String namedSearch, List<Filter> filters, PageRequest pageRequest, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
         try {
-            
-            if (filters==null) {
-                filters=new ArrayList<Filter>();
+
+            if (filters == null) {
+                filters = new ArrayList<Filter>();
             }
-            
-            if (orders==null) {
-                orders=new ArrayList<Order>();
+
+            if (orders == null) {
+                orders = new ArrayList<Order>();
             }
-            
-            
+
             Method method = ReflectionUtil.getMethod(crudService.getClass(), namedSearch);
             if (method == null) {
                 throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio: " + crudService.getClass().getName());
@@ -744,8 +753,8 @@ public class CRUDRESTController extends AbstractRESTController {
 
             if (method.getParameterTypes().length != args.size()) {
                 throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + crudService.getClass().getName() + "." + namedSearch);
-            }            
-            
+            }
+
             Object result = method.invoke(crudService, args.toArray());
 
             return result;
@@ -804,6 +813,7 @@ public class CRUDRESTController extends AbstractRESTController {
     }
 
     private enum NameSearchType {
+
         PARAMETERS,
         FILTER
     }
