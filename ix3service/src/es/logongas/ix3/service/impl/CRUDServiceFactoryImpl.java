@@ -39,7 +39,7 @@ public class CRUDServiceFactoryImpl implements CRUDServiceFactory {
     private ApplicationContext context;
 
     @Override
-    public CRUDService getService(Class entityClass) {
+    public     <T> CRUDService<T,Integer> getService(Class<T> entityClass) {
         FactoryHelper<CRUDService> factoryHelper = new FactoryHelper<CRUDService>(domainBasePackageName, interfaceBasePackageName, implBasePackageName, implSubPackageName, interfaceSufix, implSufix, defaultImplClass, context);
 
         return factoryHelper.getImpl(entityClass);

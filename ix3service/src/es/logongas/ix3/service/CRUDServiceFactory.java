@@ -21,5 +21,5 @@ package es.logongas.ix3.service;
  * @author Lorenzo
  */
 public interface CRUDServiceFactory {
-    CRUDService getService(Class entityClass);
+    <T> CRUDService<T,Integer> getService(Class<T> entityClass);    
 }
