@@ -40,7 +40,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Date {
 
-    String message() default "{es.logongas.ix3.persistence.services.constraints.Date.message}";
+    String message() default "{es.logongas.ix3.core.annotations.Date.message}";
 
     Class<?>[] groups() default {};
 

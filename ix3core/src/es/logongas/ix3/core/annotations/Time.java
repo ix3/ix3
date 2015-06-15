@@ -43,7 +43,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Time {
 
-    String message() default "{es.logongas.ix3.persistence.services.constraints.Time.message}";
+    String message() default "{es.logongas.ix3.core.annotations.Time.message}";
 
     Class<?>[] groups() default {};
 
