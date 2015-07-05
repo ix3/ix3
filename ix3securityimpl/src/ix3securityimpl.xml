@@ -39,6 +39,8 @@ limitations under the License.
         </property>
     </bean>-->
     
+    <bean class="es.logongas.ix3.security.util.WebSessionSidStorageImplHttpSession"  />
+    
     <bean class="es.logongas.ix3.security.util.PrincipalLocatorImplThreadLocal"  />
     
 </beans>
