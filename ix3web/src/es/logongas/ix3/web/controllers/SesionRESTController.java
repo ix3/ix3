@@ -16,15 +16,14 @@
 package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.core.BusinessMessage;
 import es.logongas.ix3.security.authentication.impl.CredentialImplLoginPassword;
 import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.security.util.WebSessionSidStorage;
 import java.io.Serializable;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,6 +40,9 @@ public class SesionRESTController extends AbstractRESTController {
     @Autowired
     AuthenticationManager authenticationManager;
 
+    @Autowired
+    WebSessionSidStorage webSessionSidStorage;
+    
     @RequestMapping(value = {"/session"}, method = RequestMethod.POST, headers = "Accept=application/json")
     public void login(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
@@ -61,9 +63,7 @@ public class SesionRESTController extends AbstractRESTController {
                     throw new BusinessException("El usuario o contraseña no son válidos");
                 }
 
-                //Creamos la sesión y la el sid
-                HttpSession httpSession = httpServletRequest.getSession();
-                httpSession.setAttribute("sid", principal.getSid());
+                webSessionSidStorage.setSid(httpServletRequest,httpServletResponse,principal.getSid());
 
                 return new CommandResult(Principal.class, principal,HttpServletResponse.SC_CREATED);
 
@@ -81,8 +81,7 @@ public class SesionRESTController extends AbstractRESTController {
             public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
                 Principal principal;
 
-                HttpSession httpSession = httpServletRequest.getSession();
-                Serializable sid = (Serializable) httpSession.getAttribute("sid");
+                Serializable sid =  webSessionSidStorage.getSid(httpServletRequest,httpServletResponse);
 
                 if (sid == null) {
                     principal = null;
@@ -103,8 +102,8 @@ public class SesionRESTController extends AbstractRESTController {
 
             @Override
             public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
-                HttpSession httpSession = httpServletRequest.getSession();
-                httpSession.setAttribute("sid", null);
+                
+                webSessionSidStorage.deleteSid(httpServletRequest,httpServletResponse);
 
                 return null;
 

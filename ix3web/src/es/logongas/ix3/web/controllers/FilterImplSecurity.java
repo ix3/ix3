@@ -20,6 +20,7 @@ import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.security.authentication.Principal;
 import es.logongas.ix3.security.authorization.AuthorizationManager;
 import es.logongas.ix3.security.util.PrincipalLocator;
+import es.logongas.ix3.security.util.WebSessionSidStorage;
 import java.io.IOException;
 import java.io.Serializable;
 import javax.servlet.Filter;
@@ -30,7 +31,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -45,9 +45,12 @@ public class FilterImplSecurity implements Filter {
 
     @Autowired
     AuthorizationManager authorizationManager;
-    
+
     @Autowired
     PrincipalLocator principalLocator;
+
+    @Autowired
+    WebSessionSidStorage webSessionSidStorage;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -62,21 +65,17 @@ public class FilterImplSecurity implements Filter {
         String method = httpServletRequest.getMethod();
 
         Principal principal;
-        HttpSession httpSession = httpServletRequest.getSession();
-        if (httpSession != null) {
-            Serializable sid = (Serializable) httpSession.getAttribute("sid");
-            if (sid == null) {
-                principal = null;
-            } else {
-                try {
-                    principal = authenticationManager.getPrincipalBySID(sid);
-                } catch (BusinessException ex) {
-                    httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            }
-        } else {
+
+        Serializable sid = webSessionSidStorage.getSid(httpServletRequest,httpServletResponse);
+        if (sid == null) {
             principal = null;
+        } else {
+            try {
+                principal = authenticationManager.getPrincipalBySID(sid);
+            } catch (BusinessException ex) {
+                httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
         }
 
         if (authorizationManager.authorized(principal, "URL", getSecureURI(uri, httpServletRequest.getContextPath()), method, httpServletRequest.getParameterMap()) == true) {
