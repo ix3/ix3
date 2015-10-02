@@ -16,7 +16,6 @@
 package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.service.NamedSearch;
 import es.logongas.ix3.core.OrderDirection;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.PageRequest;
@@ -29,6 +28,8 @@ import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.metadata.MetaType;
 import es.logongas.ix3.service.CRUDService;
 import es.logongas.ix3.service.CRUDServiceFactory;
+import es.logongas.ix3.service.FilterSearch;
+import es.logongas.ix3.service.ParameterSearch;
 import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.controllers.metadata.Metadata;
 import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
@@ -424,9 +425,9 @@ public class CRUDRESTController extends AbstractRESTController {
             throw new BusinessException("No existe el método " + methodName + " en la clase " + crudService.getClass().getName());
         }
 
-        NamedSearch namedSearchAnnotation = getAnnotation(crudService.getClass(), methodName, NamedSearch.class);
+        ParameterSearch parameterSearchAnnotation = getAnnotation(crudService.getClass(), methodName, ParameterSearch.class);
 
-        String[] parameterNames = namedSearchAnnotation.parameterNames();
+        String[] parameterNames = parameterSearchAnnotation.parameterNames();
         if ((parameterNames == null) && (method.getParameterTypes().length > 0)) {
             throw new RuntimeException("Es necesario la lista de nombre de parametros para la anotación NameSearch del método:" + crudService.getClass().getName() + "." + methodName);
         }
@@ -669,8 +670,8 @@ public class CRUDRESTController extends AbstractRESTController {
                 throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio: " + crudService.getClass().getName());
             }
 
-            NamedSearch namedSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, NamedSearch.class);
-            String[] parameterNames = namedSearchAnnotation.parameterNames();
+            ParameterSearch parameterSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, ParameterSearch.class);
+            String[] parameterNames = parameterSearchAnnotation.parameterNames();
             if ((parameterNames == null) && (method.getParameterTypes().length > 0)) {
                 throw new RuntimeException("Es necesario la lista de nombre de parametros para la anotación NameSearch del método:" + crudService.getClass().getName() + "." + namedSearch);
             }
@@ -733,8 +734,11 @@ public class CRUDRESTController extends AbstractRESTController {
                 throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio: " + crudService.getClass().getName());
             }
 
-            NamedSearch namedSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, NamedSearch.class);
-
+            FilterSearch filterSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, FilterSearch.class);
+            if (filterSearchAnnotation==null) {
+                throw new RuntimeException("El método '" + namedSearch + "' debe tener la anotación FilterSearch");
+            }
+            
             List args = new ArrayList();
             for (int i = 0; i < method.getParameterTypes().length; i++) {
                 Class parameterClass = method.getParameterTypes()[i];
@@ -805,15 +809,23 @@ public class CRUDRESTController extends AbstractRESTController {
     }
 
     private NameSearchType getNamedSearchType(CRUDService crudService, String namedSearch) throws BusinessException {
-        NamedSearch namedSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, NamedSearch.class);
-        if (namedSearchAnnotation == null) {
-            throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio o no tiene la anotacion NamedSearch: " + crudService.getClass().getName());
-        }
-
-        if (namedSearchAnnotation.useFilters() == true) {
-            return NameSearchType.FILTER;
-        } else {
+        FilterSearch filterSearchAnnotation;
+        ParameterSearch parameterSearchAnnotation;
+        
+        
+        filterSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, FilterSearch.class);
+        parameterSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, ParameterSearch.class);
+        
+        if ((filterSearchAnnotation==null) && (parameterSearchAnnotation==null)) {
+            throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio o no tiene la anotacion FilterSearch o ParameterSearch: " + crudService.getClass().getName());
+        } else if ((filterSearchAnnotation==null) && (parameterSearchAnnotation!=null)) {
             return NameSearchType.PARAMETERS;
+        } if ((filterSearchAnnotation!=null) && (parameterSearchAnnotation==null)) {
+            return NameSearchType.FILTER;
+        } if ((filterSearchAnnotation!=null) && (parameterSearchAnnotation!=null)) {
+            throw new BusinessException("El método " + namedSearch + " no puede tener a la vez las anotaciones anotacion FilterSearch o ParameterSearch: " + crudService.getClass().getName());
+        } else {
+            throw new BusinessException("Error de lógica");
         }
 
     }
