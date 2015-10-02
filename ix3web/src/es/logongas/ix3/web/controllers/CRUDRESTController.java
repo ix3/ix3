@@ -780,29 +780,15 @@ public class CRUDRESTController extends AbstractRESTController {
     private Filter getFilterFromPropertyName(String rawPropertyName) {
         FilterOperator filterOperator;
         String propertyName;
-
-        if (rawPropertyName.endsWith("__")) {
-            filterOperator = null;
-            propertyName = null;
-
-            for (FilterOperator searcherfilterOperator : FilterOperator.values()) {
-                String end = "__" + searcherfilterOperator.name().toUpperCase() + "__";
-                if (rawPropertyName.endsWith(end)) {
-                    filterOperator = searcherfilterOperator;
-                    propertyName = rawPropertyName.substring(0, rawPropertyName.length() - end.length());
-                    break;
-                }
+        int indexDollar=rawPropertyName.indexOf("$");
+        
+        if (indexDollar>0) {
+            try {
+                filterOperator = FilterOperator.valueOf(rawPropertyName.substring(indexDollar+1));
+            } catch ( IllegalArgumentException ex) {
+                throw new RuntimeException("El formato del modificador de la propiedad no es valido:" + rawPropertyName);
             }
-
-            if (filterOperator == null) {
-                if (rawPropertyName.matches("__[a-zA-Z]__$")) {
-                    throw new RuntimeException("El formato del modificado no es valido:" + rawPropertyName);
-                } else {
-                    filterOperator = FilterOperator.eq;
-                    propertyName = rawPropertyName;
-                }
-            }
-
+            propertyName = rawPropertyName.substring(0,indexDollar);
         } else {
             filterOperator = FilterOperator.eq;
             propertyName = rawPropertyName;
