@@ -46,7 +46,7 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
     public void setSid(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Serializable sid) {
         String payload = serialize(sid);
 
-        String jwsCompact = jws.getJwsCompactSerialization(payload, getPassword(sid));
+        String jwsCompact = jws.getJwsCompactSerialization(payload, getSecretKey(sid));
         Cookie cookie = new Cookie(jwsCookieName, jwsCompact);
         cookie.setHttpOnly(false);
         cookie.setPath(httpServletRequest.getContextPath() + "/");
@@ -94,14 +94,24 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
             return null;
         }
 
-        if ((jws.verifyJwsCompactSerialization(jwsCompactCookie, getPassword(sid)) == false)) {
+        byte[] secretKey = getSecretKey(sid);
+        if (secretKey == null) {
+            return null;
+        }
+
+        if ((jws.verifyJwsCompactSerialization(jwsCompactCookie, secretKey) == false)) {
             return null;
         }
 
         return sid;
     }
 
-    abstract protected byte[] getPassword(Serializable sid);
+    /**
+     * Obtiene un dato "secreto" del usuario para poder encriptar el Web token
+     * @param sid El identificador de seguridad del usuario
+     * @return Un secreto único de ese usuario. Normalmente es la contraseña o el hash de la contraseña. Si el "sid" no existe retorna null.
+     */
+    abstract protected byte[] getSecretKey(Serializable sid);
 
     private String getJwsCompactInCookie(HttpServletRequest httpServletRequest) {
         Cookie[] cookies = httpServletRequest.getCookies();
@@ -124,12 +134,12 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
     private String serialize(Serializable serializable) {
         try {
             Base64 base64 = new Base64();
-            
+
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ObjectOutputStream so = new ObjectOutputStream(outputStream);
             so.writeObject(serializable);
             so.flush();
-            
+
             return base64.encodeAsString(outputStream.toByteArray());
         } catch (Exception ex) {
             throw new RuntimeException(ex);
