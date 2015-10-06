@@ -29,6 +29,7 @@ import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.util.ReflectionUtil;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -60,18 +61,31 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Autowired
     protected ExceptionTranslator exceptionTranslator;
 
-    Class entityType;
+    private Class<EntityType> entityType=null;
 
     protected final Log log = LogFactory.getLog(getClass());
 
     public GenericDAOImplHibernate() {
-        entityType = (Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        Type type=getClass().getGenericSuperclass();
+        if (type instanceof  ParameterizedType) {
+            entityType = (Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        }
     }
 
     public GenericDAOImplHibernate(Class<EntityType> entityType) {
         this.entityType = entityType;
     }
 
+    @Override
+    public void setEntityType(Class<EntityType> entityType) {
+        this.entityType = entityType;
+    }
+
+    @Override
+    public Class<EntityType> getEntityType() {
+        return this.entityType;
+    }
+    
     private MetaData getEntityMetaData() {
         return metaDataFactory.getMetaData(entityType);
     }

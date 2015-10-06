@@ -29,7 +29,7 @@ import java.util.Map;
  * @param <EntityType> Tipo de la propia entidad
  * @param <PrimaryKeyType> Tipo de la clave primaria de la entidad
  */
-public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable> {
+public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable>  extends es.logongas.ix3.core.EntityType<EntityType>{
     EntityType create() throws BusinessException;
     EntityType create(Map<String,Object> initialProperties) throws BusinessException;
     void insert(EntityType entity) throws BusinessException;
