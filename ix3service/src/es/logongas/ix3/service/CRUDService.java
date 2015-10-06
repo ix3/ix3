@@ -33,7 +33,7 @@ import java.util.Map;
  * @param <EntityType>
  * @param <PrimaryKeyType> 
  */
-public interface CRUDService<EntityType,PrimaryKeyType extends Serializable> extends Service {
+public interface CRUDService<EntityType,PrimaryKeyType extends Serializable> extends Service<EntityType> {
     EntityType create() throws BusinessException;
     EntityType create(Map<String,Object> initialProperties) throws BusinessException;
     void insert(EntityType entity) throws BusinessException;

@@ -21,6 +21,6 @@ package es.logongas.ix3.service;
  *
  * @author logongas
  */
-public interface Service {
+public interface Service<EntityType> extends es.logongas.ix3.core.EntityType<EntityType> {
     
 }

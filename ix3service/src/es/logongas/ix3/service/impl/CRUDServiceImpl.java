@@ -26,9 +26,9 @@ import es.logongas.ix3.dao.SearchResponse;
 import es.logongas.ix3.dao.TransactionManager;
 import es.logongas.ix3.security.util.PrincipalLocator;
 import es.logongas.ix3.service.CRUDService;
-import es.logongas.ix3.service.rules.RuleEngineFactory;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.logging.Log;
@@ -57,18 +57,31 @@ public class CRUDServiceImpl<EntityType, PrimaryKeyType extends Serializable> im
     protected final Log log = LogFactory.getLog(getClass());
 
     public CRUDServiceImpl() {
-        entityType = (Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-
+        Type type=getClass().getGenericSuperclass();
+        if (type instanceof  ParameterizedType) {
+            entityType = (Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        }
     }
 
     public CRUDServiceImpl(Class<EntityType> entityType) {
         this.entityType = entityType;
     }
 
+
     protected GenericDAO<EntityType, PrimaryKeyType> getDAO() {
         return daoFactory.getDAO(entityType);
     }
-
+    
+    @Override
+    public void setEntityType(Class<EntityType> entityType) {
+        this.entityType = entityType;
+    }
+        
+    @Override
+    public Class<EntityType> getEntityType() {
+        return this.entityType;
+    } 
+    
     @Override
     public EntityType create() throws BusinessException {
         return getDAO().create();
