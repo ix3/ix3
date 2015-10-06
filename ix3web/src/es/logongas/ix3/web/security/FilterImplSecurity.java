@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.controllers;
+package es.logongas.ix3.web.security;
 
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.security.authentication.AuthenticationManager;
@@ -41,10 +41,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class FilterImplSecurity implements Filter {
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    AuthorizationInterceptorImplURL authorizationInterceptorImplURL;
 
     @Autowired
-    AuthorizationManager authorizationManager;
+    AuthenticationManager authenticationManager;
 
     @Autowired
     PrincipalLocator principalLocator;
@@ -61,28 +61,19 @@ public class FilterImplSecurity implements Filter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
 
-        String uri = httpServletRequest.getRequestURI();
-        String method = httpServletRequest.getMethod();
-
         Principal principal;
-
-        Serializable sid = webSessionSidStorage.getSid(httpServletRequest,httpServletResponse);
-        if (sid == null) {
-            principal = null;
-        } else {
-            try {
-                principal = authenticationManager.getPrincipalBySID(sid);
-            } catch (BusinessException ex) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
+        try {
+            principal = getPrincipal(httpServletRequest, httpServletResponse);
+        } catch (BusinessException ex) {
+            httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return;
         }
 
-        if (authorizationManager.authorized(principal, "URL", getSecureURI(uri, httpServletRequest.getContextPath()), method, httpServletRequest.getParameterMap()) == true) {
+        if (authorizationInterceptorImplURL.checkAuthorized(principal, httpServletRequest, httpServletResponse) == true) {
             try {
                 principalLocator.bindPrincipal(principal);
                 filterChain.doFilter(servletRequest, servletResponse);
-            }finally {
+            } finally {
                 principalLocator.unbindPrincipal();
             }
         } else {
@@ -94,33 +85,17 @@ public class FilterImplSecurity implements Filter {
     public void destroy() {
     }
 
-    /**
-     * Obtiene la URL pero si la parte del ContextPath De esa forma al
-     * establecer la seguridad no tenemos que saber donde está desplegada la
-     * aplicación
-     *
-     * @param uri
-     * @param contextPath
-     * @return
-     */
-    private String getSecureURI(String uri, String contextPath) {
-        int beginIndex;
-        if (contextPath == null) {
-            beginIndex = 0;
+    private Principal getPrincipal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws BusinessException {
+        Principal principal;
+
+        Serializable sid = webSessionSidStorage.getSid(httpServletRequest, httpServletResponse);
+        if (sid == null) {
+            principal = null;
         } else {
-            beginIndex = contextPath.length();
-            if (uri.startsWith(contextPath) == false) {
-                throw new RuntimeException("uri no empieza por '" + contextPath + "':" + uri);
-            }
+            principal = authenticationManager.getPrincipalBySID(sid);
         }
 
-        String secureURI = uri.substring(beginIndex);
-
-        if (secureURI.startsWith("/") == false) {
-            throw new RuntimeException("secureURI no empieza por '/':" + secureURI);
-        }
-
-        return secureURI;
+        return principal;
     }
 
 }
