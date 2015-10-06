@@ -15,6 +15,8 @@
  */
 package es.logongas.ix3.util;
 
+import es.logongas.ix3.core.EntityType;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import org.springframework.context.ApplicationContext;
 
@@ -54,7 +56,8 @@ public class FactoryHelper<T> {
      * clase DAONombreEntidadImplHibernate En el paquete
      * 'interfaceBasePackageName' , en el paquete interfaceBasePackageName y un
      * subpaquete igual a subtituir domainBasePackageName por
-     * interfaceBasePackageName o en un subpaquete del interfaz llamado "implSubPackageName"
+     * interfaceBasePackageName o en un subpaquete del interfaz llamado
+     * "implSubPackageName"
      *
      * @param entityClass
      * @return El DAO de la entidad
@@ -68,39 +71,43 @@ public class FactoryHelper<T> {
         try {
             fqcn = getFQCNImplInSpecificPackage(entityClass, domainBasePackageName, implBasePackageName);
             tClass = Class.forName(fqcn);
-            t = (T) tClass.newInstance();
-            context.getAutowireCapableBeanFactory().autowireBean(t);
+            t = (T) context.getAutowireCapableBeanFactory().createBean(tClass);
         } catch (Exception ex) {
             //Si no existe probamos con la siguiente
             try {
                 fqcn = getFQCNImplInSamePackage(entityClass, implBasePackageName);
                 tClass = Class.forName(fqcn);
-                t = (T) tClass.newInstance();
-                context.getAutowireCapableBeanFactory().autowireBean(t);
+                t = (T) context.getAutowireCapableBeanFactory().createBean(tClass);
             } catch (Exception ex1) {
                 try {
                     fqcn = getFQCNImplInSubPackage(entityClass, domainBasePackageName, implBasePackageName);
                     tClass = Class.forName(fqcn);
-                    t = (T) tClass.newInstance();
-                    context.getAutowireCapableBeanFactory().autowireBean(t);
+                    t = (T) context.getAutowireCapableBeanFactory().createBean(tClass);
                 } catch (Exception ex2) {
 
-                    //Si no existe probamos con la siguiente
-                    //Pero como es generico deberemos ver si existe el interfaz
-                    T realGenericDAO;
+                    Object bean;
                     try {
-                        realGenericDAO = defaultImplClass.getConstructor(Class.class).newInstance(entityClass);
+                        bean = context.getAutowireCapableBeanFactory().createBean(defaultImplClass);
+
+                        Object noProxyBean=unProxyObject(bean);
+                        if (noProxyBean instanceof EntityType) {
+                            EntityType entityType=(EntityType)noProxyBean;
+                            entityType.setEntityType(entityClass);
+                        }
+                        
                     } catch (Exception ex3) {
                         throw new RuntimeException(ex3);
                     }
-                    context.getAutowireCapableBeanFactory().autowireBean(realGenericDAO);
+                    
+                    
+                    //Pero como es generico deberemos ver si existe el interfaz
                     Class<? extends T> interfaceClass = getInterface(entityClass);
                     if (interfaceClass == null) {
                         //Si no existe el interfaz no hace falta crear el Proxy pq
                         //sería perder rendimiento.
-                        t = realGenericDAO;
+                        t = (T) bean;
                     } else {
-                        t = (T) Proxy.newProxyInstance(InvocationHandlerImpl.class.getClassLoader(), new Class[]{interfaceClass}, new InvocationHandlerImpl(realGenericDAO));
+                        t = (T) Proxy.newProxyInstance(InvocationHandlerImpl.class.getClassLoader(), new Class[]{interfaceClass}, new InvocationHandlerImpl(bean));
                     }
                 }
             }
@@ -194,4 +201,39 @@ public class FactoryHelper<T> {
         return entityClass.getSimpleName() + implSufix;
     }
 
+    /**
+     * Obtiene el objeto original de un objeto si este es un proxy. Si el objeto no está en un proxy retorna el mismo objeto.
+     * @param proxyObject El  proxy
+     * @return El objeto que contiene el proxy
+     */
+    private Object unProxyObject(Object proxyObject) {
+        try {
+
+            if (proxyObject == null) {
+                return null;
+            }
+
+            Method methodGetTargetSource = ReflectionUtil.getMethod(proxyObject.getClass(), "getTargetSource");
+            if (methodGetTargetSource != null) {
+                Object targetSource = methodGetTargetSource.invoke(proxyObject);
+                
+                if (targetSource==null) {
+                    return proxyObject;
+                }
+                
+                Method methodGetTarget = ReflectionUtil.getMethod(targetSource.getClass(), "getTarget");
+                if (methodGetTarget != null) {
+                    return unProxyObject(methodGetTarget.invoke(targetSource));
+                } else {
+                    return proxyObject;
+                }
+            } else {
+                return proxyObject;
+            }
+
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+    }
 }
