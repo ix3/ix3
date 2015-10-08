@@ -16,11 +16,8 @@
 package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.security.authentication.impl.CredentialImplLoginPassword;
-import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.security.authentication.Principal;
-import es.logongas.ix3.security.util.WebSessionSidStorage;
-import java.io.Serializable;
+import es.logongas.ix3.web.service.WebSessionService;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,13 +32,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @author Lorenzo González
  */
 @Controller
-public class SesionRESTController extends AbstractRESTController {
+public class SessionRESTController extends AbstractRESTController {
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    WebSessionService webSessionService;
 
-    @Autowired
-    WebSessionSidStorage webSessionSidStorage;
     
     @RequestMapping(value = {"/session"}, method = RequestMethod.POST, headers = "Accept=application/json")
     public void login(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
@@ -50,20 +45,8 @@ public class SesionRESTController extends AbstractRESTController {
 
             @Override
             public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
-                httpServletRequest.setCharacterEncoding("UTF-8");
 
-                String login = httpServletRequest.getParameter("login");
-                String password = httpServletRequest.getParameter("password");
-
-                CredentialImplLoginPassword credentialImplLoginPassword = new CredentialImplLoginPassword(login, password);
-
-                Principal principal = authenticationManager.authenticate(credentialImplLoginPassword);
-
-                if (principal == null) {
-                    throw new BusinessException("El usuario o contraseña no son válidos");
-                }
-
-                webSessionSidStorage.setSid(httpServletRequest,httpServletResponse,principal.getSid());
+                Principal principal=webSessionService.createWebSession(httpServletRequest, httpServletResponse);
 
                 return new CommandResult(Principal.class, principal,HttpServletResponse.SC_CREATED);
 
@@ -79,15 +62,8 @@ public class SesionRESTController extends AbstractRESTController {
 
             @Override
             public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
-                Principal principal;
 
-                Serializable sid =  webSessionSidStorage.getSid(httpServletRequest,httpServletResponse);
-
-                if (sid == null) {
-                    principal = null;
-                } else {
-                    principal = authenticationManager.getPrincipalBySID(sid);
-                }
+                Principal principal=webSessionService.getCurrentWebSession(httpServletRequest, httpServletResponse);
 
                 return new CommandResult(Principal.class, principal);
 
@@ -103,7 +79,7 @@ public class SesionRESTController extends AbstractRESTController {
             @Override
             public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
                 
-                webSessionSidStorage.deleteSid(httpServletRequest,httpServletResponse);
+                webSessionService.deleteCurrentWebSession(httpServletRequest,httpServletResponse);
 
                 return null;
 
