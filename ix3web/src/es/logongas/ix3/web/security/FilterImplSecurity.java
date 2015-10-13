@@ -18,9 +18,7 @@ package es.logongas.ix3.web.security;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.security.authentication.Principal;
-import es.logongas.ix3.security.authorization.AuthorizationManager;
 import es.logongas.ix3.security.util.PrincipalLocator;
-import es.logongas.ix3.security.util.WebSessionSidStorage;
 import java.io.IOException;
 import java.io.Serializable;
 import javax.servlet.Filter;
@@ -61,24 +59,22 @@ public class FilterImplSecurity implements Filter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
 
-        Principal principal;
         try {
-            principal = getPrincipal(httpServletRequest, httpServletResponse);
+            Principal principal = getPrincipal(httpServletRequest, httpServletResponse);
+            if (authorizationInterceptorImplURL.checkAuthorized(principal, httpServletRequest, httpServletResponse) == true) {
+                try {
+                    principalLocator.bindPrincipal(principal);
+                    filterChain.doFilter(servletRequest, servletResponse);
+                } finally {
+                    principalLocator.unbindPrincipal();
+                }
+            } else {
+                httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            }
         } catch (BusinessException ex) {
             httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return;
         }
 
-        if (authorizationInterceptorImplURL.checkAuthorized(principal, httpServletRequest, httpServletResponse) == true) {
-            try {
-                principalLocator.bindPrincipal(principal);
-                filterChain.doFilter(servletRequest, servletResponse);
-            } finally {
-                principalLocator.unbindPrincipal();
-            }
-        } else {
-            httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        }
     }
 
     @Override
