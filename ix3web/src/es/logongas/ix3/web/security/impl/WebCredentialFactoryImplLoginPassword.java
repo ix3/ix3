@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.service.impl;
+package es.logongas.ix3.web.security.impl;
 
 import es.logongas.ix3.security.authentication.Credential;
 import es.logongas.ix3.security.authentication.impl.CredentialImplLoginPassword;
+import es.logongas.ix3.web.security.WebCredentialFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- *
+ * Obtiene las credenciales a partir de los parámetros "login" y "password" de la petición
  * @author logongas
  */
 public class WebCredentialFactoryImplLoginPassword implements WebCredentialFactory {

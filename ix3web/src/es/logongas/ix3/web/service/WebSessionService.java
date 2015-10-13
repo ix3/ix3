@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- *
+ * Gestión de la sesión del usuario en la capa de Web
  * @author logongas
  */
 public interface WebSessionService extends Service {

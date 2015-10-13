@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.service.impl;
+package es.logongas.ix3.web.security;
 
 import es.logongas.ix3.security.authentication.Credential;
 import javax.servlet.http.HttpServletRequest;

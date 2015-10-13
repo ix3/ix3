@@ -15,11 +15,12 @@
  */
 package es.logongas.ix3.web.service.impl;
 
+import es.logongas.ix3.web.security.WebCredentialFactory;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.security.authentication.Credential;
 import es.logongas.ix3.security.authentication.Principal;
-import es.logongas.ix3.security.util.WebSessionSidStorage;
+import es.logongas.ix3.web.security.WebSessionSidStorage;
 import es.logongas.ix3.web.service.WebSessionService;
 import java.io.Serializable;
 import javax.servlet.http.HttpServletRequest;
