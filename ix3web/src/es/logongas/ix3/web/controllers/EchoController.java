@@ -16,12 +16,7 @@
 package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.core.conversion.Conversion;
 import es.logongas.ix3.dao.NativeDAO;
-import es.logongas.ix3.dao.metadata.MetaData;
-import es.logongas.ix3.dao.metadata.MetaDataFactory;
-import es.logongas.ix3.service.CRUDService;
-import es.logongas.ix3.service.CRUDServiceFactory;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
