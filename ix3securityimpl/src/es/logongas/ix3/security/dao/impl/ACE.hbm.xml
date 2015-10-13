@@ -20,6 +20,8 @@
     </many-to-one>
     <property name="secureResourceRegExp"/>
     <property name="conditionalScript" type="text"/>
+    <property name="conditionalExpression" type="text"/>
     <property name="priority"/>
+    <property name="description"/>
   </class>
 </hibernate-mapping>

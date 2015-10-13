@@ -42,7 +42,7 @@ public class ACETest {
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Object arguments = new HashMap<String,Object>();
-        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*", null, 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*", null,null, 10,null);
         AuthorizationType expResult = AuthorizationType.AccessAllow;
         AuthorizationType result = instance.authorized(user,"/index.html", permission, arguments);
         assertEquals(expResult, result);
@@ -54,7 +54,7 @@ public class ACETest {
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Object arguments = new HashMap<String,Object>();
-        ACE instance = new ACE(1, ACEType.Deny, permission, user, "/.*", null, 10);
+        ACE instance = new ACE(1, ACEType.Deny, permission, user, "/.*", null,null, 10,null);
         AuthorizationType expResult = AuthorizationType.AccessDeny;
         AuthorizationType result = instance.authorized(user,"/index.html", permission, arguments);
         assertEquals(expResult, result);
@@ -67,7 +67,7 @@ public class ACETest {
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Object arguments = new HashMap<String,Object>();
-        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*", null, 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*", null,null, 10,null);
         AuthorizationType expResult = AuthorizationType.AccessAllow;
         AuthorizationType result = instance.authorized(user,"/juan/index.html", permission, arguments);
         assertEquals(expResult, result);
@@ -80,7 +80,7 @@ public class ACETest {
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Object arguments = new HashMap<String,Object>();
-        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*", null, 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*", null,null, 10,null);
         AuthorizationType expResult = AuthorizationType.Abstain;
         AuthorizationType result = instance.authorized(user,"/juan/index.html", new Permission(1, "POST", "POST", secureResourceType), arguments);
         assertEquals(expResult, result);
@@ -93,7 +93,7 @@ public class ACETest {
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Object arguments = new HashMap<String,Object>();
-        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", null, 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", null,null, 10,null);
         AuthorizationType expResult = AuthorizationType.Abstain;
         AuthorizationType result = instance.authorized(user,"/index.html", permission, arguments);
         assertEquals(expResult, result);
@@ -105,93 +105,169 @@ public class ACETest {
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Object arguments = new HashMap<String,Object>();
-        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", null, 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*",null, null, 10,null);
         AuthorizationType expResult = AuthorizationType.AccessAllow;
         AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
         assertEquals(expResult, result);
     }
 
     @Test
-    public void testAuthorized8() {
-        System.out.println("authorized Expresion a true");
+    public void testAuthorizedScript1() {
+        System.out.println("authorized Script a true");
         SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Map<String,Object> arguments = new HashMap<String,Object>();
         arguments.put("user","pepe");
-        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", "return arguments.get('user')=='pepe'", 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", "return arguments.get('user')=='pepe'",null, 10,null);
         AuthorizationType expResult = AuthorizationType.AccessAllow;
         AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
         assertEquals(expResult, result);
     }
 
     @Test
-    public void testAuthorized9() {
-        System.out.println("authorized Expresion  a false");
+    public void testAuthorizedScript2() {
+        System.out.println("authorized Script  a false");
         SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Map<String,Object> arguments = new HashMap<String,Object>();
         arguments.put("user","pepe");
-        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", "return arguments.get('user')=='juan'", 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", "return arguments.get('user')=='juan'",null, 10,null);
         AuthorizationType expResult = AuthorizationType.Abstain;
         AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
         assertEquals(expResult, result);
     }
 
     @Test
-    public void testAuthorized10() {
-        System.out.println("authorized Expresion  usando el Identity");
+    public void testAuthorizedScript3() {
+        System.out.println("authorized Script  usando el Identity");
         SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Map<String,Object> arguments = new HashMap<String,Object>();
         arguments.put("user","pepe");
-        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", "return identity.getLogin()=='Juan'", 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", "return identity.getLogin()=='Juan'",null, 10,null);
         AuthorizationType expResult = AuthorizationType.AccessAllow;
         AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
         assertEquals(expResult, result);
     }
 
     @Test
-    public void testAuthorized11() {
-        System.out.println("authorized Expresion  usando el secureResourceName");
+    public void testAuthorizedScript4() {
+        System.out.println("authorized Script  usando el secureResourceName");
         SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Map<String,Object> arguments = new HashMap<String,Object>();
         arguments.put("user","pepe");
-        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", "return secureResourceName=='/pepe/index.html'", 10);
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", "return secureResourceName=='/pepe/index.html'",null, 10,null);
         AuthorizationType expResult = AuthorizationType.AccessAllow;
         AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
         assertEquals(expResult, result);
     }
 
     @Test
-    public void testAuthorized12() {
-        System.out.println("authorized Expresion  usando el ACE");
+    public void testAuthorizedScript5() {
+        System.out.println("authorized Script  usando el ACE");
         SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Map<String,Object> arguments = new HashMap<String,Object>();
         arguments.put("user","pepe");
-        ACE instance = new ACE(4, ACEType.Allow, permission, user, "/.*/.*", "return ace.getIdACE()==4", 10);
+        ACE instance = new ACE(4, ACEType.Allow, permission, user, "/.*/.*", "return ace.getIdACE()==4",null, 10,null);
         AuthorizationType expResult = AuthorizationType.AccessAllow;
         AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
         assertEquals(expResult, result);
     }
     @Test
-    public void testAuthorized13() {
-        System.out.println("authorized Expresion  usando múltiple lineas");
+    public void testAuthorizedScript6() {
+        System.out.println("authorized Script  usando múltiple lineas");
         SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
         User user=new User(1, "Juan", "Juan García");
         Map<String,Object> arguments = new HashMap<String,Object>();
         arguments.put("user","pepe");
-        ACE instance = new ACE(4, ACEType.Allow, permission, user, "/.*/.*", "var a=4; if (a==4) { return true; } else { return false; }", 10);
+        ACE instance = new ACE(4, ACEType.Allow, permission, user, "/.*/.*", "var a=4; if (a==4) { return true; } else { return false; }",null, 10,null);
         AuthorizationType expResult = AuthorizationType.AccessAllow;
         AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
         assertEquals(expResult, result);
     }
+    
+    
+    
+    
+    @Test
+    public void testAuthorizedExpression1() {
+        System.out.println("authorized Expression a true");
+        SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
+        Permission permission = new Permission(1, "GET", "GET", secureResourceType);
+        User user=new User(1, "Juan", "Juan García");
+        Map<String,Object> arguments = new HashMap<String,Object>();
+        arguments.put("user","pepe");
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*", null,"arguments.get('user')=='pepe'", 10,null);
+        AuthorizationType expResult = AuthorizationType.AccessAllow;
+        AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testAuthorizedExpression2() {
+        System.out.println("authorized Expression  a false");
+        SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
+        Permission permission = new Permission(1, "GET", "GET", secureResourceType);
+        User user=new User(1, "Juan", "Juan García");
+        Map<String,Object> arguments = new HashMap<String,Object>();
+        arguments.put("user","pepe");
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*",null, "arguments.get('user')=='juan'", 10,null);
+        AuthorizationType expResult = AuthorizationType.Abstain;
+        AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testAuthorizedExpression3() {
+        System.out.println("authorized Expression  usando el Identity");
+        SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
+        Permission permission = new Permission(1, "GET", "GET", secureResourceType);
+        User user=new User(1, "Juan", "Juan García");
+        Map<String,Object> arguments = new HashMap<String,Object>();
+        arguments.put("user","pepe");
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*",null, "identity.getLogin()=='Juan'", 10,null);
+        AuthorizationType expResult = AuthorizationType.AccessAllow;
+        AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testAuthorizedExpression4() {
+        System.out.println("authorized Expression  usando el secureResourceName");
+        SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
+        Permission permission = new Permission(1, "GET", "GET", secureResourceType);
+        User user=new User(1, "Juan", "Juan García");
+        Map<String,Object> arguments = new HashMap<String,Object>();
+        arguments.put("user","pepe");
+        ACE instance = new ACE(1, ACEType.Allow, permission, user, "/.*/.*",null, "secureResourceName=='/pepe/index.html'", 10,null);
+        AuthorizationType expResult = AuthorizationType.AccessAllow;
+        AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testAuthorizedExpression5() {
+        System.out.println("authorized Expression  usando el ACE");
+        SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
+        Permission permission = new Permission(1, "GET", "GET", secureResourceType);
+        User user=new User(1, "Juan", "Juan García");
+        Map<String,Object> arguments = new HashMap<String,Object>();
+        arguments.put("user","pepe");
+        ACE instance = new ACE(4, ACEType.Allow, permission, user, "/.*/.*",null, "ace.getIdACE()==4", 10,null);
+        AuthorizationType expResult = AuthorizationType.AccessAllow;
+        AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
+        assertEquals(expResult, result);
+    }
+
+    
+    
 }
 

@@ -15,15 +15,17 @@
  */
 package es.logongas.ix3.security.model;
 
-import es.logongas.ix3.core.annotations.Label;
 import es.logongas.ix3.core.annotations.ValuesList;
 import es.logongas.ix3.security.authorization.AuthorizationType;
 import es.logongas.ix3.util.ScriptEvaluator;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.validation.constraints.AssertTrue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
  *
@@ -38,27 +40,34 @@ public class ACE {
     private Identity identity;
     private String secureResourceRegExp;
     private String conditionalScript;
+    private String conditionalExpression;
     private Integer priority;
-
+    private String description;
 
     private static final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
     private static final ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
     private static final ScriptEvaluator scriptEvaluator = new ScriptEvaluator(scriptEngine);
+
+    private static final ExpressionParser expressionParser = new SpelExpressionParser();
 
     protected final Log log = LogFactory.getLog(getClass());
 
     public ACE() {
     }
 
-    public ACE(int idACE, ACEType aceType, Permission permission, Identity identity, String secureResourceRegExp, String conditionalScript, Integer priority) {
+    public ACE(int idACE, ACEType aceType, Permission permission, Identity identity, String secureResourceRegExp, String conditionalScript, String conditionalExpression, Integer priority, String description) {
         this.idACE = idACE;
         this.aceType = aceType;
         this.permission = permission;
         this.identity = identity;
         this.secureResourceRegExp = secureResourceRegExp;
         this.conditionalScript = conditionalScript;
+        this.conditionalExpression = conditionalExpression;
         this.priority = priority;
+        this.description = description;
     }
+
+    
 
     @Override
     public String toString() {
@@ -74,11 +83,27 @@ public class ACE {
 
         if (this.permission.equals(permission)) {
             if (secureResourceName.matches(secureResourceRegExp)) {
-                if (evaluateConditionalScript(this, identity, secureResourceName, arguments)==true) {
+
+                if ((existsConditionalExpression() == false) && (existsConditionalScript() == false)) {
                     authorizationType = aceTypeToAuthorizationType(aceType);
+                } else if ((existsConditionalExpression() == true) && (existsConditionalScript() == false)) {
+                    if (evaluateConditionalExpression(this, identity, secureResourceName, arguments) == true) {
+                        authorizationType = aceTypeToAuthorizationType(aceType);
+                    } else {
+                        authorizationType = AuthorizationType.Abstain;
+                    }
+                } else if ((existsConditionalExpression() == false) && (existsConditionalScript() == true)) {
+                    if (evaluateConditionalScript(this, identity, secureResourceName, arguments) == true) {
+                        authorizationType = aceTypeToAuthorizationType(aceType);
+                    } else {
+                        authorizationType = AuthorizationType.Abstain;
+                    }
+                } else if ((existsConditionalExpression() == true) && (existsConditionalScript() == true)) {
+                    throw new RuntimeException("No es posible indicar un Script y una expresion para el ACE:" + this.getIdACE());
                 } else {
-                    authorizationType = AuthorizationType.Abstain;
+                    throw new RuntimeException("Error de lógica para el ACE:" + this.getIdACE());
                 }
+
             } else {
                 authorizationType = AuthorizationType.Abstain;
             }
@@ -101,31 +126,63 @@ public class ACE {
     }
 
     private boolean evaluateConditionalScript(ACE ace, Identity identity, String secureResourceName, Object arguments) {
-        Object result;
-
-
-        //Si no hay Script retirnamos 'true'
-        if ((conditionalScript==null) || (conditionalScript.trim().length()==0)) {
-            return true;
+        if ((ace.getConditionalScript() == null) || (ace.getConditionalScript().trim().length() == 0)) {
+            throw new RuntimeException("No podemos evaluar un Script vacio del ACE:" + ace.getIdACE());
         }
 
-        String functionName = "conditionalScript_" + ace.getIdACE()+"_"+Math.abs(conditionalScript.hashCode());
+        String functionName = "conditionalScript_" + ace.getIdACE() + "_" + Math.abs(ace.getConditionalScript().hashCode());
 
         //Si aun no se ha compilado el Script lo hacemos ahora
         if (((Boolean) scriptEvaluator.evaluate("typeof " + functionName + "=='function'")) == false) {
             scriptEvaluator.evaluate("function " + functionName + "(ace,identity,secureResourceName,arguments) {" + ace.getConditionalScript() + "}");
-            log.debug("Compilando código del ACE " +  ace.getIdACE()+ ":"+ace.getConditionalScript());
+            log.debug("Compilando código del ACE " + ace.getIdACE());
         }
 
-        result =scriptEvaluator.invokeFunction(functionName, ace, identity, secureResourceName, arguments);
-        if (result==null) {
-            throw new RuntimeException("El método no puede retornal null:"+conditionalScript);
+        Object result = scriptEvaluator.invokeFunction(functionName, ace, identity, secureResourceName, arguments);
+        if (result == null) {
+            throw new RuntimeException("El Script no puede retornar null en el ACE:" + ace.getIdACE());
         }
         if (!(result instanceof Boolean)) {
-            throw new RuntimeException("El método no ha retornado un boolean:"+conditionalScript + " ," + result + " , " + result.getClass().getName());
+            throw new RuntimeException("El Script no es un boolean en el ACE:" + ace.getIdACE());
         }
 
-        return (Boolean)result;
+        return (Boolean) result;
+    }
+
+    private boolean evaluateConditionalExpression(ACE ace, Identity identity, String secureResourceName, Object arguments) {
+        Object result;
+
+        //Si no hay Script retornamos 'null'
+        if ((ace.getConditionalExpression() == null) || (ace.getConditionalExpression().trim().length() == 0)) {
+            throw new RuntimeException("No podemos evaluar una expresion vacia del ACE:" + ace.getIdACE());
+        }
+
+        EvaluationContext context = new StandardEvaluationContext(new ConditionalExpressionSpelContext(ace, identity, secureResourceName, arguments));
+        result = expressionParser.parseExpression(ace.getConditionalExpression()).getValue(context, Object.class);
+        if (result == null) {
+            throw new RuntimeException("La expresion no puede retornar null en el ACE:" + ace.getIdACE());
+        }
+        if (!(result instanceof Boolean)) {
+            throw new RuntimeException("La expresion no es un boolean en el ACE:" + ace.getIdACE());
+        }
+
+        return (Boolean) result;
+    }
+
+    protected boolean existsConditionalExpression() {
+        if ((this.getConditionalExpression() == null) || (this.getConditionalExpression().trim().length() == 0)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    protected boolean existsConditionalScript() {
+        if ((this.getConditionalScript() == null) || (this.getConditionalScript().trim().length() == 0)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     /**
@@ -213,6 +270,20 @@ public class ACE {
     }
 
     /**
+     * @return the conditionalExpression
+     */
+    public String getConditionalExpression() {
+        return conditionalExpression;
+    }
+
+    /**
+     * @param conditionalExpression the conditionalExpression to set
+     */
+    public void setConditionalExpression(String conditionalExpression) {
+        this.conditionalExpression = conditionalExpression;
+    }
+
+    /**
      * @return the priority
      */
     public Integer getPriority() {
@@ -225,4 +296,94 @@ public class ACE {
     public void setPriority(Integer priority) {
         this.priority = priority;
     }
+
+    /**
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * @param description the description to set
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    /**
+     * Contiene los datos a los que tiene acceso una "conditionalExpresion"
+     */
+    private class ConditionalExpressionSpelContext {
+
+        public ACE ace;
+        public Identity identity;
+        public String secureResourceName;
+        public Object arguments;
+
+        public ConditionalExpressionSpelContext(ACE ace, Identity identity, String secureResourceName, Object arguments) {
+            this.ace = ace;
+            this.identity = identity;
+            this.secureResourceName = secureResourceName;
+            this.arguments = arguments;
+        }
+
+        /**
+         * @return the ace
+         */
+        public ACE getAce() {
+            return ace;
+        }
+
+        /**
+         * @param ace the ace to set
+         */
+        public void setAce(ACE ace) {
+            this.ace = ace;
+        }
+
+        /**
+         * @return the identity
+         */
+        public Identity getIdentity() {
+            return identity;
+        }
+
+        /**
+         * @param identity the identity to set
+         */
+        public void setIdentity(Identity identity) {
+            this.identity = identity;
+        }
+
+        /**
+         * @return the secureResourceName
+         */
+        public String getSecureResourceName() {
+            return secureResourceName;
+        }
+
+        /**
+         * @param secureResourceName the secureResourceName to set
+         */
+        public void setSecureResourceName(String secureResourceName) {
+            this.secureResourceName = secureResourceName;
+        }
+
+        /**
+         * @return the arguments
+         */
+        public Object getArguments() {
+            return arguments;
+        }
+
+        /**
+         * @param arguments the arguments to set
+         */
+        public void setArguments(Object arguments) {
+            this.arguments = arguments;
+        }
+
+    }
+
 }

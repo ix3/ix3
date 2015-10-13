@@ -72,12 +72,14 @@ CREATE TABLE `sec_permission` (
 
 CREATE TABLE `sec_ace` (
   `idACE` int(11) NOT NULL AUTO_INCREMENT,
-  `aceType` varchar(255) DEFAULT NULL,
+  `aceType` varchar(6) DEFAULT NULL,
   `idPermission` int(11) DEFAULT NULL,
   `ididentity` int(11) DEFAULT NULL,
   `secureResourceRegExp` varchar(255) DEFAULT NULL,
   `conditionalScript` text,
+  `conditionalExpression` text,
   `priority` int(11) DEFAULT NULL,
+  `description` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`idACE`),
   KEY `FKFC63E44E74A0` (`idPermission`),
   KEY `FKFC631EDD9A75` (`ididentity`),
