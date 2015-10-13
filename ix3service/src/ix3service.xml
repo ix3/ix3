@@ -15,11 +15,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:xsi=     "http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop=    "http://www.springframework.org/schema/aop"
        xsi:schemaLocation="
        http://www.springframework.org/schema/beans   http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+       http://www.springframework.org/schema/aop     http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
 ">     
     
     <!-- Hay que ponerlo en cada aplicacion que hagamos -->
@@ -31,5 +33,9 @@ limitations under the License.
     
     <bean class="es.logongas.ix3.service.rules.impl.RuleEngineFactoryImpl" />
     <bean class="es.logongas.ix3.service.rules.impl.hibernate.ApplicationContextProvider"  />
+    
+    <!-- Quitar estas 2 lineas para deshabilitar el AOP y la seguridad en los servicios -->
+    <aop:aspectj-autoproxy />
+    <bean id="authorizationInterceptorImplService" class="es.logongas.ix3.service.security.AuthorizationInterceptorImplService"  />
     
 </beans>
