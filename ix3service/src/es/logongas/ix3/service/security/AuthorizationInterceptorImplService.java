@@ -45,6 +45,11 @@ public class AuthorizationInterceptorImplService implements AuthorizationInterce
     @Autowired
     PrincipalLocator principalLocator;
 
+    /**
+     * Se ejecuta ANTES de cualquier llamada a una clase que herede del interfaz "Service" y comprueba la seguridad de si se puede llamar al método
+     * @param joinPoint
+     * @throws BusinessException 
+     */
     @Before("within(es.logongas.ix3.service.Service+)")
     public void checkPreAuthorized(JoinPoint joinPoint) throws BusinessException {
         Principal principal = principalLocator.getPrincipal();
@@ -59,6 +64,12 @@ public class AuthorizationInterceptorImplService implements AuthorizationInterce
 
     }
 
+    /**
+     * Se ejecuta DESPUES de cualquier llamada a una clase que herede del interfaz "Service" y comprueba la seguridad de si se puede retornar los datos del método
+     * @param joinPoint
+     * @param result
+     * @throws BusinessException 
+     */
     @AfterReturning(pointcut = "within(es.logongas.ix3.service.Service+)", returning = "result")
     public void checkPostAuthorized(JoinPoint joinPoint, Object result) throws BusinessException {
         Principal principal = principalLocator.getPrincipal();
