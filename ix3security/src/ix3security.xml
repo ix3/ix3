@@ -21,7 +21,5 @@ limitations under the License.
        http://www.springframework.org/schema/beans   http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
 ">
-
-    <bean class="es.logongas.ix3.security.jwt.impl.JwsImplJose4j"  />
     
 </beans>
