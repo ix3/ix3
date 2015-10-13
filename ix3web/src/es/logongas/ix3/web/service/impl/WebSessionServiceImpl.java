@@ -23,6 +23,7 @@ import es.logongas.ix3.security.authentication.Principal;
 import es.logongas.ix3.web.security.WebSessionSidStorage;
 import es.logongas.ix3.web.service.WebSessionService;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +56,9 @@ public class WebSessionServiceImpl implements WebSessionService {
             webSessionSidStorage.setSid(httpServletRequest, httpServletResponse, principal.getSid());
 
             return principal;
-        } catch (Exception ex) {
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (UnsupportedEncodingException ex) {
             throw new RuntimeException(ex);
         }
     }
