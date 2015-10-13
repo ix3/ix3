@@ -28,15 +28,19 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class AuthorizationInterceptorImplURL implements AuthorizationInterceptor {
     
+    private static final String SECURE_RESOURCE_TYPE_NAME = "URL";    
+    
     @Autowired
     AuthorizationManager authorizationManager;
 
     
     public boolean checkAuthorized(Principal principal,HttpServletRequest httpServletRequest,HttpServletResponse httpServletResponse) {
-        String uri = httpServletRequest.getRequestURI();
-        String method = httpServletRequest.getMethod();        
+        String secureResourceTypeName=SECURE_RESOURCE_TYPE_NAME;
+        String secureResource=getSecureURI(httpServletRequest.getRequestURI(), httpServletRequest.getContextPath());
+        String permissionName=httpServletRequest.getMethod();
+        Object arguments=httpServletRequest.getParameterMap(); 
         
-        boolean isAuthorized=authorizationManager.authorized(principal, "URL", getSecureURI(uri, httpServletRequest.getContextPath()), method, httpServletRequest.getParameterMap());
+        boolean isAuthorized=authorizationManager.authorized(principal,secureResourceTypeName, secureResource, permissionName, arguments);
         
         return isAuthorized;
     } 
