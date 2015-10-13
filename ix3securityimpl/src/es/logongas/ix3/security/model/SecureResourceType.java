@@ -51,9 +51,9 @@ public class SecureResourceType {
             return false;
         }
 
-        Permission permission = (Permission) obj;
+        SecureResourceType secureResourceType = (SecureResourceType) obj;
         Object obj1_prop1 = getName();
-        Object obj2_prop1 = permission.getName();
+        Object obj2_prop1 = secureResourceType.getName();
 
 
         if ((obj1_prop1 == null) || (obj2_prop1 == null) ) {
