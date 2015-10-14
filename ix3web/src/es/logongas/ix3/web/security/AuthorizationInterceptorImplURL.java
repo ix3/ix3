@@ -18,6 +18,8 @@ package es.logongas.ix3.web.security;
 import es.logongas.ix3.security.authentication.Principal;
 import es.logongas.ix3.security.authorization.AuthorizationInterceptor;
 import es.logongas.ix3.security.authorization.AuthorizationManager;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,13 +40,36 @@ public class AuthorizationInterceptorImplURL implements AuthorizationInterceptor
         String secureResourceTypeName=SECURE_RESOURCE_TYPE_NAME;
         String secureResource=getSecureURI(httpServletRequest.getRequestURI(), httpServletRequest.getContextPath());
         String permissionName=httpServletRequest.getMethod();
-        Object arguments=httpServletRequest.getParameterMap(); 
+        Object arguments=getArguments(httpServletRequest.getParameterMap()); 
         
         boolean isAuthorized=authorizationManager.authorized(principal,secureResourceTypeName, secureResource, permissionName, arguments);
         
         return isAuthorized;
     } 
     
+    /**
+     * Esta funcición es para transformar en array de valores del Map en un String cuando solo hay un valor. Ya que es lo que suele pasar.
+     * Ya que aunque haya un solo valor , siempre es un array y eso es un poco incomodo.
+     * @param parameters
+     * @return 
+     */
+    private Map<String,Object> getArguments(Map<String,String[]> parameters) {
+        Map<String,Object> arguments=new HashMap<String,Object>();
+        
+        for(String key:parameters.keySet()) {
+            String[] values=parameters.get(key);
+            if (values==null) {
+                arguments.put(key, null);
+            } else if (values.length==1) {
+                arguments.put(key, values[0]);
+            } else {
+                arguments.put(key, values);
+            }
+        }
+        
+        return arguments;
+        
+    }
     
     /**
      * Obtiene la URL pero si la parte del ContextPath De esa forma al
