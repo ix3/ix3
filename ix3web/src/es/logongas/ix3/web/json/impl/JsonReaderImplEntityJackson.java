@@ -169,7 +169,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                     sb.append(",");
                 }
 
-                throw new RuntimeException("El objeto JSON tiene clave primarias y claves naturales que referencian distintos objetos:");
+                throw new RuntimeException("El objeto JSON tiene clave primarias y claves naturales que referencian distintos objetos:" + sb);
             }
 
             if (entities.size() == 1) {
