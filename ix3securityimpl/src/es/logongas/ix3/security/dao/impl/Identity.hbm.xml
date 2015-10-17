@@ -17,7 +17,7 @@
       </key>
       <one-to-many class="es.logongas.ix3.security.model.ACE"/>
     </set>
-    <set cascade="save-update,evict,lock,merge,refresh,replicate" inverse="true" name="memberOf" order-by="priority" lazy="false">
+    <set cascade="all" inverse="false" name="memberOf" order-by="priority" lazy="false">
       <cache usage="read-write"/>
       <key>
         <column name="idIdentity"/>
