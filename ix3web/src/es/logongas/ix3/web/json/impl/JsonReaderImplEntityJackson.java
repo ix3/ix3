@@ -17,6 +17,7 @@ package es.logongas.ix3.web.json.impl;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
@@ -240,7 +241,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                 switch (propertyMetaData.getCollectionType()) {
                     case List:
                     case Set: {
-                        if (propertyMetaData.isCollectionLazy() == false) {
+                        if (false) { //TODO:No cargamos nunca las coleccione pq aun no sabemos si hay que hacerlo o no
                             Collection rawCollection = (Collection) getValueFromBean(jsonObj, propertyName);
                             Collection currentCollection = (Collection) getValueFromBean(entity, propertyName);
 
@@ -266,12 +267,12 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                                 }
                             }
                         } else {
-                            //NO hamos nada pq las colecciones Lazy no se cargan
+                            //NO cargamos la coleccion desde el JSON
                         }
                         break;
                     }
                     case Map: {
-                        if (propertyMetaData.isCollectionLazy() == false) {
+                        if (false) { //TODO:No cargamos nunca las coleccione pq aun no sabemos si hay que hacerlo o no
                             Map rawMap = (Map) getValueFromBean(jsonObj, propertyName);
                             Map currentMap = (Map) getValueFromBean(entity, propertyName);
 
@@ -293,7 +294,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                                 }
                             }
                         } else {
-                            //NO hamos nada pq las colecciones Lazy no se cargan
+                            //NO cargamos la coleccion desde el JSON
                         }
                         break;
                     }
