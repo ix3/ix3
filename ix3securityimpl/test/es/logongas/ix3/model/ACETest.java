@@ -36,7 +36,7 @@ public class ACETest {
     }
 
     @Test
-    public void testAuthorized() {
+    public void testAuthorized1() {
         System.out.println("authorized Allow");
         SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
         Permission permission = new Permission(1, "GET", "GET", secureResourceType);
@@ -194,7 +194,19 @@ public class ACETest {
         assertEquals(expResult, result);
     }
     
-    
+    @Test
+    public void testAuthorizedScript7() {
+        System.out.println("authorized Script  usando mg");
+        SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
+        Permission permission = new Permission(1, "GET", "GET", secureResourceType);
+        User user=new User(1, "Juan", "Juan García");
+        Map<String,Object> arguments = new HashMap<String,Object>();
+        arguments.put("user","pepe");
+        ACE instance = new ACE(4, ACEType.Allow, permission, user, "/34([AB])/[a-z]+\\.([a-z]+)", "if ((mg.get(1)=='B') && (mg.get(2)=='html')) { return true; }else { return false; } ",null, 10,null);
+        AuthorizationType expResult = AuthorizationType.AccessAllow;
+        AuthorizationType result = instance.authorized(user,"/34B/index.html", permission, arguments);
+        assertEquals(expResult, result);
+    }
     
     
     @Test
@@ -267,7 +279,19 @@ public class ACETest {
         assertEquals(expResult, result);
     }
 
-    
+    @Test
+    public void testAuthorizedExpression6() {
+        System.out.println("authorized Expression  usando el mg");
+        SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
+        Permission permission = new Permission(1, "GET", "GET", secureResourceType);
+        User user=new User(1, "Juan", "Juan García");
+        Map<String,Object> arguments = new HashMap<String,Object>();
+        arguments.put("user","pepe");
+        ACE instance = new ACE(4, ACEType.Allow, permission, user, "/A(B+)/(\\d+)\\.json",null, "mg.get(1)=='BBB' && mg.get(2)=='4567'", 10,null);
+        AuthorizationType expResult = AuthorizationType.AccessAllow;
+        AuthorizationType result = instance.authorized(user,"/ABBB/4567.json", permission, arguments);
+        assertEquals(expResult, result);
+    }    
     
 }
 
