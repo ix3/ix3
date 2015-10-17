@@ -46,7 +46,7 @@ public class AuthorizationProviderImplIdentity implements AuthorizationProvider 
     public AuthorizationType authorized(Principal principal,String secureResourceTypeName, String secureResource, String permissionName, Object arguments) {
         try {
             AuthorizationType authorizationType;
-            GenericDAO<Identity, Integer> genericDAO = daoFactory.getDAO(es.logongas.ix3.security.model.Identity.class);
+            GenericDAO<Identity, Integer> identityDAO = daoFactory.getDAO(es.logongas.ix3.security.model.Identity.class);
             Permission permission=getPermission(secureResourceTypeName, permissionName);
             
             
@@ -55,14 +55,14 @@ public class AuthorizationProviderImplIdentity implements AuthorizationProvider 
                     Identity identity = (Identity) principal;
                     authorizationType = identity.authorized(secureResource, permission, arguments);
                     if (authorizationType == AuthorizationType.Abstain) {
-                        Identity authenticatedIdentity = genericDAO.readByNaturalKey(SpecialUsers.Authenticated.name());
+                        Identity authenticatedIdentity = identityDAO.readByNaturalKey(SpecialUsers.Authenticated.name());
                         if (authenticatedIdentity!=null) {
                             authorizationType = authenticatedIdentity.authorized(secureResource, permission, arguments);
                         } else {
                             authorizationType = AuthorizationType.Abstain;
                         }
                         if (authorizationType == AuthorizationType.Abstain) {
-                            Identity allIdentity = genericDAO.readByNaturalKey(SpecialUsers.All.name());
+                            Identity allIdentity = identityDAO.readByNaturalKey(SpecialUsers.All.name());
                             if (allIdentity!=null) {
                                 authorizationType = allIdentity.authorized(secureResource, permission, arguments);
                             } else {
@@ -74,7 +74,7 @@ public class AuthorizationProviderImplIdentity implements AuthorizationProvider 
                     authorizationType = AuthorizationType.Abstain;
                 }
             } else {
-                Identity allIdentity = genericDAO.readByNaturalKey(SpecialUsers.All.name());
+                Identity allIdentity = identityDAO.readByNaturalKey(SpecialUsers.All.name());
                 if (allIdentity!=null) {
                     authorizationType = allIdentity.authorized(secureResource, permission, arguments);
                 } else {
