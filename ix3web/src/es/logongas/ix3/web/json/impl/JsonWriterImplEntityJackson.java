@@ -207,7 +207,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 Object rawValue = getValueFromBean(obj, propertyName);
                 switch (propertyMetaData.getCollectionType()) {
                     case List: {
-                        if ((propertyMetaData.isCollectionLazy() == false) || (expandMath(expand, path + "." + propertyName))) {
+                        if (expandMath(expand, path + "." + propertyName)) {
                             List list = (List) rawValue;
                             List jsonList = new ArrayList();
                             if (list != null) {
@@ -230,7 +230,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         break;
                     }
                     case Set: {
-                        if ((propertyMetaData.isCollectionLazy() == false) || (expandMath(expand, path + "." + propertyName))) {
+                        if (expandMath(expand, path + "." + propertyName)) {
                             Set set = (Set) rawValue;
                             Set jsonSet = new HashSet();
                             if (set != null) {
@@ -243,9 +243,9 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                                 value = null;
                             }
                         } else {
-                            //Es una colección y Lazy así que añadimos un array vacio
+                            //Es una colección y Lazy así que añadimos un set vacio
                             if (rawValue != null) {
-                                value = new ArrayList();
+                                value = new HashSet();
                             } else {
                                 value = null;
                             }
@@ -253,7 +253,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         break;
                     }
                     case Map: {
-                        if ((propertyMetaData.isCollectionLazy() == false) || (expandMath(expand, path + "." + propertyName))) {
+                        if (expandMath(expand, path + "." + propertyName)) {
                             Map map = (Map) rawValue;
                             Map jsonMap = new LinkedHashMap();
                             if (map != null) {
@@ -268,9 +268,9 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                                 value = null;
                             }
                         } else {
-                            //Es una colección y Lazy así que añadimos un array vacio
+                            //Es una colección y Lazy así que añadimos un map vacio
                             if (rawValue != null) {
-                                value = new ArrayList();
+                                value = new LinkedHashMap();
                             } else {
                                 value = null;
                             }
