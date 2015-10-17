@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @author Lorenzo González
  */
 @Controller
-public class SessionRESTController extends AbstractRESTController {
+public class SessionRestController extends AbstractRestController {
 
     @Autowired
     WebSessionService webSessionService;

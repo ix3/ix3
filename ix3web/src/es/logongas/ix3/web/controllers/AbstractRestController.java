@@ -28,14 +28,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class AbstractRESTController extends AbstractController {
+public class AbstractRestController extends AbstractController {
 
     protected final String PARAMETER_EXPAND = "$expand";
     
     @Autowired
     protected JsonFactory jsonFactory;
 
-    protected Log log = LogFactory.getLog(AbstractRESTController.class);
+    protected Log log = LogFactory.getLog(AbstractRestController.class);
 
     final protected void restMethod(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments, Command command) {
         try {

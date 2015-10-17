@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @author logongas
  */
 @Controller
-public class EchoController extends AbstractRESTController {
+public class EchoController extends AbstractRestController {
 
     private static final Log log = LogFactory.getLog(EchoController.class);
 

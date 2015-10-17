@@ -62,9 +62,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @author Lorenzo González
  */
 @Controller
-public class CRUDRESTController extends AbstractRESTController {
+public class CrudRestController extends AbstractRestController {
 
-    private static final Log log = LogFactory.getLog(CRUDRESTController.class);
+    private static final Log log = LogFactory.getLog(CrudRestController.class);
 
     private final String PARAMETER_ORDERBY = "$orderby";
     private final String PARAMETER_PAGENUMBER = "$pagenumber";
