@@ -70,7 +70,14 @@ public class ReflectionUtilTest {
         AnnotationTest expResult = ReflectionUtils.findField(BeanTestC.class, "propBooleanReadOnly").getAnnotation(AnnotationTest.class);
         AnnotationTest result = ReflectionUtil.getAnnotation(BeanTestC.class, "propBooleanReadOnly", AnnotationTest.class);
         assertEquals(expResult, result);
-    }      
+    }  
+    @Test
+    public void testGetAnnotationPropertyNested() throws Exception {
+        System.out.println("getAnnotation PropertyNested");
+        AnnotationTest expResult = ReflectionUtils.findField(BeanTestC.class, "propBooleanReadOnly").getAnnotation(AnnotationTest.class);
+        AnnotationTest result = ReflectionUtil.getAnnotation(BeanTestA.class, "prop1.beanTestC.propBooleanReadOnly", AnnotationTest.class);
+        assertEquals(expResult, result);
+    }    
     
 
     /**

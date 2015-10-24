@@ -56,18 +56,40 @@ public class ReflectionUtil {
             throw new IllegalArgumentException("El argumento propertyName no puede ser null");
         }
 
-        T annotationField = getFieldAnnotation(baseClass, propertyName, annotationClass);
-        if (annotationField != null) {
-            return annotationField;
-        }
+        String leftPropertyName; //El nombre de la propiedad antes del primer punto
+        String rigthPropertyName; //El nombre de la propiedad antes del primer punto
 
-        T annotationMethod = getMethodAnnotation(baseClass, propertyName, annotationClass);
-        if (annotationMethod != null) {
-            return annotationMethod;
-        }
+        int indexPoint = propertyName.indexOf(".");
+        if (indexPoint < 0) {
+            leftPropertyName = propertyName;
+            rigthPropertyName = null;
+        } else if ((indexPoint > 0) && (indexPoint < (propertyName.length() - 1))) {
+            leftPropertyName = propertyName.substring(0, indexPoint);
+            rigthPropertyName = propertyName.substring(indexPoint + 1);
+        } else {
+            throw new RuntimeException("El punto no puede estar ni al principio ni al final");
+        }        
 
-        //No hemos encontrado la anotación
-        return null;
+        if (rigthPropertyName != null) {
+            Field leftField=getField(baseClass, leftPropertyName);
+            if (leftField==null) {
+                throw new RuntimeException("No existe el campo " + leftPropertyName + " en la clase " + baseClass.getName());
+            }
+            return getAnnotation(leftField.getType(), rigthPropertyName, annotationClass);
+        } else {
+            T annotationField = getFieldAnnotation(baseClass, leftPropertyName, annotationClass);
+            if (annotationField != null) {
+                return annotationField;
+            }
+
+            T annotationMethod = getMethodAnnotation(baseClass, leftPropertyName, annotationClass);
+            if (annotationMethod != null) {
+                return annotationMethod;
+            }
+
+            //No hemos encontrado la anotación
+            return null;
+        }            
 
     }
 
