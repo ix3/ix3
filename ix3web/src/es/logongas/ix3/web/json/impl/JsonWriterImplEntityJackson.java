@@ -22,9 +22,8 @@ import es.logongas.ix3.core.Page;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.metadata.MetaType;
-import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.json.JsonWriter;
-import es.logongas.ix3.web.json.annotations.ForbiddenExport;
+import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -57,16 +56,24 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
     @Override
     public String toJson(Object obj) {
-        return toJson(obj, null);
+        return toJson(obj, null, null);
     }
 
     @Override
     public String toJson(Object obj, List<String> expand) {
+        return toJson(obj, expand, null);
+    }
+    
+    @Override
+    public String toJson(Object obj, List<String> expand, BeanMapper beanMapper) {
         try {
             if (expand == null) {
                 expand = new ArrayList<String>();
             }
-            Object jsonValue = getJsonObjectFromObject(obj, expand, "");
+            if (beanMapper == null) {
+                beanMapper = new BeanMapper(Object.class);
+            }
+            Object jsonValue = getJsonObjectFromObject(obj, expand, "", beanMapper);
             return objectMapper.writeValueAsString(jsonValue);
         } catch (JsonProcessingException ex) {
             throw new RuntimeException(ex);
@@ -74,18 +81,18 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
     }
 
-    private Object getJsonObjectFromObject(Object obj) {
-        return getJsonObjectFromObject(obj, new ArrayList<String>(), "");
+    private Object getJsonObjectFromObject(Object obj, BeanMapper beanMapper) {
+        return getJsonObjectFromObject(obj, new ArrayList<String>(), "", beanMapper);
     }
 
-    private Object getJsonObjectFromObject(Object obj, List<String> expand, String path) {
+    private Object getJsonObjectFromObject(Object obj, List<String> expand, String path, BeanMapper beanMapper) {
         if (obj == null) {
             return null;
         } else if (obj instanceof Collection) {
             Collection collection = (Collection) obj;
             List jsonList = new ArrayList();
             for (Object element : collection) {
-                jsonList.add(getJsonObjectFromObject(element, expand, path));
+                jsonList.add(getJsonObjectFromObject(element, expand, path, beanMapper));
             }
 
             return jsonList;
@@ -95,7 +102,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             for (Object key : map.keySet()) {
                 Object value = map.get(key);
 
-                jsonMap.put(getJsonObjectFromObject(key), getJsonObjectFromObject(value, expand, path));
+                jsonMap.put(getJsonObjectFromObject(key, beanMapper), getJsonObjectFromObject(value, expand, path, beanMapper));
             }
 
             return jsonMap;
@@ -105,14 +112,14 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             jsonMap.put("pageSize", page.getPageSize());
             jsonMap.put("pageNumber", page.getPageNumber());
             jsonMap.put("totalPages", page.getTotalPages());
-            jsonMap.put("content", getJsonObjectFromObject(page.getContent(), expand, path));
+            jsonMap.put("content", getJsonObjectFromObject(page.getContent(), expand, path, beanMapper));
             return jsonMap;
         } else {
             //Es simplemente un objeto "simple"
             MetaData metaData = metaDataFactory.getMetaData(obj);
 
             if (metaData != null) {
-                Map<String, Object> jsonMap = getMapFromEntity(obj, metaData, expand, path);
+                Map<String, Object> jsonMap = getMapFromEntity(obj, metaData, expand, path, beanMapper);
 
                 return jsonMap;
             } else {
@@ -123,7 +130,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 if (metaData.getMetaType() == MetaType.Scalar) {
                     jsonValue = obj;
                 } else {
-                    jsonValue = getMapFromEntity(obj, metaData, expand, path);
+                    jsonValue = getMapFromEntity(obj, metaData, expand, path, beanMapper);
                 }
 
                 return jsonValue;
@@ -131,7 +138,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         }
     }
 
-    private Map<String, Object> getMapFromEntity(Object obj, MetaData metaData, List<String> expand, String path) {
+    private Map<String, Object> getMapFromEntity(Object obj, MetaData metaData, List<String> expand, String path, BeanMapper beanMapper) {
         Map<String, Object> values = new LinkedHashMap<String, Object>();
 
         if (obj == null) {
@@ -144,14 +151,18 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
-            ForbiddenExport forbiddenExport=ReflectionUtil.getAnnotation(obj.getClass(), propertyName, ForbiddenExport.class);
-            if (forbiddenExport!=null) {
-                    //No se puede generar esa propiedad al "exterior"
-                    continue;
+            String fullPropertyName;
+            if ((path == null) || (path.trim().length() == 0)) {
+                fullPropertyName = propertyName;
+            } else {
+                fullPropertyName = path + "." + propertyName;
+            }
 
-            }            
-            
-            
+            if (beanMapper.isDeleteOutProperty(fullPropertyName) == true) {
+                //No se puede generar esa propiedad al "exterior"
+                continue;
+            }
+
             Object value;
 
             if (propertyMetaData.isCollection() == false) {
@@ -164,9 +175,9 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                                 //En el que realmente no sabemos los tipos
                                 Object rawValue = getValueFromBean(obj, propertyName);
 
-                                if (expandMath(expand, path + "." + propertyName) == true) {
+                                if (expandMath(expand, fullPropertyName) || (beanMapper.isExpandOutProperty(fullPropertyName))) {
                                     //En vez de poner solo la clave primaria , expandimos la entidad
-                                    value = getMapFromEntity(rawValue, metaDataFactory.getMetaData(value), expand, path + "." + propertyName);
+                                    value = getMapFromEntity(rawValue, metaDataFactory.getMetaData(value), expand, path + "." + propertyName, beanMapper);
                                 } else {
                                     value = getMapFromForeingEntity(rawValue, metaDataFactory.getMetaData(value));
                                 }
@@ -178,9 +189,9 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                     case Entity: {
                         Object rawValue = getValueFromBean(obj, propertyName);
                         if (rawValue != null) {
-                            if (expandMath(expand, path + "." + propertyName) == true) {
+                            if (expandMath(expand, fullPropertyName) || (beanMapper.isExpandOutProperty(fullPropertyName))) {
                                 //En vez de poner solo la clave primaria , expandimos la entidad
-                                value = getMapFromEntity(rawValue, propertyMetaData, expand, path + "." + propertyName);
+                                value = getMapFromEntity(rawValue, propertyMetaData, expand, path + "." + propertyName, beanMapper);
                             } else {
                                 value = getMapFromForeingEntity(rawValue, propertyMetaData);
                             }
@@ -192,7 +203,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                     case Component: {
                         Object rawValue = getValueFromBean(obj, propertyName);
                         if (rawValue != null) {
-                            value = getMapFromEntity(rawValue, propertyMetaData, expand, path + "." + propertyName);
+                            value = getMapFromEntity(rawValue, propertyMetaData, expand, fullPropertyName, beanMapper);
                         } else {
                             value = null;
                         }
@@ -207,12 +218,12 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 Object rawValue = getValueFromBean(obj, propertyName);
                 switch (propertyMetaData.getCollectionType()) {
                     case List: {
-                        if (expandMath(expand, path + "." + propertyName)) {
+                        if (expandMath(expand, fullPropertyName) || beanMapper.isExpandOutProperty(fullPropertyName)) {
                             List list = (List) rawValue;
                             List jsonList = new ArrayList();
                             if (list != null) {
                                 for (Object element : list) {
-                                    jsonList.add(getJsonObjectFromObjectFromCollection(element, propertyMetaData, expand, path + "." + propertyName));
+                                    jsonList.add(getJsonObjectFromObjectFromCollection(element, propertyMetaData, expand, fullPropertyName, beanMapper));
                                 }
                                 value = jsonList;
                             } else {
@@ -230,12 +241,12 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         break;
                     }
                     case Set: {
-                        if (expandMath(expand, path + "." + propertyName)) {
+                        if (expandMath(expand, fullPropertyName) || beanMapper.isExpandOutProperty(fullPropertyName)) {
                             Set set = (Set) rawValue;
                             Set jsonSet = new HashSet();
                             if (set != null) {
                                 for (Object element : set) {
-                                    jsonSet.add(getJsonObjectFromObjectFromCollection(element, propertyMetaData, expand, path + "." + propertyName));
+                                    jsonSet.add(getJsonObjectFromObjectFromCollection(element, propertyMetaData, expand, fullPropertyName, beanMapper));
                                 }
 
                                 value = jsonSet;
@@ -253,14 +264,14 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         break;
                     }
                     case Map: {
-                        if (expandMath(expand, path + "." + propertyName)) {
+                        if (expandMath(expand, fullPropertyName) || beanMapper.isExpandOutProperty(fullPropertyName)) {
                             Map map = (Map) rawValue;
                             Map jsonMap = new LinkedHashMap();
                             if (map != null) {
                                 for (Object key : map.keySet()) {
                                     Object valueMap = map.get(key);
 
-                                    jsonMap.put(getJsonObjectFromObject(key), getJsonObjectFromObjectFromCollection(valueMap, propertyMetaData, expand, path + "." + propertyName));
+                                    jsonMap.put(getJsonObjectFromObject(key, beanMapper), getJsonObjectFromObjectFromCollection(valueMap, propertyMetaData, expand, fullPropertyName, beanMapper));
                                 }
 
                                 value = jsonMap;
@@ -288,11 +299,11 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         //Añadimos la representación como String del objeto y el nombre de su clase
         values.put("$toString", obj.toString());
         values.put("$className", metaData.getType().getSimpleName());
-        
+
         return values;
     }
 
-    private Object getJsonObjectFromObjectFromCollection(Object obj, MetaData metaData, List<String> expand, String path) {
+    private Object getJsonObjectFromObjectFromCollection(Object obj, MetaData metaData, List<String> expand, String path, BeanMapper beanMapper) {
         if (obj == null) {
             return null;
         }
@@ -306,7 +317,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 //Los metadatos decían que es un Scalar pero no es así. Esto ocurre con el tipo "Object"
                 //En el que realmente no sabemos los tipos
                 if (metaDataFactory.getMetaData(obj) != null) {
-                    Map<String, Object> jsonMap = getMapFromEntity(obj, metaDataFactory.getMetaData(obj), expand, path);
+                    Map<String, Object> jsonMap = getMapFromEntity(obj, metaDataFactory.getMetaData(obj), expand, path, beanMapper);
                     return jsonMap;
 
                 } else {
@@ -315,7 +326,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
             case Entity:
             case Component:
-                Map<String, Object> jsonMap = getMapFromEntity(obj, metaData, expand, path);
+                Map<String, Object> jsonMap = getMapFromEntity(obj, metaData, expand, path, beanMapper);
 
                 return jsonMap;
             default:
@@ -328,7 +339,9 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
      * Dado un objeto que es otra entidad distinta de la que queremos transforma
      * en JSON. La transforma pero solo añadiendo las siguientes propeidades.
      * <ul> <li>El valor de la clave primaria</li> <li>El valor de las claves de
-     * naturals (si las hay)</li> <li>El valor de llamar a toString</li><li>El valor de llamar getClass().getSimpleName() en la propiedad 'class'</li> </ul>
+     * naturals (si las hay)</li> <li>El valor de llamar a toString</li><li>El
+     * valor de llamar getClass().getSimpleName() en la propiedad 'class'</li>
+     * </ul>
      *
      * @param obj El Objeto a transformar en un Map
      * @param metaData Sus Metadatos
@@ -394,7 +407,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
     private boolean expandMath(List<String> expands, String propertyPath) {
         for (String expandProperty : expands) {
-            if (("." + expandProperty).startsWith(propertyPath)) {
+            if ((expandProperty.trim()).startsWith(propertyPath + ".") || (expandProperty.trim().equals(propertyPath))) {
                 return true;
             }
         }

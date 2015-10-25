@@ -25,9 +25,8 @@ import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.dao.metadata.CollectionType;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
-import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.json.JsonReader;
-import es.logongas.ix3.web.json.annotations.ForbiddenImport;
+import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -67,19 +66,30 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
     @Override
     public Object fromJson(String json) {
+        return fromJson(json, null);
+    }
+
+
+    @Override
+    public Object fromJson(String json, BeanMapper beanMapper) {
         try {
+            if (beanMapper == null) {
+                beanMapper = new BeanMapper(clazz);
+            }
+
             Object jsonObj = objectMapper.readValue(json, clazz);
 
             MetaData metaData = metaDataFactory.getMetaData(clazz);
 
-            Object entity = readEntity(jsonObj, metaData);
+            Object entity = readEntity(jsonObj, metaData, "", beanMapper);
 
             return entity;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
 
-    }
+    }    
+    
 
     /**
      * Crea una entidad completa en base a la clave primaria y a los datos que
@@ -89,7 +99,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
      * @param metaData Los metadatos de la entidad a tranformar
      * @return El Objeto Entidad
      */
-    private Object readEntity(Object jsonObj, MetaData metaData) {
+    private Object readEntity(Object jsonObj, MetaData metaData, String path, BeanMapper beanMapper) {
         try {
 
             Object entity;
@@ -105,7 +115,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                 entity = genericDAO.create();
             }
 
-            populateEntity(entity, jsonObj, metaData);
+            populateEntity(entity, jsonObj, metaData, path, beanMapper);
 
             return entity;
         } catch (Exception ex) {
@@ -186,19 +196,24 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         }
     }
 
-    private void populateEntity(Object entity, Object jsonObj, MetaData metaData) throws BusinessException {
+    private void populateEntity(Object entity, Object jsonObj, MetaData metaData, String path, BeanMapper beanMapper) throws BusinessException {
 
-        if (jsonObj==null) {
+        if (jsonObj == null) {
             return;
         }
-        
+
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
-            //Ver si la propiedad está prohibida cargarla
-            ForbiddenImport forbiddenImport = ReflectionUtil.getAnnotation(entity.getClass(), propertyName, ForbiddenImport.class);
-            if (forbiddenImport != null) {
-                //No se puede cargar esa propiedad desde el "exterior"
+            String fullPropertyName;
+            if ((path == null) || (path.trim().length() == 0)) {
+                fullPropertyName = propertyName;
+            } else {
+                fullPropertyName = path + "." + propertyName;
+            }
+
+            if (beanMapper.isDeleteInProperty(fullPropertyName) == true) {
+                //No se puede generar esa propiedad desde el "exterior"
                 continue;
             }
 
@@ -231,7 +246,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                                 throw new RuntimeException(ex);
                             }
                         }
-                            populateEntity(component, rawValue, propertyMetaData);
+                        populateEntity(component, rawValue, propertyMetaData, path + "." + propertyName, beanMapper);
                         break;
                     }
                     default:
@@ -241,28 +256,28 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                 switch (propertyMetaData.getCollectionType()) {
                     case List:
                     case Set: {
-                        if (false) { //TODO:No cargamos nunca las coleccione pq aun no sabemos si hay que hacerlo o no
+                        if (beanMapper.isExpandInProperty(propertyName)) { 
                             Collection rawCollection = (Collection) getValueFromBean(jsonObj, propertyName);
                             Collection currentCollection = (Collection) getValueFromBean(entity, propertyName);
 
                             //Borramos todos los elementos para añadir despues los que vienen desde JSON
-                            if (currentCollection!=null) {
+                            if (currentCollection != null) {
                                 currentCollection.clear();
                             } else {
                                 //Si no hay coleccion hay que crearla aqui
-                                if (propertyMetaData.getCollectionType()==CollectionType.List) {
-                                    currentCollection=new ArrayList();
-                                } else if (propertyMetaData.getCollectionType()==CollectionType.Set) {
-                                    currentCollection=new HashSet();
+                                if (propertyMetaData.getCollectionType() == CollectionType.List) {
+                                    currentCollection = new ArrayList();
+                                } else if (propertyMetaData.getCollectionType() == CollectionType.Set) {
+                                    currentCollection = new HashSet();
                                 } else {
                                     throw new RuntimeException("El tipo coneccion no es válida:" + propertyMetaData.getCollectionType());
                                 }
                                 setValueToBean(entity, currentCollection, propertyName);
                             }
                             //Añadimos los elementos que vienen desde JSON
-                            if (rawCollection!=null) {
+                            if (rawCollection != null) {
                                 for (Object rawValue : rawCollection) {
-                                    Object value = readEntity(rawValue, propertyMetaData);
+                                    Object value = readEntity(rawValue, propertyMetaData, path + "." + propertyName, beanMapper);
                                     currentCollection.add(value);
                                 }
                             }
@@ -272,24 +287,24 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                         break;
                     }
                     case Map: {
-                        if (false) { //TODO:No cargamos nunca las coleccione pq aun no sabemos si hay que hacerlo o no
+                        if (beanMapper.isExpandInProperty(propertyName)) { //TODO:No cargamos nunca las coleccione pq aun no sabemos si hay que hacerlo o no
                             Map rawMap = (Map) getValueFromBean(jsonObj, propertyName);
                             Map currentMap = (Map) getValueFromBean(entity, propertyName);
 
                             //Borramos todos los elementos para añadir despues los que vienen desde JSON
-                            if (currentMap!=null) {
+                            if (currentMap != null) {
                                 currentMap.clear();
                             } else {
                                 //Si no hay coleccion hay que crearla qui
-                                currentMap=new HashMap();
+                                currentMap = new HashMap();
                                 setValueToBean(entity, currentMap, propertyName);
                             }
 
                             //Añadimos los elementos que vienen desde JSON
-                            if (rawMap!=null) {
+                            if (rawMap != null) {
                                 for (Object key : rawMap.keySet()) {
                                     Object rawValue = rawMap.get(key);
-                                    Object value = readEntity(rawValue, propertyMetaData);
+                                    Object value = readEntity(rawValue, propertyMetaData, path + "." + propertyName, beanMapper);
                                     currentMap.put(key, value);
                                 }
                             }

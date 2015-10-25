@@ -18,6 +18,7 @@ package es.logongas.ix3.web.json.impl;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import es.logongas.ix3.web.json.JsonReader;
 
 /**
@@ -47,4 +48,8 @@ public class JsonReaderImplJackson implements JsonReader {
         }
     }
 
+    @Override
+    public Object fromJson(String json, BeanMapper beanMapper) {
+        throw new UnsupportedOperationException("No se permite el uso de BeanMapper en esta implementacion");
+    }
 }

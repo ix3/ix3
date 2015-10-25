@@ -15,6 +15,7 @@
  */
 package es.logongas.ix3.web.json;
 
+import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import java.util.List;
 
 /**
@@ -24,4 +25,5 @@ import java.util.List;
 public interface JsonWriter {
     String toJson(Object obj);
     String toJson(Object obj,List<String> expand);
+    String toJson(Object obj,List<String> expand,BeanMapper beanMapper);
 }
