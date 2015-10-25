@@ -26,7 +26,7 @@ limitations under the License.
         
     <!-- BEGIN:Seguridad -->
     <bean class="es.logongas.ix3.web.security.jwt.impl.JwsImplJose4j"  /> 
-    <bean class="es.logongas.ix3.web.security.WebCredentialFactoryImplLoginPassword" />
+    <bean class="es.logongas.ix3.web.security.impl.WebCredentialFactoryImplLoginPassword" />
     <bean class="es.logongas.ix3.web.service.impl.WebSessionServiceImpl" />
     <bean class="es.logongas.ix3.web.security.FilterImplSecurity" id="filterImplSecurity"/>
     <bean class="es.logongas.ix3.web.security.AuthorizationInterceptorImplURL" id="authorizationInterceptorImplURL"/>
