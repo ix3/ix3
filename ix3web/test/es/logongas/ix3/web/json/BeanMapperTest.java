@@ -227,10 +227,10 @@ public class BeanMapperTest {
         boolean result = instance.isDeleteInProperty(propertyNameAllow);
         assertEquals(expResult, result);
     }
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testIsDeleteInProperty6() {
         System.out.println("isDeleteInProperty 6");
-        String propertyNameAllow = "cualquier.propiedad";
+        String propertyNameAllow = "prop1.beanTestC.prop";
         BeanMapper instance = new BeanMapper(BeanTestA.class,null,"prop1,prop2.beanTestC.prop",null,null,null,null);
         boolean expResult = false;
         boolean result = instance.isDeleteInProperty(propertyNameAllow);
@@ -262,7 +262,7 @@ public class BeanMapperTest {
         System.out.println("isDeleteOutProperty 2");
         String propertyNameAllow = "prop2.beanTestC.privateProperty";
         BeanMapper instance = new BeanMapper(BeanTestA.class,null,null,null,null,null,null);
-        boolean expResult = true;
+        boolean expResult = false;
         boolean result = instance.isDeleteOutProperty(propertyNameAllow);
         assertEquals(expResult, result);
     }    
