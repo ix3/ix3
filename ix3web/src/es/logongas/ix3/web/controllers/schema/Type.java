@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.logongas.ix3.web.controllers.metadata;
+package es.logongas.ix3.web.controllers.schema;
 
 import java.math.BigDecimal;
 import java.util.Date;

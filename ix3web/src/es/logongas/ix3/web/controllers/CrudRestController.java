@@ -32,8 +32,8 @@ import es.logongas.ix3.service.FilterSearch;
 import es.logongas.ix3.service.ParameterSearch;
 import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.controllers.endpoint.EndPoint;
-import es.logongas.ix3.web.controllers.metadata.Metadata;
-import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
+import es.logongas.ix3.web.controllers.schema.Schema;
+import es.logongas.ix3.web.controllers.schema.SchemaFactory;
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import es.logongas.ix3.web.json.JsonReader;
 import java.io.Serializable;
@@ -73,7 +73,7 @@ public class CrudRestController extends AbstractRestController {
     private final String PARAMETER_PAGESIZE = "$pagesize";
     private final String PARAMETER_DISTINCT = "$distinct";
     private final String PARAMETER_NAMEDSEARCH = "$namedsearch";
-    private final String PATH_METADATA = "$metadata";
+    private final String PATH_SCHEMA = "$schema";
     private final String PATH_CREATE = "$create";
 
     @Autowired
@@ -87,8 +87,8 @@ public class CrudRestController extends AbstractRestController {
     
 
 
-    @RequestMapping(value = {"{path}/{entityName}/" + PATH_METADATA}, method = RequestMethod.GET, produces = "application/json")
-    public void metadata(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
+    @RequestMapping(value = {"{path}/{entityName}/" + PATH_SCHEMA}, method = RequestMethod.GET, produces = "application/json")
+    public void schema(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
 
         restMethod(httpServletRequest, httpServletResponse, new Command() {
 
@@ -102,9 +102,9 @@ public class CrudRestController extends AbstractRestController {
 
                 List<String> expand = getExpand(httpServletRequest.getParameter(PARAMETER_EXPAND));
 
-                Metadata metadata = (new MetadataFactory()).getMetadata(metaData, metaDataFactory, crudServiceFactory, httpServletRequest.getContextPath(), expand);
-                CommandResult commandResult=new CommandResult(Metadata.class, metadata, true);
-                commandResult.setBeanMapper(new BeanMapper(Object.class,null,"<*"));
+                Schema schema = (new SchemaFactory()).getSchema(metaData, metaDataFactory, crudServiceFactory, expand);
+                CommandResult commandResult=new CommandResult(Schema.class, schema, true);
+                commandResult.setBeanMapper(new BeanMapper(Schema.class,null,"<*"));
                 return commandResult;
             }
 

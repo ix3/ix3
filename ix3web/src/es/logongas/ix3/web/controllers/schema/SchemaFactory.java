@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.controllers.metadata;
+package es.logongas.ix3.web.controllers.schema;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.metadata.ValuesList;
@@ -29,33 +28,33 @@ import java.util.List;
  *
  * @author Lorenzo
  */
-public class MetadataFactory {
+public class SchemaFactory {
 
-    public Metadata getMetadata(es.logongas.ix3.dao.metadata.MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, String basePath,List<String> expand) throws BusinessException {
-        Metadata metadata = new Metadata();
+    public Schema getSchema(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, List<String> expand) throws BusinessException {
+        Schema schema = new Schema();
         String propertyPath="";
         
-        metadata.setClassName(metaData.getType().getSimpleName());
-        metadata.setDescription(metadata.getClassName());
-        metadata.setTitle(metadata.getClassName());
-        metadata.setPrimaryKeyPropertyName(metaData.getPrimaryKeyPropertyName());
-        metadata.setNaturalKeyPropertiesName(metaData.getNaturalKeyPropertiesName());
+        schema.setClassName(metaData.getType().getSimpleName());
+        schema.setDescription(schema.getClassName());
+        schema.setTitle(schema.getClassName());
+        schema.setPrimaryKeyPropertyName(metaData.getPrimaryKeyPropertyName());
+        schema.setNaturalKeyPropertiesName(metaData.getNaturalKeyPropertiesName());
         
 
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
             if ((propertyMetaData.isCollection() == false) || (expandMath(expand, propertyPath+"."+propertyName))) {
-                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, basePath,expand,propertyPath+"."+propertyName);
+                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, expand,propertyPath+"."+propertyName);
 
-                metadata.getProperties().put(propertyName, property);
+                schema.getProperties().put(propertyName, property);
             }
         }
 
-        return metadata;
+        return schema;
     }
 
-    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, String basePath,List<String> expand,String propertyPath) throws BusinessException {
+    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, List<String> expand,String propertyPath) throws BusinessException {
         Property property = new Property();
         property.setType(Type.getTypeFromClass(metaData.getType()));
 
@@ -68,7 +67,7 @@ public class MetadataFactory {
                 MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
                 if ((propertyMetaData.isCollection() == false) || (expandMath(expand, propertyPath+"."+propertyName))) {
-                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, basePath,expand,propertyPath+"."+propertyName);
+                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, expand,propertyPath+"."+propertyName);
 
                     property.getProperties().put(propertyName, subproperty);
                 }
@@ -125,7 +124,11 @@ public class MetadataFactory {
         }
         
         property.setPattern(metaData.getConstraints().getPattern());
-        property.setFormat(metaData.getConstraints().getFormat());
+        if (metaData.getConstraints().getFormat()!=null) {
+            property.setFormat(Format.valueOf(metaData.getConstraints().getFormat().name())); //Transformamos de es.logongas.ix3.dao.metadata a es.logongas.ix3.web.controllers.schema.Format
+        } else {
+            property.setFormat(null);
+        }
 
         property.setLabel(metaData.getLabel());
         property.setDescription(metaData.getLabel());

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.logongas.ix3.web.controllers.metadata;
+package es.logongas.ix3.web.controllers.schema;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.Map;
  *
  * @author Lorenzo
  */
-public class Metadata {
+public class Schema {
     private String className;
     private String title;
     private String description;

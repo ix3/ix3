@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package es.logongas.ix3.web.controllers.metadata;
+package es.logongas.ix3.web.controllers.schema;
 
-import es.logongas.ix3.dao.metadata.Format;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
