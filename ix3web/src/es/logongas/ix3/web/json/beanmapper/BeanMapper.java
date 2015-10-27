@@ -44,6 +44,17 @@ public final class BeanMapper {
         this(entityClass, null, null);
     }
 
+    /**
+     * Crea un nuevo objeto
+     * @param entityClass Nombre de la clase Java sobre la que se aplicará el BeanMapper
+     * @param deleteProperties Propiedaes a borrar se paradas por comas. 
+     * Si se inclue '&lt;' delante del nombre de la propiedad, solo se borrará desde el objeto hacia Json
+     * Si se inclue '&gt;' detras del nombre de la propiedad, solo se borrará desde Json hacia el objeto
+     * @param expandProperties  Propiedaes a expandir se paradas por comas.
+     * Se permite el "*" para indicar que se expanden todas las propiedades.
+     * Si se inclue '&lt;' delante del nombre de la propiedad, solo se expandirán desde el objeto hacia Json
+     * Si se inclue '&gt;' detras del nombre de la propiedad, solo se expandirán desde Json hacia el objeto
+     */
     public BeanMapper(Class entityClass, String deleteProperties, String expandProperties) {
 
         this.entityClass = entityClass;
