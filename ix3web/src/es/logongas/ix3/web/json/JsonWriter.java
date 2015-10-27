@@ -16,7 +16,7 @@
 package es.logongas.ix3.web.json;
 
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
-import java.util.List;
+import es.logongas.ix3.web.json.beanmapper.Expands;
 
 /**
  * Transforma un Objeto Java en un String JSON
@@ -24,6 +24,6 @@ import java.util.List;
  */
 public interface JsonWriter {
     String toJson(Object obj);
-    String toJson(Object obj,List<String> expand);
-    String toJson(Object obj,List<String> expand,BeanMapper beanMapper);
+    String toJson(Object obj,Expands expands);
+    String toJson(Object obj,Expands expands,BeanMapper beanMapper);
 }

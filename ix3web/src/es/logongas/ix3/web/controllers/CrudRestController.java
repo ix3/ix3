@@ -36,6 +36,7 @@ import es.logongas.ix3.web.controllers.schema.Schema;
 import es.logongas.ix3.web.controllers.schema.SchemaFactory;
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import es.logongas.ix3.web.json.JsonReader;
+import es.logongas.ix3.web.json.beanmapper.Expands;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -100,9 +101,9 @@ public class CrudRestController extends AbstractRestController {
                     throw new BusinessException("No existe la entidad " + entityName);
                 }
 
-                List<String> expand = getExpand(httpServletRequest.getParameter(PARAMETER_EXPAND));
+                Expands expands = Expands.createExpandsWithoutAsterisk(httpServletRequest.getParameter(PARAMETER_EXPAND));
 
-                Schema schema = (new SchemaFactory()).getSchema(metaData, metaDataFactory, crudServiceFactory, expand);
+                Schema schema = (new SchemaFactory()).getSchema(metaData, metaDataFactory, crudServiceFactory, expands);
                 CommandResult commandResult=new CommandResult(Schema.class, schema, true);
                 commandResult.setBeanMapper(new BeanMapper(Schema.class,null,"<*"));
                 return commandResult;

@@ -21,10 +21,7 @@ import es.logongas.ix3.web.controllers.endpoint.EndPointsFactory;
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import es.logongas.ix3.web.json.JsonFactory;
 import es.logongas.ix3.web.json.JsonWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.regex.Pattern;
+import es.logongas.ix3.web.json.beanmapper.Expands;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -35,8 +32,6 @@ import org.springframework.web.servlet.HandlerMapping;
 public class AbstractRestController extends AbstractController {
 
     protected final String PARAMETER_EXPAND = "$expand";
-
-    private final Pattern expandPattern = Pattern.compile("([_a-zA-Z0-9]+(\\.[_a-zA-Z0-9]+)*)(,([_a-zA-Z0-9]+(\\.[_a-zA-Z0-9]+)*))*");
 
     @Autowired
     protected JsonFactory jsonFactory;
@@ -63,7 +58,7 @@ public class AbstractRestController extends AbstractController {
             if (commandResult != null) {
                 if (commandResult.getResult() != null) {
                     JsonWriter jsonWriter = jsonFactory.getJsonWriter(commandResult.getResultClass());
-                    List<String> expand = getExpand(httpServletRequest.getParameter(PARAMETER_EXPAND));
+                    Expands expands = Expands.createExpandsWithoutAsterisk(httpServletRequest.getParameter(PARAMETER_EXPAND));
 
                     BeanMapper beanMapper;
                     if (commandResult.getBeanMapper() != null) {
@@ -72,7 +67,7 @@ public class AbstractRestController extends AbstractController {
                         beanMapper = endPoint.getBeanMapper();
                     }
 
-                    String jsonOut = jsonWriter.toJson(commandResult.getResult(), expand, beanMapper);
+                    String jsonOut = jsonWriter.toJson(commandResult.getResult(), expands, beanMapper);
 
                     if (commandResult.isCache()) {
                         cache(httpServletResponse);
@@ -118,24 +113,6 @@ public class AbstractRestController extends AbstractController {
             }
         }
 
-    }
-
-    /**
-     * Transforma el parámetro "expand" que viene por la petición http en una array
-     *
-     * @param expand El String con varios expand separados por comas
-     * @return El array con cada uno de ello.
-     */
-    final protected List<String> getExpand(String expand) {
-        if ((expand == null) || (expand.trim().isEmpty())) {
-            return new ArrayList<String>();
-        } else {
-            if (expandPattern.matcher(expand).matches() == false) {
-                throw new RuntimeException("El parámetro expand no tiene el formato adecuado:" + expand + " , " + expandPattern.pattern());
-            }
-
-            return Arrays.asList(expand.split(","));
-        }
     }
 
 }

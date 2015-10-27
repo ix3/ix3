@@ -21,6 +21,7 @@ import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.metadata.ValuesList;
 import es.logongas.ix3.service.CRUDService;
 import es.logongas.ix3.service.CRUDServiceFactory;
+import es.logongas.ix3.web.json.beanmapper.Expands;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +31,7 @@ import java.util.List;
  */
 public class SchemaFactory {
 
-    public Schema getSchema(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, List<String> expand) throws BusinessException {
+    public Schema getSchema(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, Expands expands) throws BusinessException {
         Schema schema = new Schema();
         String propertyPath="";
         
@@ -44,8 +45,15 @@ public class SchemaFactory {
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
-            if ((propertyMetaData.isCollection() == false) || (expandMath(expand, propertyPath+"."+propertyName))) {
-                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, expand,propertyPath+"."+propertyName);
+            String fullPropertyName;
+            if ((propertyPath == null) || (propertyPath.trim().length() == 0)) {
+                fullPropertyName = propertyName;
+            } else {
+                fullPropertyName = propertyPath + "." + propertyName;
+            }
+            
+            if ((propertyMetaData.isCollection() == false) || (expands.isExpandProperty(fullPropertyName))) {
+                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, expands,fullPropertyName);
 
                 schema.getProperties().put(propertyName, property);
             }
@@ -54,7 +62,7 @@ public class SchemaFactory {
         return schema;
     }
 
-    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, List<String> expand,String propertyPath) throws BusinessException {
+    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, Expands expands,String propertyPath) throws BusinessException {
         Property property = new Property();
         property.setType(Type.getTypeFromClass(metaData.getType()));
 
@@ -66,8 +74,15 @@ public class SchemaFactory {
             for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
                 MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
-                if ((propertyMetaData.isCollection() == false) || (expandMath(expand, propertyPath+"."+propertyName))) {
-                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, expand,propertyPath+"."+propertyName);
+                String fullPropertyName;
+                if ((propertyPath == null) || (propertyPath.trim().length() == 0)) {
+                    fullPropertyName = propertyName;
+                } else {
+                    fullPropertyName = propertyPath + "." + propertyName;
+                }                
+                
+                if ((propertyMetaData.isCollection() == false) || (expands.isExpandProperty(fullPropertyName))) {
+                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, expands,fullPropertyName);
 
                     property.getProperties().put(propertyName, subproperty);
                 }
@@ -169,14 +184,5 @@ public class SchemaFactory {
         return values;
     }
     
-    private boolean expandMath(List<String> expands,String propertyPath) {
-        for(String expandProperty:expands) {
-            if (("."+expandProperty).startsWith(propertyPath)) {
-                return true;
-            }
-        }
-        
-        return false;
-        
-    }
+
 }

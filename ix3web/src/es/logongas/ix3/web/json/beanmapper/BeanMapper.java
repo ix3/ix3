@@ -37,8 +37,8 @@ public final class BeanMapper {
     private final List<String> inDeleteProperties;
     private final List<String> outDeleteProperties;
 
-    private final List<String> inExpandProperties;
-    private final List<String> outExpandProperties;
+    private final Expands inExpands;
+    private final Expands outExpands;
 
     public BeanMapper(Class entityClass) {
         this(entityClass, null, null);
@@ -64,9 +64,9 @@ public final class BeanMapper {
         populateInOutLists(deleteProperties,deletePropertiesPattern,inDeleteProperties,outDeleteProperties);
 
 
-        this.inExpandProperties = new ArrayList<String>();
-        this.outExpandProperties = new ArrayList<String>();
-        populateInOutLists(expandProperties,expandPropertiesPattern,inExpandProperties,outExpandProperties);
+        this.inExpands = new Expands();
+        this.outExpands = new Expands();
+        populateInOutLists(expandProperties,expandPropertiesPattern,inExpands,outExpands);
         
 
         this.validate();
@@ -104,30 +104,11 @@ public final class BeanMapper {
 
 
     public boolean isExpandInProperty(String propertyNameExpand) {
-        if (expandMath(inExpandProperties, propertyNameExpand)) {
-            return true;
-        } else {
-            return false;
-        }
+        return inExpands.isExpandProperty(propertyNameExpand);
     }
 
     public boolean isExpandOutProperty(String propertyNameExpand) {
-        if (expandMath(outExpandProperties, propertyNameExpand)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private boolean expandMath(List<String> expands, String propertyNameExpand) {
-        for (String propertyName : expands) {
-            if ((propertyName.trim()).startsWith(propertyNameExpand + ".") || (propertyName.trim().equals(propertyNameExpand)) || (propertyName.trim().equals("*"))) {
-                return true;
-            }
-        }
-
-        return false;
-
+        return outExpands.isExpandProperty(propertyNameExpand);
     }
 
     public boolean isDeleteInProperty(String propertyNameDelete) {
@@ -174,12 +155,12 @@ public final class BeanMapper {
                 }
             }
 
-            for (String propertyName : this.inExpandProperties) {
+            for (String propertyName : this.inExpands) {
                 if (("*".equals(propertyName) == false) && (ReflectionUtil.existsReadPropertyInClass(entityClass, propertyName) == false)) {
                     sb.append("No existe la propiedad set de '" + propertyName + " en la clase " + entityClass.getName() + "\n");
                 }
             }
-            for (String propertyName : this.outExpandProperties) {
+            for (String propertyName : this.outExpands) {
                 if (("*".equals(propertyName) == false) && (ReflectionUtil.existsReadPropertyInClass(entityClass, propertyName) == false)) {
                     sb.append("No existe la propiedad get de '" + propertyName + " en la clase " + entityClass.getName() + "\n");
                 }
