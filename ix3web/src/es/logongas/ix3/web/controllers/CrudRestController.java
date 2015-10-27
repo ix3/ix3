@@ -31,8 +31,10 @@ import es.logongas.ix3.service.CRUDServiceFactory;
 import es.logongas.ix3.service.FilterSearch;
 import es.logongas.ix3.service.ParameterSearch;
 import es.logongas.ix3.util.ReflectionUtil;
+import es.logongas.ix3.web.controllers.endpoint.EndPoint;
 import es.logongas.ix3.web.controllers.metadata.Metadata;
 import es.logongas.ix3.web.controllers.metadata.MetadataFactory;
+import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import es.logongas.ix3.web.json.JsonReader;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -82,15 +84,17 @@ public class CrudRestController extends AbstractRestController {
 
     @Autowired
     private CRUDServiceFactory crudServiceFactory;
+    
 
-    @RequestMapping(value = {"/{entityName}/" + PATH_METADATA}, method = RequestMethod.GET, produces = "application/json")
-    public void metadata(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
 
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
+    @RequestMapping(value = {"{path}/{entityName}/" + PATH_METADATA}, method = RequestMethod.GET, produces = "application/json")
+    public void metadata(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
+
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
 
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
-
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+                
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
                     throw new BusinessException("No existe la entidad " + entityName);
@@ -99,21 +103,22 @@ public class CrudRestController extends AbstractRestController {
                 List<String> expand = getExpand(httpServletRequest.getParameter(PARAMETER_EXPAND));
 
                 Metadata metadata = (new MetadataFactory()).getMetadata(metaData, metaDataFactory, crudServiceFactory, httpServletRequest.getContextPath(), expand);
-                return new CommandResult(Metadata.class, metadata, true);
-
+                CommandResult commandResult=new CommandResult(Metadata.class, metadata, true);
+                commandResult.setBeanMapper(new BeanMapper(Object.class,null,"<*"));
+                return commandResult;
             }
 
         });
 
     }
 
-    @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.GET, produces = "application/json")
-    public void search(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
-
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
-
+    @RequestMapping(value = {"{path}/{entityName}"}, method = RequestMethod.GET, produces = "application/json")
+    public void search(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
+        
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
@@ -155,13 +160,13 @@ public class CrudRestController extends AbstractRestController {
 
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.GET, produces = "application/json")
-    public void read(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id) {
-
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
-
+    @RequestMapping(value = {"{path}/{entityName}/{id}"}, method = RequestMethod.GET, produces = "application/json")
+    public void read(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id) {
+        
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
@@ -177,13 +182,13 @@ public class CrudRestController extends AbstractRestController {
 
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}/{child}"}, method = RequestMethod.GET, produces = "application/json")
-    public void readChild(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id, final @PathVariable("child") String child) {
-
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
-
+    @RequestMapping(value = {"{path}/{entityName}/{id}/{child}"}, method = RequestMethod.GET, produces = "application/json")
+    public void readChild(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id, final @PathVariable("child") String child) {
+        
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
@@ -213,13 +218,13 @@ public class CrudRestController extends AbstractRestController {
 
     }
 
-    @RequestMapping(value = {"/{entityName}/" + PATH_CREATE}, method = RequestMethod.GET, produces = "application/json")
-    public void create(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
-
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
-
+    @RequestMapping(value = {"{path}/{entityName}/" + PATH_CREATE}, method = RequestMethod.GET, produces = "application/json")
+    public void create(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
+        
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
@@ -235,12 +240,12 @@ public class CrudRestController extends AbstractRestController {
         });
     }
 
-    @RequestMapping(value = {"/{entityName}"}, method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-    public void insert(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @RequestBody String jsonIn) {
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
-
+    @RequestMapping(value = {"{path}/{entityName}"}, method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+    public void insert(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @RequestBody String jsonIn) {
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
@@ -248,7 +253,7 @@ public class CrudRestController extends AbstractRestController {
                 }
                 CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
-                Object entity = jsonReader.fromJson(jsonIn);
+                Object entity = jsonReader.fromJson(jsonIn,endPoint.getBeanMapper());
                 crudService.insert(entity);
 
                 return new CommandResult(metaData.getType(), entity, HttpServletResponse.SC_CREATED);
@@ -257,13 +262,13 @@ public class CrudRestController extends AbstractRestController {
         });
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
-    public void update(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id, final @RequestBody String jsonIn) {
-
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
-
+    @RequestMapping(value = {"{path}/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
+    public void update(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id, final @RequestBody String jsonIn) {
+        
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
@@ -271,7 +276,7 @@ public class CrudRestController extends AbstractRestController {
                 }
                 CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
-                Object entity = jsonReader.fromJson(jsonIn);
+                Object entity = jsonReader.fromJson(jsonIn,endPoint.getBeanMapper());
                 crudService.update(entity);
 
                 return new CommandResult(metaData.getType(), entity);
@@ -281,13 +286,13 @@ public class CrudRestController extends AbstractRestController {
 
     }
 
-    @RequestMapping(value = {"/{entityName}/{id}"}, method = RequestMethod.DELETE)
-    public void delete(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id) {
-
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
-
+    @RequestMapping(value = {"{path}/{entityName}/{id}"}, method = RequestMethod.DELETE)
+    public void delete(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id) {
+        
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
 
                 MetaData metaData = metaDataFactory.getMetaData(entityName);
                 if (metaData == null) {
@@ -299,7 +304,7 @@ public class CrudRestController extends AbstractRestController {
                     throw new BusinessException("No existe la entidad a borrar");
                 }
 
-                return null;
+                return new CommandResult(null);
 
             }
         });

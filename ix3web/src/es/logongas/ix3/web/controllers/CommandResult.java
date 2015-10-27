@@ -15,6 +15,8 @@
  */
 package es.logongas.ix3.web.controllers;
 
+import es.logongas.ix3.web.json.beanmapper.BeanMapper;
+
 /**
  *
  * @author logongas
@@ -24,6 +26,7 @@ public class CommandResult {
     private Object result;
     private int httpSuccessStatus;
     private boolean cache;
+    private BeanMapper beanMapper;
 
     public CommandResult(Object result) {
         if (result==null) {
@@ -119,6 +122,20 @@ public class CommandResult {
      */
     public void setHttpSuccessStatus(int httpSuccessStatus) {
         this.httpSuccessStatus = httpSuccessStatus;
+    }
+
+    /**
+     * @return the beanMapper
+     */
+    public BeanMapper getBeanMapper() {
+        return beanMapper;
+    }
+
+    /**
+     * @param beanMapper the beanMapper to set
+     */
+    public void setBeanMapper(BeanMapper beanMapper) {
+        this.beanMapper = beanMapper;
     }
     
     

@@ -17,8 +17,8 @@ package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.web.controllers.endpoint.EndPoint;
 import es.logongas.ix3.web.service.WebSessionService;
-import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,15 +36,15 @@ public class SessionRestController extends AbstractRestController {
 
     @Autowired
     WebSessionService webSessionService;
-
     
-    @RequestMapping(value = {"/session"}, method = RequestMethod.POST, headers = "Accept=application/json")
-    public void login(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
+    @RequestMapping(value = {"/session"}, method = RequestMethod.POST, headers = "Accept=application/json")
+    public void login(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
+        
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
 
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
 
                 Principal principal=webSessionService.createWebSession(httpServletRequest, httpServletResponse);
 
@@ -56,12 +56,12 @@ public class SessionRestController extends AbstractRestController {
     }
 
     @RequestMapping(value = {"/session"}, method = RequestMethod.GET, headers = "Accept=application/json")
-    public void logged(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
+    public void logged(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
+        
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
 
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
 
                 Principal principal=webSessionService.getCurrentWebSession(httpServletRequest, httpServletResponse);
 
@@ -73,15 +73,15 @@ public class SessionRestController extends AbstractRestController {
     }
 
     @RequestMapping(value = {"/session"}, method = RequestMethod.DELETE)
-    public void logout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
+    public void logout(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
 
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
                 
                 webSessionService.deleteCurrentWebSession(httpServletRequest,httpServletResponse);
 
-                return null;
+                return new CommandResult(null);
 
             }
         });

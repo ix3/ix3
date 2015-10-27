@@ -16,9 +16,7 @@
 package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
-import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import es.logongas.ix3.web.controllers.endpoint.EndPoint;
 
 /**
  *
@@ -26,6 +24,6 @@ import javax.servlet.http.HttpServletResponse;
  */
 public interface Command {
     
-    CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,Map<String,Object> arguments) throws Exception,BusinessException;
+    CommandResult run(EndPoint endPoint) throws Exception,BusinessException;
     
 }

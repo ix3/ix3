@@ -17,9 +17,9 @@ package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.NativeDAO;
+import es.logongas.ix3.web.controllers.endpoint.EndPoint;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -43,11 +43,11 @@ public class EchoController extends AbstractRestController {
     private NativeDAO nativeDAO;
 
     @RequestMapping(value = {"/$echo/{id}"}, method = RequestMethod.GET, produces = "application/json")
-    public void echo(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, final @PathVariable("id") int id) {
-        restMethod(httpServletRequest, httpServletResponse, null, new Command() {
+    public void echo(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("id") int id) {
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
 
             @Override
-            public CommandResult run(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, Object> arguments) throws Exception, BusinessException {
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
 
                 List<Object> resultado = nativeDAO.createNativeQuery("select now() from dual", (List<Object>) null);
                 Date date = (Date) resultado.get(0);
