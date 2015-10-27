@@ -108,19 +108,6 @@ public class MetaDataImplHibernate implements MetaData {
     }
 
     @Override
-    public boolean isCollectionLazy() {
-        if (isCollection() == false) {
-            return false;
-        }
-
-        org.hibernate.type.CollectionType collectionType = (org.hibernate.type.CollectionType) type;
-        String role = collectionType.getRole();
-        CollectionMetadata collectionMetadata = sessionFactory.getCollectionMetadata(role);
-
-        return collectionMetadata.isLazy();
-    }
-
-    @Override
     public MetaType getMetaType() {
         if ((getPropertiesMetaData() == null) || (getPropertiesMetaData().size() == 0)) {
             return MetaType.Scalar;

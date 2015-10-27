@@ -193,11 +193,6 @@ public class MetaDataImplBean implements MetaData {
     }
 
     @Override
-    public boolean isCollectionLazy() {
-        return false;
-    }
-
-    @Override
     public CollectionType getCollectionType() {
         return collectionType;
     }

@@ -85,13 +85,6 @@ public interface MetaData {
     CollectionType getCollectionType();
 
     /**
-     * Si la carga de la colección es perezosa
-     *
-     * @return Retorna <code>true</code> si la carga de la colección es perezosa
-     */
-    boolean isCollectionLazy();
-
-    /**
      * El nombre de la propiedad.
      * Sera null si hace rererencia a una clase en vez de a una propiedad de una clase.
      * @return El nombre de la propiedad.
