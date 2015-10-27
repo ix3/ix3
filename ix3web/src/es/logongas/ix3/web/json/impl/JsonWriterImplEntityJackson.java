@@ -177,7 +177,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
 
                                 if (expandMath(expand, fullPropertyName) || (beanMapper.isExpandOutProperty(fullPropertyName))) {
                                     //En vez de poner solo la clave primaria , expandimos la entidad
-                                    value = getMapFromEntity(rawValue, metaDataFactory.getMetaData(value), expand, path + "." + propertyName, beanMapper);
+                                    value = getMapFromEntity(rawValue, metaDataFactory.getMetaData(value), expand, fullPropertyName, beanMapper);
                                 } else {
                                     value = getMapFromForeingEntity(rawValue, metaDataFactory.getMetaData(value));
                                 }
@@ -191,7 +191,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         if (rawValue != null) {
                             if (expandMath(expand, fullPropertyName) || (beanMapper.isExpandOutProperty(fullPropertyName))) {
                                 //En vez de poner solo la clave primaria , expandimos la entidad
-                                value = getMapFromEntity(rawValue, propertyMetaData, expand, path + "." + propertyName, beanMapper);
+                                value = getMapFromEntity(rawValue, propertyMetaData, expand, fullPropertyName, beanMapper);
                             } else {
                                 value = getMapFromForeingEntity(rawValue, propertyMetaData);
                             }

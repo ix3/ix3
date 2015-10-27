@@ -246,7 +246,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                                 throw new RuntimeException(ex);
                             }
                         }
-                        populateEntity(component, rawValue, propertyMetaData, path + "." + propertyName, beanMapper);
+                        populateEntity(component, rawValue, propertyMetaData, fullPropertyName, beanMapper);
                         break;
                     }
                     default:
@@ -277,7 +277,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                             //Añadimos los elementos que vienen desde JSON
                             if (rawCollection != null) {
                                 for (Object rawValue : rawCollection) {
-                                    Object value = readEntity(rawValue, propertyMetaData, path + "." + propertyName, beanMapper);
+                                    Object value = readEntity(rawValue, propertyMetaData, fullPropertyName, beanMapper);
                                     currentCollection.add(value);
                                 }
                             }
@@ -304,7 +304,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                             if (rawMap != null) {
                                 for (Object key : rawMap.keySet()) {
                                     Object rawValue = rawMap.get(key);
-                                    Object value = readEntity(rawValue, propertyMetaData, path + "." + propertyName, beanMapper);
+                                    Object value = readEntity(rawValue, propertyMetaData, fullPropertyName, beanMapper);
                                     currentMap.put(key, value);
                                 }
                             }
