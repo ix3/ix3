@@ -24,9 +24,15 @@ import java.util.List;
  */
 public class EndPointFactoryImpl implements EndPointsFactory {
 
+    List<EndPoint> endPoints = new ArrayList<EndPoint>();
+
+    public EndPointFactoryImpl() {
+        endPoints.add(EndPoint.createEndPoint("/**",  null, null));
+    }
+
     @Override
     public List<EndPoint> getEndPoints() {
-        return new ArrayList<EndPoint>();
+        return endPoints;
     }
     
 }
