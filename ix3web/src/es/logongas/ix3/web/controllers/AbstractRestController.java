@@ -16,6 +16,7 @@
 package es.logongas.ix3.web.controllers;
 
 import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.security.authorization.BusinessSecurityException;
 import es.logongas.ix3.web.controllers.endpoint.EndPoint;
 import es.logongas.ix3.web.controllers.endpoint.EndPointsFactory;
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
@@ -84,12 +85,24 @@ public class AbstractRestController extends AbstractController {
             } else {
                 //Si no nos reponden nada , no hacemos nada ya que significa que el "command" es el responsable de todo.
             }
+        } catch (Exception ex) {
+            printException(ex, httpServletResponse);
+        }
 
-        } catch (BusinessException ex) {
+    }
+
+    private void printException(Throwable ex, HttpServletResponse httpServletResponse) {
+        Throwable realException = getRealException(ex);
+
+        if (realException instanceof BusinessException) {
             try {
-                String jsonOut = jsonFactory.getJsonWriter().toJson(ex.getBusinessMessages());
+                String jsonOut = jsonFactory.getJsonWriter().toJson(((BusinessException) ex).getBusinessMessages());
 
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                if (ex instanceof BusinessSecurityException) {
+                    httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                } else {
+                    httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                }
                 httpServletResponse.setContentType("application/json; charset=UTF-8");
                 httpServletResponse.getWriter().println(jsonOut);
             } catch (Exception ex2) {
@@ -101,7 +114,7 @@ public class AbstractRestController extends AbstractController {
                     log.error("Falló al imprimir la traza", ex3);
                 }
             }
-        } catch (Exception ex) {
+        } else {
             log.error("Fallo al ejecutar el método del controlador REST", ex);
 
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -110,6 +123,30 @@ public class AbstractRestController extends AbstractController {
                 ex.printStackTrace(httpServletResponse.getWriter());
             } catch (Exception ex2) {
                 log.error("Falló al imprimir la traza", ex2);
+            }
+        }
+
+    }
+
+    /**
+     * Si la excepcion contiene como causa (recursivamente) una BusinessException, retorna la BusinessException
+     * sino retorna la propia excepción original
+     * @param ex 
+     * @return 
+     */
+    private Throwable getRealException(Throwable ex) {
+
+        if (ex instanceof BusinessException) {
+            return ex;
+        } else if (ex.getCause() == null) {
+            return ex;
+        } else {
+            Throwable causeException = getRealException(ex);
+
+            if (causeException instanceof BusinessException) {
+                return causeException;
+            } else {
+                return ex;
             }
         }
 
