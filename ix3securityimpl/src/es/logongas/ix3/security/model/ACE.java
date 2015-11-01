@@ -77,7 +77,7 @@ public class ACE {
 
     @Override
     public String toString() {
-        return idACE + "-" + aceType + " - " + permission + " => " + secureResourceRegExp;
+        return idACE + "-" + aceType + " - " + permission + " - " + secureResourceRegExp;
     }
 
     public AuthorizationType authorized(Identity identity, String secureResourceName, Permission permission, Object arguments) {
