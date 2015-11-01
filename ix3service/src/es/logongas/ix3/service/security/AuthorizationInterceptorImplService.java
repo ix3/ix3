@@ -19,6 +19,7 @@ import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.security.authentication.Principal;
 import es.logongas.ix3.security.authorization.AuthorizationInterceptor;
 import es.logongas.ix3.security.authorization.AuthorizationManager;
+import es.logongas.ix3.security.authorization.BusinessSecurityException;
 import es.logongas.ix3.security.util.PrincipalLocator;
 import es.logongas.ix3.service.Service;
 import org.aspectj.lang.JoinPoint;
@@ -59,7 +60,7 @@ public class AuthorizationInterceptorImplService implements AuthorizationInterce
         boolean isAuthorized = authorizationManager.authorized(principal, SECURE_RESOURCE_TYPE_NAME, secureResource, PERMISSION_NAME_PRE_EXECUTE, arguments);
 
         if (isAuthorized == false) {
-            throw new BusinessException("No tiene permisos para ejecutar el método:" + SECURE_RESOURCE_TYPE_NAME + ":" + secureResource);
+            throw new BusinessSecurityException("No tiene permisos para ejecutar el método:" + SECURE_RESOURCE_TYPE_NAME + ":" + secureResource);
         }
 
     }
@@ -79,7 +80,7 @@ public class AuthorizationInterceptorImplService implements AuthorizationInterce
         boolean isAuthorized = authorizationManager.authorized(principal, SECURE_RESOURCE_TYPE_NAME, secureResource, PERMISSION_NAME_POST_EXECUTE, arguments);
 
         if (isAuthorized == false) {
-            throw new BusinessException("No tiene permisos para devolver los datos del método:" + SECURE_RESOURCE_TYPE_NAME + ":" + secureResource);
+            throw new BusinessSecurityException("No tiene permisos para devolver los datos del método:" + SECURE_RESOURCE_TYPE_NAME + ":" + secureResource);
         }
 
     }
