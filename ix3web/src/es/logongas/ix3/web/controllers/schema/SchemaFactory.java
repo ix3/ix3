@@ -23,6 +23,8 @@ import es.logongas.ix3.service.CRUDService;
 import es.logongas.ix3.service.CRUDServiceFactory;
 import es.logongas.ix3.web.json.beanmapper.Expands;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -166,6 +168,14 @@ public class SchemaFactory {
             values.add(value);
         }
 
+        Collections.sort(values,new Comparator<Object>() {
+
+            @Override
+            public int compare(Object value1, Object value2) {
+                return value1.toString().compareTo(value2.toString());
+            }
+        });
+        
         return values;
     }
 
@@ -180,7 +190,15 @@ public class SchemaFactory {
         }
 
         values=data;
+        
+        Collections.sort(values,new Comparator<Object>() {
 
+            @Override
+            public int compare(Object value1, Object value2) {
+                return value1.toString().compareTo(value2.toString());
+            }
+        });
+        
         return values;
     }
     
