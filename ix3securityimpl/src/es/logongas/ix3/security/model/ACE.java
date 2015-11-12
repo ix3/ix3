@@ -55,7 +55,7 @@ public class ACE {
 
     private static final ExpressionParser expressionParser = new SpelExpressionParser();
 
-    protected final Log log = LogFactory.getLog(getClass());
+    protected static final Log log = LogFactory.getLog(ACE.class);
 
     public ACE() {
     }
@@ -106,8 +106,12 @@ public class ACE {
                     throw new RuntimeException("No es posible indicar un Script y una expresion para el ACE:" + this.getIdACE());
                 } else {
                     throw new RuntimeException("Error de lógica para el ACE:" + this.getIdACE());
-                }              
+                } 
                 
+                if (log.isDebugEnabled()) {
+                    log.debug(identity + ":" + secureResourceName + ":" + permission + ":" + authorizationType + "  ==>  " + this);
+                }
+        
             } else {
                 authorizationType = AuthorizationType.Abstain;
             }
