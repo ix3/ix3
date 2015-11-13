@@ -46,36 +46,36 @@ public class ReflectionUtilTest {
     @Test
     public void testGetAnnotationField() throws Exception {
         System.out.println("getAnnotation en un campo");
-        AnnotationTest expResult = ReflectionUtils.findField(BeanTestC.class, "prop").getAnnotation(AnnotationTest.class);
-        AnnotationTest result = ReflectionUtil.getAnnotation(BeanTestC.class, "prop", AnnotationTest.class);
+        TestAnnotation expResult = ReflectionUtils.findField(BeanTestC.class, "prop").getAnnotation(TestAnnotation.class);
+        TestAnnotation result = ReflectionUtil.getAnnotation(BeanTestC.class, "prop", TestAnnotation.class);
         assertEquals(expResult, result);
     }
     @Test
     public void testGetAnnotationMethodGet() throws Exception {
         System.out.println("getAnnotation en un metodo get");
-        AnnotationTest expResult = ReflectionUtils.findMethod(BeanTestC.class, "getPropReadOnly").getAnnotation(AnnotationTest.class);
-        AnnotationTest result = ReflectionUtil.getAnnotation(BeanTestC.class, "propReadOnly", AnnotationTest.class);
+        TestAnnotation expResult = ReflectionUtils.findMethod(BeanTestC.class, "getPropReadOnly").getAnnotation(TestAnnotation.class);
+        TestAnnotation result = ReflectionUtil.getAnnotation(BeanTestC.class, "propReadOnly", TestAnnotation.class);
         assertEquals(expResult, result);
     }   
     @Test
     public void testGetAnnotationMethodSet() throws Exception {
         System.out.println("getAnnotation en un metodo set");
-        AnnotationTest expResult = null;
-        AnnotationTest result = ReflectionUtil.getAnnotation(BeanTestC.class, "propWriteOnly", AnnotationTest.class);
+        TestAnnotation expResult = null;
+        TestAnnotation result = ReflectionUtil.getAnnotation(BeanTestC.class, "propWriteOnly", TestAnnotation.class);
         assertEquals(expResult, result);
     }   
     @Test
     public void testGetAnnotationMethodIs() throws Exception {
         System.out.println("getAnnotation en un metodo is");
-        AnnotationTest expResult = ReflectionUtils.findField(BeanTestC.class, "propBooleanReadOnly").getAnnotation(AnnotationTest.class);
-        AnnotationTest result = ReflectionUtil.getAnnotation(BeanTestC.class, "propBooleanReadOnly", AnnotationTest.class);
+        TestAnnotation expResult = ReflectionUtils.findField(BeanTestC.class, "propBooleanReadOnly").getAnnotation(TestAnnotation.class);
+        TestAnnotation result = ReflectionUtil.getAnnotation(BeanTestC.class, "propBooleanReadOnly", TestAnnotation.class);
         assertEquals(expResult, result);
     }  
     @Test
     public void testGetAnnotationPropertyNested() throws Exception {
         System.out.println("getAnnotation PropertyNested");
-        AnnotationTest expResult = ReflectionUtils.findField(BeanTestC.class, "propBooleanReadOnly").getAnnotation(AnnotationTest.class);
-        AnnotationTest result = ReflectionUtil.getAnnotation(BeanTestA.class, "prop1.beanTestC.propBooleanReadOnly", AnnotationTest.class);
+        TestAnnotation expResult = ReflectionUtils.findField(BeanTestC.class, "propBooleanReadOnly").getAnnotation(TestAnnotation.class);
+        TestAnnotation result = ReflectionUtil.getAnnotation(BeanTestA.class, "prop1.beanTestC.propBooleanReadOnly", TestAnnotation.class);
         assertEquals(expResult, result);
     }    
     

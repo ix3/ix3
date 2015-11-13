@@ -14,7 +14,7 @@ public class BeanTestC {
     
     private int propReadOnly;
     private int propWriteOnly;
-    @AnnotationTest
+    @TestAnnotation
     private int prop;
     private boolean propBooleanReadOnly;
 
@@ -33,7 +33,7 @@ public class BeanTestC {
     /**
      * @return the propReadOnly
      */
-    @AnnotationTest
+    @TestAnnotation
     public int getPropReadOnly() {
         return propReadOnly;
     }
@@ -41,7 +41,7 @@ public class BeanTestC {
     /**
      * @param propWriteOnly the propWriteOnly to set
      */
-    @AnnotationTest
+    @TestAnnotation
     public void setPropWriteOnly(int propWriteOnly) {
         this.propWriteOnly = propWriteOnly;
     }

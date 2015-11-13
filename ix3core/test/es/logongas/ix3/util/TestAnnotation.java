@@ -7,14 +7,12 @@ package es.logongas.ix3.util;
 
 import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import org.junit.Ignore;
 
 /**
  *
  * @author logongas
  */
 @Retention(RUNTIME)
-@Ignore
-public @interface AnnotationTest {
+public @interface TestAnnotation {
     
 }
