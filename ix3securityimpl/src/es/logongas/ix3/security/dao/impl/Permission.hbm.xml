@@ -2,7 +2,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
   <class name="es.logongas.ix3.security.model.Permission" table="sec_permission">
-    <cache usage="read-write"/>
+    <cache usage="read-only"/>
     <id name="idPermission">
       <generator class="identity"/>
     </id>

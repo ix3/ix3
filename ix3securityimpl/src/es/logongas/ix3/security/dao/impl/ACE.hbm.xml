@@ -2,7 +2,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
   <class name="es.logongas.ix3.security.model.ACE" table="sec_ace">
-    <cache usage="read-write"/>
+    <cache usage="read-only"/>
     <id name="idACE">
       <generator class="identity"/>
     </id>
