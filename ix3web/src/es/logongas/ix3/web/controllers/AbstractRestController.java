@@ -40,7 +40,7 @@ public class AbstractRestController extends AbstractController {
     @Autowired
     private EndPointsFactory endPointFactory;
 
-    protected Log log = LogFactory.getLog(AbstractRestController.class);
+    private Log log = LogFactory.getLog(AbstractRestController.class);
 
     final protected void restMethod(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Command command) {
         try {
