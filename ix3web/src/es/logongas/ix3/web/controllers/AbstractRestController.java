@@ -140,8 +140,10 @@ public class AbstractRestController extends AbstractController {
             return ex;
         } else if (ex.getCause() == null) {
             return ex;
+        } else if (ex==ex.getCause()) {
+            return ex;            
         } else {
-            Throwable causeException = getRealException(ex);
+            Throwable causeException = getRealException(ex.getCause());
 
             if (causeException instanceof BusinessException) {
                 return causeException;
@@ -151,5 +153,4 @@ public class AbstractRestController extends AbstractController {
         }
 
     }
-
 }
