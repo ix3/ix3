@@ -58,5 +58,11 @@ public class CredentialImplLoginPassword implements Credential {
         this.password = password;
     }
 
+    @Override
+    public String toString() {
+        return this.login;
+    }
 
+
+    
 }
