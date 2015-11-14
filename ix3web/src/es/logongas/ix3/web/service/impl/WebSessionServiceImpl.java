@@ -26,6 +26,8 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -42,7 +44,9 @@ public class WebSessionServiceImpl implements WebSessionService {
     
     @Autowired
     WebCredentialFactory webCredentialFactory;
-
+    
+    private Log log = LogFactory.getLog(WebSessionServiceImpl.class);
+    
     @Override
     final public Principal createWebSession(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws BusinessException {
         try {
@@ -51,10 +55,17 @@ public class WebSessionServiceImpl implements WebSessionService {
             Credential credental=webCredentialFactory.getCredential(httpServletRequest, httpServletResponse);
             Principal principal = authenticationManager.authenticate(credental);
             if (principal == null) {
+                if (log.isInfoEnabled()) {
+                    log.info("Login fallido con la credencial:" + credental);
+                }
                 throw new BusinessException("El usuario o contraseña no son válidos");
             }
             webSessionSidStorage.setSid(httpServletRequest, httpServletResponse, principal.getSid());
 
+            if (log.isInfoEnabled()) {
+                log.info("Login usuario:" + principal.getName());
+            }
+            
             return principal;
         } catch (BusinessException ex) {
             throw ex;
