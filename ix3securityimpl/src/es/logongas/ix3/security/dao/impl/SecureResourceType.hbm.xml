@@ -2,7 +2,6 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
   <class name="es.logongas.ix3.security.model.SecureResourceType" table="sec_secureresourcetype">
-    <cache usage="read-only"/>
     <id name="idSecureResourceType">
       <generator class="identity"/>
     </id>
@@ -11,14 +10,12 @@
     </natural-id>
     <property name="description"/>
     <set cascade="all" inverse="true" name="permissions">
-      <cache usage="read-write"/>
       <key>
         <column name="idSecureResourceType"/>
       </key>
       <one-to-many class="es.logongas.ix3.security.model.Permission"/>
     </set>
     <set cascade="all" inverse="true" name="secureResources">
-      <cache usage="read-write"/>
       <key>
         <column name="idSecureResourceType"/>
       </key>

@@ -2,7 +2,6 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
   <class name="es.logongas.ix3.security.model.SecureResource" table="sec_secureresource">
-    <cache usage="read-only"/>
     <id name="idSecureResource">
       <generator class="identity"/>
     </id>
