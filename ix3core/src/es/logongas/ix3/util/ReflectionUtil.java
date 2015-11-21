@@ -260,7 +260,7 @@ public class ReflectionUtil {
             }
 
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException("obj:" + obj + " propertyName=" + propertyName + " value=" + value,ex);
         }
     }
 
