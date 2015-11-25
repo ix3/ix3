@@ -43,7 +43,7 @@ public class EchoController extends AbstractRestController {
     private NativeDAO nativeDAO;
 
     @RequestMapping(value = {"/$echo/{id}"}, method = RequestMethod.GET, produces = "application/json")
-    public void echo(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("id") int id) {
+    public void echoDataBase(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("id") int id) {
         restMethod(httpServletRequest, httpServletResponse, new Command() {
 
             @Override
@@ -59,13 +59,30 @@ public class EchoController extends AbstractRestController {
             }
         });
     }
+    
+    @RequestMapping(value = {"/$echo"}, method = RequestMethod.GET, produces = "application/json")
+    public void echoNoDatabase(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
+        restMethod(httpServletRequest, httpServletResponse, new Command() {
 
+            @Override
+            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+
+                Date date = new Date();
+
+                EchoResult echoResult = new EchoResult(date.getTime(), date);
+
+                return new CommandResult(EchoResult.class, echoResult);
+
+            }
+        });
+    }
+    
     public class EchoResult {
 
-        private int id;
+        private long id;
         private Date date;
 
-        public EchoResult(int id, Date date) {
+        public EchoResult(long id, Date date) {
             this.id = id;
             this.date = date;
         }
@@ -73,14 +90,14 @@ public class EchoController extends AbstractRestController {
         /**
          * @return the id
          */
-        public int getId() {
+        public long getId() {
             return id;
         }
 
         /**
          * @param id the id to set
          */
-        public void setId(int id) {
+        public void setId(long id) {
             this.id = id;
         }
 
