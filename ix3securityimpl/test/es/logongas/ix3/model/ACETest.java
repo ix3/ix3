@@ -278,6 +278,29 @@ public class ACETest {
         AuthorizationType result = instance.authorized(user,"/pepe/index.html", permission, arguments);
         assertEquals(expResult, result);
     }
+    
+    @Test
+    public void testAuthorizedExpressionPermiteTrim() {
+        System.out.println("authorized Expression coprobando valores de null, '' y '    '");
+        SecureResourceType secureResourceType = new SecureResourceType(1, "URL", "URL");
+        String secureResourceName="/pepe/index.html";
+        Permission permission = new Permission(1, "GET", "GET", secureResourceType);
+        User user=new User(1, "Juan", "Juan García");
+        ACE instance = new ACE(4, ACEType.Allow, permission, user, "/.*/.*",null, "(arguments.get('p1')!=null)?arguments.get('p1').trim().isEmpty()==false:false", 10,null);
+        Map<String,Object> arguments = new HashMap<String,Object>();
+        
+        arguments.put("p1",null);
+        assertEquals(AuthorizationType.Abstain,instance.authorized(user ,secureResourceName, permission, arguments) );
+        
+        arguments.put("p1","");
+        assertEquals(AuthorizationType.Abstain,instance.authorized(user ,secureResourceName, permission, arguments) ); 
+        
+        arguments.put("p1","   ");
+        assertEquals(AuthorizationType.Abstain,instance.authorized(user ,secureResourceName, permission, arguments) );  
+        
+        arguments.put("p1"," a  ");
+        assertEquals(AuthorizationType.AccessAllow,instance.authorized(user ,secureResourceName, permission, arguments) );          
+    }    
 
     @Test
     public void testAuthorizedExpression6() {
