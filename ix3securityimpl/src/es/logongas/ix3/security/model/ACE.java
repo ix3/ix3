@@ -143,6 +143,15 @@ public class ACE {
         return matcherGroups;
     }
     
+    /**
+     * Evalua el Script de un ACE
+     * @param ace El ACE a evaluar
+     * @param identity El usuario que está haciando la petición
+     * @param secureResourceName El recurso
+     * @param arguments Los argumentos de la petición
+     * @param mg Los MathcherGroups de la "secureResourceName" si el "secureResourceName" era una expresión regular.
+     * @return El resultado de evaluarlo
+     */
     private boolean evaluateConditionalScript(ACE ace, Identity identity, String secureResourceName, Object arguments, List<String> mg) {
         if ((ace.getConditionalScript() == null) || (ace.getConditionalScript().trim().length() == 0)) {
             throw new RuntimeException("No podemos evaluar un Script vacio del ACE:" + ace.getIdACE());
@@ -167,6 +176,15 @@ public class ACE {
         return (Boolean) result;
     }
 
+    /**
+     * Evalua una expresión de un ACE
+     * @param ace El ACE a evaluar
+     * @param identity El usuario que está haciando la petición
+     * @param secureResourceName El recurso
+     * @param arguments Los argumentos de la petición
+     * @param mg Los MathcherGroups de la "secureResourceName" si el "secureResourceName" era una expresión regular.
+     * @return El resultado de evaluarlo
+     */    
     private boolean evaluateConditionalExpression(ACE ace, Identity identity, String secureResourceName, Object arguments,List<String> mg) {
         Object result;
 
@@ -341,6 +359,13 @@ public class ACE {
         public Object arguments;
         public List<String> mg;
 
+        /**
+         * @param ace El ACE a evaluar
+         * @param identity El usuario que está haciando la petición
+         * @param secureResourceName El recurso
+         * @param arguments Los argumentos de la petición
+         * @param mg Los MathcherGroups de la "secureResourceName" si el "secureResourceName" era una expresión regular.
+         */        
         public ConditionalExpressionSpelContext(ACE ace, Identity identity, String secureResourceName, Object arguments, List<String> mg) {
             this.ace = ace;
             this.identity = identity;
