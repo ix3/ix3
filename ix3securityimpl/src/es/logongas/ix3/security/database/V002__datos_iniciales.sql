@@ -12,12 +12,18 @@ INSERT INTO `sec_permission` (`idPermission`, `name`, `description`, `idSecureRe
 	(1, 'GET', 'GET', 1),
 	(2, 'POST', 'POST', 1),
 	(3, 'PUT', 'PUT', 1),
-	(4, 'DELETE', 'DELETE', 1);
+	(4, 'DELETE', 'DELETE', 1),
+	(5, 'PATCH', 'PATCH', 1);
 
 
 INSERT INTO `sec_secureresourcetype` (`idSecureResourceType`, `name`, `description`) VALUES
 	(2, 'Service', 'Servicio');
 INSERT INTO `sec_permission` (`idPermission`, `name`, `description`, `idSecureResourceType`) VALUES
-	(5, 'preexecute', 'Pre-Execute', 2),
-	(6, 'postexecute', 'Post-Execute', 2);
+	(20, 'preexecute', 'Pre-Execute', 2),
+	(21, 'postexecute', 'Post-Execute', 2);
 
+INSERT INTO `sec_secureresourcetype` (`idSecureResourceType`, `name`, `description`) VALUES
+	(3, 'Controller', 'Controladores públicos');
+INSERT INTO `sec_permission` (`idPermission`, `name`, `description`, `idSecureResourceType`) VALUES
+	(22, 'PreExecuteController', 'Pre-Execute Controller', 3),
+	(23, 'PostExecuteController', 'Post-Execute Controller', 3);
