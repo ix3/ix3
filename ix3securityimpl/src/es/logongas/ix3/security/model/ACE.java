@@ -48,7 +48,7 @@ public class ACE {
     private String conditionalExpression;
     private Integer priority;
     private String description;
-    
+
     private static final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
     private static final ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
     private static final ScriptEvaluator scriptEvaluator = new ScriptEvaluator(scriptEngine);
@@ -66,14 +66,12 @@ public class ACE {
         this.permission = permission;
         this.identity = identity;
         this.secureResourceRegExp = secureResourceRegExp;
-        this.secureResourcePattern=Pattern.compile("^" + this.secureResourceRegExp + "$");
+        this.secureResourcePattern = Pattern.compile("^" + this.secureResourceRegExp + "$");
         this.conditionalScript = conditionalScript;
         this.conditionalExpression = conditionalExpression;
         this.priority = priority;
         this.description = description;
     }
-
-    
 
     @Override
     public String toString() {
@@ -84,20 +82,20 @@ public class ACE {
         AuthorizationType authorizationType;
 
         if (this.permission.equals(permission)) {
-            Matcher matcher=secureResourcePattern.matcher(secureResourceName);
-            if (matcher.matches()) {             
+            Matcher matcher = secureResourcePattern.matcher(secureResourceName);
+            if (matcher.matches()) {
                 if ((existsConditionalExpression() == false) && (existsConditionalScript() == false)) {
                     authorizationType = aceTypeToAuthorizationType(aceType);
                 } else if ((existsConditionalExpression() == true) && (existsConditionalScript() == false)) {
-                    List<String> matcherGroups=getMatcherGroups(matcher);
-                    if (evaluateConditionalExpression(this, identity, secureResourceName, arguments,matcherGroups) == true) {
+                    List<String> matcherGroups = getMatcherGroups(matcher);
+                    if (evaluateConditionalExpression(this, identity, secureResourceName, arguments, matcherGroups) == true) {
                         authorizationType = aceTypeToAuthorizationType(aceType);
                     } else {
                         authorizationType = AuthorizationType.Abstain;
                     }
                 } else if ((existsConditionalExpression() == false) && (existsConditionalScript() == true)) {
-                    List<String> matcherGroups=getMatcherGroups(matcher);
-                    if (evaluateConditionalScript(this, identity, secureResourceName, arguments,matcherGroups) == true) {
+                    List<String> matcherGroups = getMatcherGroups(matcher);
+                    if (evaluateConditionalScript(this, identity, secureResourceName, arguments, matcherGroups) == true) {
                         authorizationType = aceTypeToAuthorizationType(aceType);
                     } else {
                         authorizationType = AuthorizationType.Abstain;
@@ -106,19 +104,19 @@ public class ACE {
                     throw new RuntimeException("No es posible indicar un Script y una expresion para el ACE:" + this.getIdACE());
                 } else {
                     throw new RuntimeException("Error de lógica para el ACE:" + this.getIdACE());
-                } 
-                
+                }
+
                 if (log.isDebugEnabled()) {
                     log.debug(identity + ":" + secureResourceName + ":" + permission + ":" + authorizationType + "  ==>  " + this);
                 }
-        
+
             } else {
                 authorizationType = AuthorizationType.Abstain;
             }
         } else {
             authorizationType = AuthorizationType.Abstain;
         }
-        
+
         return authorizationType;
     }
 
@@ -134,17 +132,18 @@ public class ACE {
     }
 
     private List<String> getMatcherGroups(Matcher matcher) {
-        List<String> matcherGroups=new ArrayList<String>();
-        
-        for(int i=0;i<=matcher.groupCount();i++) {
+        List<String> matcherGroups = new ArrayList<String>();
+
+        for (int i = 0; i <= matcher.groupCount(); i++) {
             matcherGroups.add(matcher.group(i));
         }
-        
+
         return matcherGroups;
     }
-    
+
     /**
      * Evalua el Script de un ACE
+     *
      * @param ace El ACE a evaluar
      * @param identity El usuario que está haciando la petición
      * @param secureResourceName El recurso
@@ -153,56 +152,65 @@ public class ACE {
      * @return El resultado de evaluarlo
      */
     private boolean evaluateConditionalScript(ACE ace, Identity identity, String secureResourceName, Object arguments, List<String> mg) {
-        if ((ace.getConditionalScript() == null) || (ace.getConditionalScript().trim().length() == 0)) {
-            throw new RuntimeException("No podemos evaluar un Script vacio del ACE:" + ace.getIdACE());
-        }
+        try {
+            if ((ace.getConditionalScript() == null) || (ace.getConditionalScript().trim().length() == 0)) {
+                throw new RuntimeException("No podemos evaluar un Script vacio del ACE:" + ace.getIdACE());
+            }
 
-        String functionName = "conditionalScript_" + ace.getIdACE() + "_" + Math.abs(ace.getConditionalScript().hashCode());
+            String functionName = "conditionalScript_" + ace.getIdACE() + "_" + Math.abs(ace.getConditionalScript().hashCode());
 
-        //Si aun no se ha compilado el Script lo hacemos ahora
-        if (((Boolean) scriptEvaluator.evaluate("typeof " + functionName + "=='function'")) == false) {
-            scriptEvaluator.evaluate("function " + functionName + "(ace,identity,secureResourceName,arguments,mg) {" + ace.getConditionalScript() + "}");
-            log.debug("Compilando código del ACE " + ace.getIdACE());
-        }
+            //Si aun no se ha compilado el Script lo hacemos ahora
+            if (((Boolean) scriptEvaluator.evaluate("typeof " + functionName + "=='function'")) == false) {
+                scriptEvaluator.evaluate("function " + functionName + "(ace,identity,secureResourceName,arguments,mg) {" + ace.getConditionalScript() + "}");
+                log.debug("Compilando código del ACE " + ace.getIdACE());
+            }
 
-        Object result = scriptEvaluator.invokeFunction(functionName, ace, identity, secureResourceName, arguments,mg);
-        if (result == null) {
-            throw new RuntimeException("El Script no puede retornar null en el ACE:" + ace.getIdACE());
-        }
-        if (!(result instanceof Boolean)) {
-            throw new RuntimeException("El Script no es un boolean en el ACE:" + ace.getIdACE());
-        }
+            Object result = scriptEvaluator.invokeFunction(functionName, ace, identity, secureResourceName, arguments, mg);
+            if (result == null) {
+                throw new RuntimeException("El Script no puede retornar null en el ACE:" + ace.getIdACE());
+            }
+            if (!(result instanceof Boolean)) {
+                throw new RuntimeException("El Script no es un boolean en el ACE:" + ace.getIdACE());
+            }
 
-        return (Boolean) result;
+            return (Boolean) result;
+        } catch (Exception ex) {
+            throw new RuntimeException("ACE:" + ace.toString(), ex);
+        }
     }
 
     /**
      * Evalua una expresión de un ACE
+     *
      * @param ace El ACE a evaluar
      * @param identity El usuario que está haciando la petición
      * @param secureResourceName El recurso
      * @param arguments Los argumentos de la petición
      * @param mg Los MathcherGroups de la "secureResourceName" si el "secureResourceName" era una expresión regular.
      * @return El resultado de evaluarlo
-     */    
-    private boolean evaluateConditionalExpression(ACE ace, Identity identity, String secureResourceName, Object arguments,List<String> mg) {
-        Object result;
+     */
+    private boolean evaluateConditionalExpression(ACE ace, Identity identity, String secureResourceName, Object arguments, List<String> mg) {
+        try {
+            Object result;
 
-        //Si no hay Script retornamos 'null'
-        if ((ace.getConditionalExpression() == null) || (ace.getConditionalExpression().trim().length() == 0)) {
-            throw new RuntimeException("No podemos evaluar una expresion vacia del ACE:" + ace.getIdACE());
-        }
+            //Si no hay Script retornamos 'null'
+            if ((ace.getConditionalExpression() == null) || (ace.getConditionalExpression().trim().length() == 0)) {
+                throw new RuntimeException("No podemos evaluar una expresion vacia del ACE:" + ace.getIdACE());
+            }
 
-        EvaluationContext context = new StandardEvaluationContext(new ConditionalExpressionSpelContext(ace, identity, secureResourceName, arguments,mg));
-        result = expressionParser.parseExpression(ace.getConditionalExpression()).getValue(context, Object.class);
-        if (result == null) {
-            throw new RuntimeException("La expresion no puede retornar null en el ACE:" + ace.getIdACE());
-        }
-        if (!(result instanceof Boolean)) {
-            throw new RuntimeException("La expresion no es un boolean en el ACE:" + ace.getIdACE());
-        }
+            EvaluationContext context = new StandardEvaluationContext(new ConditionalExpressionSpelContext(ace, identity, secureResourceName, arguments, mg));
+            result = expressionParser.parseExpression(ace.getConditionalExpression()).getValue(context, Object.class);
+            if (result == null) {
+                throw new RuntimeException("La expresion no puede retornar null en el ACE:" + ace.getIdACE());
+            }
+            if (!(result instanceof Boolean)) {
+                throw new RuntimeException("La expresion no es un boolean en el ACE:" + ace.getIdACE());
+            }
 
-        return (Boolean) result;
+            return (Boolean) result;
+        } catch (Exception ex) {
+            throw new RuntimeException("ACE:" + ace.toString(), ex);
+        }
     }
 
     protected boolean existsConditionalExpression() {
@@ -289,7 +297,7 @@ public class ACE {
      */
     public void setSecureResourceRegExp(String secureResourceRegExp) {
         this.secureResourceRegExp = secureResourceRegExp;
-        this.secureResourcePattern=Pattern.compile("^" + this.secureResourceRegExp + "$");
+        this.secureResourcePattern = Pattern.compile("^" + this.secureResourceRegExp + "$");
     }
 
     /**
@@ -365,7 +373,7 @@ public class ACE {
          * @param secureResourceName El recurso
          * @param arguments Los argumentos de la petición
          * @param mg Los MathcherGroups de la "secureResourceName" si el "secureResourceName" era una expresión regular.
-         */        
+         */
         public ConditionalExpressionSpelContext(ACE ace, Identity identity, String secureResourceName, Object arguments, List<String> mg) {
             this.ace = ace;
             this.identity = identity;
@@ -373,8 +381,6 @@ public class ACE {
             this.arguments = arguments;
             this.mg = mg;
         }
-
-
 
         /**
          * @return the ace
