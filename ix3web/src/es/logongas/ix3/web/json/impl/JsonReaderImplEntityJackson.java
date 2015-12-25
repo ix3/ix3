@@ -256,7 +256,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                 switch (propertyMetaData.getCollectionType()) {
                     case List:
                     case Set: {
-                        if (beanMapper.isExpandInProperty(propertyName)) { 
+                        if (beanMapper.isExpandInProperty(fullPropertyName)) { 
                             Collection rawCollection = (Collection) getValueFromBean(jsonObj, propertyName);
                             Collection currentCollection = (Collection) getValueFromBean(entity, propertyName);
 
@@ -287,7 +287,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                         break;
                     }
                     case Map: {
-                        if (beanMapper.isExpandInProperty(propertyName)) { //TODO:No cargamos nunca las coleccione pq aun no sabemos si hay que hacerlo o no
+                        if (beanMapper.isExpandInProperty(fullPropertyName)) { //TODO:No cargamos nunca las coleccione pq aun no sabemos si hay que hacerlo o no
                             Map rawMap = (Map) getValueFromBean(jsonObj, propertyName);
                             Map currentMap = (Map) getValueFromBean(entity, propertyName);
 
