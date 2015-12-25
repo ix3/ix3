@@ -34,8 +34,9 @@ limitations under the License.
     <bean class="es.logongas.ix3.service.rules.impl.RuleEngineFactoryImpl" />
     <bean class="es.logongas.ix3.service.rules.impl.hibernate.ApplicationContextProvider"  />
     
-    <!-- Quitar estas 2 lineas para deshabilitar el AOP y la seguridad en los servicios -->
+    <!-- Estas 2 lineas para habilitan/deshabilitan el AOP para la seguridad de todas las llamadas a los servicios -->
+<!--    
     <aop:aspectj-autoproxy />
     <bean id="authorizationInterceptorImplService" class="es.logongas.ix3.service.security.AuthorizationInterceptorImplService"  />
-    
+-->
 </beans>
