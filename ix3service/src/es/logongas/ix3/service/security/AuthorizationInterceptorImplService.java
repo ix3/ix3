@@ -37,8 +37,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class AuthorizationInterceptorImplService implements AuthorizationInterceptor {
 
     private static final String SECURE_RESOURCE_TYPE_NAME = "Service";
-    private static final String PERMISSION_NAME_PRE_EXECUTE = "preexecute";
-    private static final String PERMISSION_NAME_POST_EXECUTE = "postexecute";
+    private static final String PERMISSION_NAME_PRE_EXECUTE = "PreExecuteService";
+    private static final String PERMISSION_NAME_POST_EXECUTE = "PostExecuteService";
 
     @Autowired
     AuthorizationManager authorizationManager;

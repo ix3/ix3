@@ -19,8 +19,8 @@ INSERT INTO `sec_permission` (`idPermission`, `name`, `description`, `idSecureRe
 INSERT INTO `sec_secureresourcetype` (`idSecureResourceType`, `name`, `description`) VALUES
 	(2, 'Service', 'Servicio');
 INSERT INTO `sec_permission` (`idPermission`, `name`, `description`, `idSecureResourceType`) VALUES
-	(20, 'preexecute', 'Pre-Execute', 2),
-	(21, 'postexecute', 'Post-Execute', 2);
+	(20, 'PreExecuteService', 'Pre-Execute Service', 2),
+	(21, 'PostExecuteService', 'Post-Execute Service', 2);
 
 INSERT INTO `sec_secureresourcetype` (`idSecureResourceType`, `name`, `description`) VALUES
 	(3, 'Controller', 'Controladores públicos');
