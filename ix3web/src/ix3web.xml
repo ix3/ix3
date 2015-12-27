@@ -30,6 +30,10 @@ limitations under the License.
     <bean class="es.logongas.ix3.web.service.impl.WebSessionServiceImpl" />
     <bean class="es.logongas.ix3.web.security.FilterImplSecurity" id="filterImplSecurity"/>
     <bean class="es.logongas.ix3.web.security.AuthorizationInterceptorImplURL" id="authorizationInterceptorImplURL"/>
+    <bean class="es.logongas.ix3.web.security.AuthorizationInterceptorImplController" id="authorizationInterceptorImplController"/>
+    
+    
+    <!-- Usar una de las siguientes clases para decidir como se guarda la sesión -->
     <!-- 
         <bean class="es.logongas.ix3.web.security.impl.WebSessionSidStorageImplAbstractJws"  />    
         <bean class="es.logongas.ix3.web.security.impl.WebSessionSidStorageImplHttpSession"  />    
