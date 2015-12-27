@@ -15,11 +15,16 @@
  */
 package es.logongas.ix3.web.controllers;
 
+import es.logongas.ix3.web.controllers.helper.AbstractRestController;
+import es.logongas.ix3.web.controllers.command.CommandResult;
+import es.logongas.ix3.web.controllers.command.Command;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.NativeDAO;
 import es.logongas.ix3.web.controllers.endpoint.EndPoint;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -44,10 +49,17 @@ public class EchoController extends AbstractRestController {
 
     @RequestMapping(value = {"/$echo/{id}"}, method = RequestMethod.GET, produces = "application/json")
     public void echoDataBase(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("id") int id) {
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        restMethod(httpServletRequest, httpServletResponse,"echoDataBase",null, new Command() {
 
+            public int id;
+            
+            Command initialize(int id) {
+                this.id=id;
+                return this;
+            };
+            
             @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+            public CommandResult run() throws Exception, BusinessException {
 
                 List<Object> resultado = nativeDAO.createNativeQuery("select now() from dual", (List<Object>) null);
                 Date date = (Date) resultado.get(0);
@@ -57,15 +69,15 @@ public class EchoController extends AbstractRestController {
                 return new CommandResult(EchoResult.class, echoResult);
 
             }
-        });
+        }.initialize(id));
     }
     
     @RequestMapping(value = {"/$echo"}, method = RequestMethod.GET, produces = "application/json")
     public void echoNoDatabase(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        restMethod(httpServletRequest, httpServletResponse,"echoNoDatabase",null, new Command() {
 
             @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+            public CommandResult run() throws Exception, BusinessException {
 
                 Date date = new Date();
 
@@ -73,7 +85,7 @@ public class EchoController extends AbstractRestController {
 
                 return new CommandResult(EchoResult.class, echoResult);
 
-            }
+            }            
         });
     }
     

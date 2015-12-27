@@ -15,6 +15,9 @@
  */
 package es.logongas.ix3.web.controllers;
 
+import es.logongas.ix3.web.controllers.helper.AbstractRestController;
+import es.logongas.ix3.web.controllers.command.CommandResult;
+import es.logongas.ix3.web.controllers.command.Command;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.security.authentication.Principal;
 import es.logongas.ix3.web.controllers.endpoint.EndPoint;
@@ -41,10 +44,10 @@ public class SessionRestController extends AbstractRestController {
     @RequestMapping(value = {"/session"}, method = RequestMethod.POST, headers = "Accept=application/json")
     public void login(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
         
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        restMethod(httpServletRequest, httpServletResponse,"login",null, new Command() {
 
             @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+            public CommandResult run() throws Exception, BusinessException {
 
                 Principal principal=webSessionService.createWebSession(httpServletRequest, httpServletResponse);
 
@@ -58,10 +61,10 @@ public class SessionRestController extends AbstractRestController {
     @RequestMapping(value = {"/session"}, method = RequestMethod.GET, headers = "Accept=application/json")
     public void logged(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
         
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        restMethod(httpServletRequest, httpServletResponse,"logged",null, new Command() {
 
             @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+            public CommandResult run() throws Exception, BusinessException {
 
                 Principal principal=webSessionService.getCurrentWebSession(httpServletRequest, httpServletResponse);
 
@@ -74,10 +77,10 @@ public class SessionRestController extends AbstractRestController {
 
     @RequestMapping(value = {"/session"}, method = RequestMethod.DELETE)
     public void logout(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        restMethod(httpServletRequest, httpServletResponse,"logout",null, new Command() {
 
             @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+            public CommandResult run() throws Exception, BusinessException {
                 
                 webSessionService.deleteCurrentWebSession(httpServletRequest,httpServletResponse);
 

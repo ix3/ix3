@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.controllers;
+package es.logongas.ix3.web.controllers.command;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.web.controllers.endpoint.EndPoint;
 
 /**
  *
@@ -24,6 +23,6 @@ import es.logongas.ix3.web.controllers.endpoint.EndPoint;
  */
 public interface Command {
     
-    CommandResult run(EndPoint endPoint) throws Exception,BusinessException;
+    CommandResult run() throws Exception;
     
 }

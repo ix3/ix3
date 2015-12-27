@@ -15,6 +15,9 @@
  */
 package es.logongas.ix3.web.controllers;
 
+import es.logongas.ix3.web.controllers.helper.AbstractRestController;
+import es.logongas.ix3.web.controllers.command.CommandResult;
+import es.logongas.ix3.web.controllers.command.Command;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.core.OrderDirection;
 import es.logongas.ix3.core.Order;
@@ -31,7 +34,7 @@ import es.logongas.ix3.service.CRUDServiceFactory;
 import es.logongas.ix3.service.FilterSearch;
 import es.logongas.ix3.service.ParameterSearch;
 import es.logongas.ix3.util.ReflectionUtil;
-import es.logongas.ix3.web.controllers.endpoint.EndPoint;
+import es.logongas.ix3.web.controllers.command.MimeType;
 import es.logongas.ix3.web.controllers.schema.Schema;
 import es.logongas.ix3.web.controllers.schema.SchemaFactory;
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
@@ -42,11 +45,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
@@ -85,69 +88,113 @@ public class CrudRestController extends AbstractRestController {
 
     @Autowired
     private CRUDServiceFactory crudServiceFactory;
-    
-
 
     @RequestMapping(value = {"{path}/{entityName}/" + PATH_SCHEMA}, method = RequestMethod.GET, produces = "application/json")
-    public void schema(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
+    public void schema(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
 
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        if (metaData == null) {
+            throw new RuntimeException("No existe la entidad " + entityName);
+        }
+        Expands expands = Expands.createExpandsWithoutAsterisk(httpServletRequest.getParameter(PARAMETER_EXPAND));
+
+        restMethod(httpServletRequest, httpServletResponse, "schema", metaData.getType(), new Command() {
+            public MetaData metaData;
+            public Expands expands;
+
+            public Command inicialize(MetaData metaData, Expands expands) {
+                this.metaData = metaData;
+                this.expands = expands;
+                return this;
+            }
 
             @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
-                
-                MetaData metaData = metaDataFactory.getMetaData(entityName);
-                if (metaData == null) {
-                    throw new BusinessException("No existe la entidad " + entityName);
-                }
-
-                Expands expands = Expands.createExpandsWithoutAsterisk(httpServletRequest.getParameter(PARAMETER_EXPAND));
-
+            public CommandResult run() throws Exception, BusinessException {
                 Schema schema = (new SchemaFactory()).getSchema(metaData, metaDataFactory, crudServiceFactory, expands);
-                CommandResult commandResult=new CommandResult(Schema.class, schema, true);
-                commandResult.setBeanMapper(new BeanMapper(Schema.class,null,"<*"));
+                CommandResult commandResult = new CommandResult(Schema.class, schema, 200, true, new BeanMapper(Schema.class, null, "<*"), MimeType.JSON);
                 return commandResult;
             }
 
-        });
+        }.inicialize(metaData, expands));
 
     }
 
     @RequestMapping(value = {"{path}/{entityName}"}, method = RequestMethod.GET, produces = "application/json")
-    public void search(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
+    public void search(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) throws BusinessException {
+
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        if (metaData == null) {
+            throw new RuntimeException("No existe la entidad " + entityName);
+        }
+        CRUDService crudService = crudServiceFactory.getService(metaData.getType());
+        List<Order> orders = getOrders(metaData, httpServletRequest.getParameter(PARAMETER_ORDERBY));
+        PageRequest pageRequest = getPageRequest(httpServletRequest);
+        SearchResponse searchResponse = getSearchResponse(httpServletRequest);
+        String namedSearch = httpServletRequest.getParameter(PARAMETER_NAMEDSEARCH);
+        Map<String, String[]> parametersMap = httpServletRequest.getParameterMap();
+        List<Filter> filters;
+        Map<String, Object> parameters;
+
+        if ((namedSearch != null) && (namedSearch.trim().equals("") == false)) {
+            switch (getNamedSearchType(crudService, namedSearch)) {
+                case FILTER:
+                    filters = getFiltersSearchFromWebParameters(parametersMap, metaData);
+                    parameters=null;
+                    break;
+                case PARAMETERS:
+                    parameters = getParametersSearchFromWebParameters(parametersMap, crudService, namedSearch);
+                    filters=null;
+                    break;
+                default:
+                    throw new RuntimeException("El tipo del name search es desconocido:" + getNamedSearchType(crudService, namedSearch));
+            }
+        } else {
+            filters = getFiltersSearchFromWebParameters(parametersMap, metaData);
+            parameters=null;
+        }
+
+        restMethod(httpServletRequest, httpServletResponse, "search", metaData.getType(), new Command() {
+
+            public MetaData metaData;
+            public List<Order> orders;
+            public PageRequest pageRequest;
+            public SearchResponse searchResponse;
+            public String namedSearch;
+            public Map<String, String[]> parametersMap;
+            public List<Filter> filters;
+            public Map<String, Object> parameters;
         
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
-        
+            public Command inicialize(MetaData metaData, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse, String namedSearch, Map<String, String[]> parametersMap,List<Filter> filters,Map<String, Object> parameters) {
+                this.metaData = metaData;
+                this.orders = orders;
+                this.pageRequest = pageRequest;
+                this.searchResponse = searchResponse;
+                this.namedSearch = namedSearch;
+                this.parametersMap = parametersMap;
+                this.filters=filters;
+                this.parameters=parameters;
+                
+                return this;
+            }
+
             @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+            public CommandResult run() throws Exception, BusinessException {
 
-                MetaData metaData = metaDataFactory.getMetaData(entityName);
-                if (metaData == null) {
-                    throw new BusinessException("No existe la entidad " + entityName);
-                }
                 CRUDService crudService = crudServiceFactory.getService(metaData.getType());
-
-                List<Order> orders = getOrders(metaData, httpServletRequest.getParameter(PARAMETER_ORDERBY));
-                PageRequest pageRequest = getPageRequest(httpServletRequest);
-                SearchResponse searchResponse = getSearchResponse(httpServletRequest);
-                String namedSearch = httpServletRequest.getParameter(PARAMETER_NAMEDSEARCH);
 
                 Object result;
                 if ((namedSearch != null) && (namedSearch.trim().equals("") == false)) {
                     switch (getNamedSearchType(crudService, namedSearch)) {
                         case FILTER:
-                            List<Filter> filters = getFiltersSearchFromWebParameters(httpServletRequest, metaData);
                             result = executeNamedSearchFilters(crudService, namedSearch, filters, pageRequest, orders, searchResponse);
                             break;
                         case PARAMETERS:
-                            Map<String, Object> parameters = getParametersSearchFromWebParameters(httpServletRequest, crudService, namedSearch);
                             result = executeNamedSearchParameters(crudService, namedSearch, parameters, pageRequest, orders, searchResponse);
                             break;
                         default:
                             throw new RuntimeException("El tipo del name search es desconocido:" + getNamedSearchType(crudService, namedSearch));
                     }
                 } else {
-                    List<Filter> filters = getFiltersSearchFromWebParameters(httpServletRequest, metaData);
                     if (pageRequest == null) {
                         result = crudService.search(filters, orders, searchResponse);
                     } else {
@@ -157,50 +204,70 @@ public class CrudRestController extends AbstractRestController {
                 return new CommandResult(metaData.getType(), result);
 
             }
-        });
+        }.inicialize(metaData, orders, pageRequest, searchResponse, namedSearch, parametersMap,filters, parameters));
 
     }
 
     @RequestMapping(value = {"{path}/{entityName}/{id}"}, method = RequestMethod.GET, produces = "application/json")
-    public void read(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id) {
-        
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
-        
-            @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+    public void read(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) {
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        if (metaData == null) {
+            throw new RuntimeException("No existe la entidad " + entityName);
+        }
 
-                MetaData metaData = metaDataFactory.getMetaData(entityName);
-                if (metaData == null) {
-                    throw new BusinessException("No existe la entidad " + entityName);
-                }
+        restMethod(httpServletRequest, httpServletResponse, "read", metaData.getType(), new Command() {
+
+            public MetaData metaData;
+            public int id;
+
+            public Command inicialize(MetaData metaData, int id) {
+                this.metaData = metaData;
+                this.id = id;
+                return this;
+            }
+
+            @Override
+            public CommandResult run() throws Exception, BusinessException {
+
                 CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 Object entity = crudService.read(id);
 
                 return new CommandResult(metaData.getType(), entity);
 
             }
-        });
+        }.inicialize(metaData, id));
 
     }
 
     @RequestMapping(value = {"{path}/{entityName}/{id}/{child}"}, method = RequestMethod.GET, produces = "application/json")
-    public void readChild(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id, final @PathVariable("child") String child) {
-        
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
-        
-            @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+    public void readChild(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @PathVariable("child") String child) {
 
-                MetaData metaData = metaDataFactory.getMetaData(entityName);
-                if (metaData == null) {
-                    throw new BusinessException("No existe la entidad " + entityName);
-                }
-                if (metaData.getPropertiesMetaData().get(child) == null) {
-                    throw new BusinessException("En la entidad '" + entityName + "' no existe la propiedad '" + child + "'");
-                }
-                if (metaData.getPropertiesMetaData().get(child).isCollection() == false) {
-                    throw new BusinessException("En la entidad '" + entityName + "'  la propiedad '" + child + "' no es una colección");
-                }
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        if (metaData == null) {
+            throw new RuntimeException("No existe la entidad " + entityName);
+        }
+        if (metaData.getPropertiesMetaData().get(child) == null) {
+            throw new RuntimeException("En la entidad '" + entityName + "' no existe la propiedad '" + child + "'");
+        }
+        if (metaData.getPropertiesMetaData().get(child).isCollection() == false) {
+            throw new RuntimeException("En la entidad '" + entityName + "'  la propiedad '" + child + "' no es una colección");
+        }
+
+        restMethod(httpServletRequest, httpServletResponse, "readChild", metaData.getType(), new Command() {
+
+            public MetaData metaData;
+            public int id;
+            public String child;
+
+            public Command inicialize(MetaData metaData, int id, String child) {
+                this.metaData = metaData;
+                this.id = id;
+                this.child = child;
+                return this;
+            }
+
+            @Override
+            public CommandResult run() throws Exception, BusinessException {
 
                 CRUDService crudService = crudServiceFactory.getService(metaData.getType());
                 Object entity = crudService.read(id);
@@ -215,92 +282,136 @@ public class CrudRestController extends AbstractRestController {
                 return new CommandResult(metaData.getPropertiesMetaData().get(child).getType(), childData);
 
             }
-        });
+        }.inicialize(metaData, id, child));
 
     }
 
     @RequestMapping(value = {"{path}/{entityName}/" + PATH_CREATE}, method = RequestMethod.GET, produces = "application/json")
-    public void create(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName) {
-        
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
-        
-            @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+    public void create(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
 
-                MetaData metaData = metaDataFactory.getMetaData(entityName);
-                if (metaData == null) {
-                    throw new BusinessException("No existe la entidad " + entityName);
-                }
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        if (metaData == null) {
+            throw new RuntimeException("No existe la entidad " + entityName);
+        }
+        Map<String, String[]> parametersMap = httpServletRequest.getParameterMap();
+
+        restMethod(httpServletRequest, httpServletResponse, "create", metaData.getType(), new Command() {
+
+            public MetaData metaData;
+            public Map<String, String[]> parametersMap;
+
+            public Command inicialize(MetaData metaData, Map<String, String[]> parametersMap) {
+                this.metaData = metaData;
+                this.parametersMap = parametersMap;
+                return this;
+            }
+
+            @Override
+            public CommandResult run() throws Exception, BusinessException {
+
                 CRUDService crudService = crudServiceFactory.getService(metaData.getType());
-                Map<String, Object> initialProperties = getPropertiesFromParameters(metaData, removeDollarParameters(httpServletRequest.getParameterMap()));
+                Map<String, Object> initialProperties = getPropertiesFromParameters(metaData, removeDollarParameters(parametersMap));
                 Object entity = crudService.create(initialProperties);
 
                 return new CommandResult(metaData.getType(), entity);
 
             }
-        });
+        }.inicialize(metaData, parametersMap));
     }
 
     @RequestMapping(value = {"{path}/{entityName}"}, method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-    public void insert(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @RequestBody String jsonIn) {
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
-        
-            @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+    public void insert(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @RequestBody String jsonIn) {
 
-                MetaData metaData = metaDataFactory.getMetaData(entityName);
-                if (metaData == null) {
-                    throw new BusinessException("No existe la entidad " + entityName);
-                }
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        if (metaData == null) {
+            throw new RuntimeException("No existe la entidad " + entityName);
+        }
+        JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
+        Object entity = jsonReader.fromJson(jsonIn, getBeanMapper(httpServletRequest));
+
+        restMethod(httpServletRequest, httpServletResponse, "insert", metaData.getType(), new Command() {
+            public MetaData metaData;
+            public Object entity;
+
+            public Command inicialize(MetaData metaData, Object entity) {
+                this.metaData = metaData;
+                this.entity = entity;
+
+                return this;
+            }
+
+            @Override
+            public CommandResult run() throws Exception, BusinessException {
+
                 CRUDService crudService = crudServiceFactory.getService(metaData.getType());
-                JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
-                Object entity = jsonReader.fromJson(jsonIn,endPoint.getBeanMapper());
+
                 crudService.insert(entity);
 
                 return new CommandResult(metaData.getType(), entity, HttpServletResponse.SC_CREATED);
 
             }
-        });
+        }.inicialize(metaData, entity));
     }
 
     @RequestMapping(value = {"{path}/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
-    public void update(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id, final @RequestBody String jsonIn) {
-        
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
-        
-            @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+    public void update(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @RequestBody String jsonIn) {
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        if (metaData == null) {
+            throw new RuntimeException("No existe la entidad " + entityName);
+        }
+        JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
+        Object entity = jsonReader.fromJson(jsonIn, getBeanMapper(httpServletRequest));
 
-                MetaData metaData = metaDataFactory.getMetaData(entityName);
-                if (metaData == null) {
-                    throw new BusinessException("No existe la entidad " + entityName);
-                }
+        restMethod(httpServletRequest, httpServletResponse, "update", metaData.getType(), new Command() {
+            public MetaData metaData;
+            public Object entity;
+
+            public Command inicialize(MetaData metaData, Object entity) {
+                this.metaData = metaData;
+                this.entity = entity;
+
+                return this;
+            }
+
+            @Override
+            public CommandResult run() throws Exception, BusinessException {
+
                 CRUDService crudService = crudServiceFactory.getService(metaData.getType());
-                JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
-                Object entity = jsonReader.fromJson(jsonIn,endPoint.getBeanMapper());
+
                 crudService.update(entity);
 
                 return new CommandResult(metaData.getType(), entity);
 
             }
-        });
+        }.inicialize(metaData, entity));
 
     }
 
     @RequestMapping(value = {"{path}/{entityName}/{id}"}, method = RequestMethod.DELETE)
-    public void delete(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("entityName") String entityName, final @PathVariable("id") int id) {
-        
-        restMethod(httpServletRequest, httpServletResponse, new Command() {
-        
-            @Override
-            public CommandResult run(EndPoint endPoint) throws Exception, BusinessException {
+    public void delete(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id) throws BusinessException {
+        MetaData metaData = metaDataFactory.getMetaData(entityName);
+        if (metaData == null) {
+            throw new RuntimeException("No existe la entidad " + entityName);
+        }
+        CRUDService crudService = crudServiceFactory.getService(metaData.getType());
+        Object entity = crudService.read(id);
 
-                MetaData metaData = metaDataFactory.getMetaData(entityName);
-                if (metaData == null) {
-                    throw new BusinessException("No existe la entidad " + entityName);
-                }
+        restMethod(httpServletRequest, httpServletResponse, "delete", metaData.getType(), new Command() {
+
+            public MetaData metaData;
+            public Object entity;
+
+            public Command inicialize(MetaData metaData, Object entity) {
+                this.metaData = metaData;
+                this.entity = entity;
+                return this;
+            }
+
+            @Override
+            public CommandResult run() throws Exception, BusinessException {
                 CRUDService crudService = crudServiceFactory.getService(metaData.getType());
-                boolean deletedSuccess = crudService.delete(id);
+
+                boolean deletedSuccess = crudService.delete((Integer) ReflectionUtil.getValueFromBean(entity, metaData.getPrimaryKeyPropertyName()));
                 if (deletedSuccess == false) {
                     throw new BusinessException("No existe la entidad a borrar");
                 }
@@ -308,15 +419,14 @@ public class CrudRestController extends AbstractRestController {
                 return new CommandResult(null);
 
             }
-        });
+        }.inicialize(metaData, entity));
     }
 
     /**
      * Como se ordenan los datos
      *
      * @param metaData Metadatos de la que se quieren ordenar
-     * @param orderBy Debe tener la forma de "[campo [asc desc],](campo [asc
-     * desc])*)
+     * @param orderBy Debe tener la forma de "[campo [asc desc],](campo [asc desc])*)
      * @return
      */
     private List<Order> getOrders(MetaData metaData, String orderBy) {
@@ -381,17 +491,16 @@ public class CrudRestController extends AbstractRestController {
         return searchResponse;
     }
 
-    private List<Filter> getFiltersSearchFromWebParameters(HttpServletRequest httpServletRequest, MetaData metaData) {
+    private List<Filter> getFiltersSearchFromWebParameters(Map<String, String[]> parametersMap, MetaData metaData) {
         List<Filter> filters = new ArrayList<Filter>();
-        Enumeration<String> enumeration = httpServletRequest.getParameterNames();
-        while (enumeration.hasMoreElements()) {
-            String rawPropertyName = enumeration.nextElement();
+        for (Entry<String, String[]> entry : parametersMap.entrySet()) {
+            String rawPropertyName = entry.getKey();
             Filter filter = getFilterFromPropertyName(rawPropertyName);
 
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(filter.getPropertyName());
             if (propertyMetaData != null) {
                 Class propertyType = propertyMetaData.getType();
-                String[] parameterValues = httpServletRequest.getParameterValues(rawPropertyName);
+                String[] parameterValues = entry.getValue();
                 if (parameterValues.length == 1) {
                     Object value;
                     if (filter.getFilterOperator() == FilterOperator.isnull) {
@@ -406,11 +515,11 @@ public class CrudRestController extends AbstractRestController {
 
                 } else {
                     List<Object> values = new ArrayList<Object>();
-                    
+
                     if (filter.getFilterOperator() == FilterOperator.isnull) {
                         throw new RuntimeException("No se permiten varios valores con el operador 'isnull'");
                     }
-                    
+
                     for (String parameterValue : parameterValues) {
                         values.add(conversion.convertFromString(parameterValue, propertyType));
                     }
@@ -423,7 +532,7 @@ public class CrudRestController extends AbstractRestController {
         return filters;
     }
 
-    private Map<String, Object> getParametersSearchFromWebParameters(HttpServletRequest httpServletRequest, CRUDService crudService, String methodName) throws BusinessException {
+    private Map<String, Object> getParametersSearchFromWebParameters(Map<String, String[]> parametersMap, CRUDService crudService, String methodName) throws BusinessException {
         Map<String, Object> parameters = new HashMap<String, Object>();
 
         Method method = ReflectionUtil.getMethod(crudService.getClass(), methodName);
@@ -442,7 +551,7 @@ public class CrudRestController extends AbstractRestController {
             throw new RuntimeException("La lista de nombre de parametros para la anotación NameSearch debe coincidir con el nº de parámetro del método: " + crudService.getClass().getName() + "." + methodName);
         }
 
-        Map<String, String[]> webParameters = removeDollarParameters(httpServletRequest.getParameterMap());
+        Map<String, String[]> webParameters = removeDollarParameters(parametersMap);
         for (int i = 0; i < method.getParameterTypes().length; i++) {
             String parameterName = parameterNames[i];
             Class parameterType = method.getParameterTypes()[i];
@@ -504,8 +613,7 @@ public class CrudRestController extends AbstractRestController {
      * Obtiene un integer a partir de un null
      *
      * @param s El String que se transforma en un Integer
-     * @return Si el string es null se retornará null, sino se retornará el
-     * Integer
+     * @return Si el string es null se retornará null, sino se retornará el Integer
      */
     private Integer getIntegerFromString(String s) {
         if (s == null) {
@@ -519,8 +627,7 @@ public class CrudRestController extends AbstractRestController {
      * Obtiene un boolean a partir de un null
      *
      * @param s El String que se transforma en un Integer
-     * @return Si el string es null se retornará false, sino se retornará el
-     * booleano
+     * @return Si el string es null se retornará false, sino se retornará el booleano
      */
     private boolean getBooleanFromString(String s) {
         if (s == null) {
@@ -545,9 +652,7 @@ public class CrudRestController extends AbstractRestController {
     }
 
     /**
-     * Esta función quita aquellos parametros que viene nen la petición http que
-     * empiezan por "$" pq esos parámetros tienen un significado especial y no
-     * son "normales" para el modelo de negocio.
+     * Esta función quita aquellos parametros que viene nen la petición http que empiezan por "$" pq esos parámetros tienen un significado especial y no son "normales" para el modelo de negocio.
      *
      * @param parameterMap El map con los parametros
      * @return Otro map con los mismos valores excepto los que empiezan por "$"
@@ -565,10 +670,8 @@ public class CrudRestController extends AbstractRestController {
     }
 
     /**
-     * Esta funcion transforma los valores iniciales de la petición HTTP en una
-     * serie de objetos. Si las propiedaes hacen referencia a una propiedad de
-     * una entida o a una clave primaria de una entidad se leerá dicha entidad
-     * Sino simplemente se pondrá el valor de la entidad.
+     * Esta funcion transforma los valores iniciales de la petición HTTP en una serie de objetos. Si las propiedaes hacen referencia a una propiedad de una entida o a una clave primaria de una entidad
+     * se leerá dicha entidad Sino simplemente se pondrá el valor de la entidad.
      *
      * @param metaData Metada desde la que se quiere
      * @param parameters
@@ -741,10 +844,10 @@ public class CrudRestController extends AbstractRestController {
             }
 
             FilterSearch filterSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, FilterSearch.class);
-            if (filterSearchAnnotation==null) {
+            if (filterSearchAnnotation == null) {
                 throw new RuntimeException("El método '" + namedSearch + "' debe tener la anotación FilterSearch");
             }
-            
+
             List args = new ArrayList();
             for (int i = 0; i < method.getParameterTypes().length; i++) {
                 Class parameterClass = method.getParameterTypes()[i];
@@ -790,15 +893,15 @@ public class CrudRestController extends AbstractRestController {
     private Filter getFilterFromPropertyName(String rawPropertyName) {
         FilterOperator filterOperator;
         String propertyName;
-        int indexDollar=rawPropertyName.indexOf("$");
-        
-        if (indexDollar>0) {
+        int indexDollar = rawPropertyName.indexOf("$");
+
+        if (indexDollar > 0) {
             try {
-                filterOperator = FilterOperator.valueOf(rawPropertyName.substring(indexDollar+1));
-            } catch ( IllegalArgumentException ex) {
+                filterOperator = FilterOperator.valueOf(rawPropertyName.substring(indexDollar + 1));
+            } catch (IllegalArgumentException ex) {
                 throw new RuntimeException("El formato del modificador de la propiedad no es valido:" + rawPropertyName);
             }
-            propertyName = rawPropertyName.substring(0,indexDollar);
+            propertyName = rawPropertyName.substring(0, indexDollar);
         } else {
             filterOperator = FilterOperator.eq;
             propertyName = rawPropertyName;
@@ -817,18 +920,19 @@ public class CrudRestController extends AbstractRestController {
     private NameSearchType getNamedSearchType(CRUDService crudService, String namedSearch) throws BusinessException {
         FilterSearch filterSearchAnnotation;
         ParameterSearch parameterSearchAnnotation;
-        
-        
+
         filterSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, FilterSearch.class);
         parameterSearchAnnotation = getAnnotation(crudService.getClass(), namedSearch, ParameterSearch.class);
-        
-        if ((filterSearchAnnotation==null) && (parameterSearchAnnotation==null)) {
+
+        if ((filterSearchAnnotation == null) && (parameterSearchAnnotation == null)) {
             throw new BusinessException("No existe el método " + namedSearch + " en la clase de Servicio o no tiene la anotacion FilterSearch o ParameterSearch: " + crudService.getClass().getName());
-        } else if ((filterSearchAnnotation==null) && (parameterSearchAnnotation!=null)) {
+        } else if ((filterSearchAnnotation == null) && (parameterSearchAnnotation != null)) {
             return NameSearchType.PARAMETERS;
-        } if ((filterSearchAnnotation!=null) && (parameterSearchAnnotation==null)) {
+        }
+        if ((filterSearchAnnotation != null) && (parameterSearchAnnotation == null)) {
             return NameSearchType.FILTER;
-        } if ((filterSearchAnnotation!=null) && (parameterSearchAnnotation!=null)) {
+        }
+        if ((filterSearchAnnotation != null) && (parameterSearchAnnotation != null)) {
             throw new BusinessException("El método " + namedSearch + " no puede tener a la vez las anotaciones anotacion FilterSearch o ParameterSearch: " + crudService.getClass().getName());
         } else {
             throw new BusinessException("Error de lógica");

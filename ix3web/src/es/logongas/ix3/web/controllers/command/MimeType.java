@@ -13,25 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.controllers;
-
-import javax.servlet.http.HttpServletResponse;
+package es.logongas.ix3.web.controllers.command;
 
 /**
  *
  * @author logongas
  */
-public class AbstractController {
+public enum MimeType {
+    JSON("application/json; charset=UTF-8"),
+    OCTET_STREAM("application/octet-stream"), 
+    PDF("application/pdf");
+    
+    final private String text;
 
-    public void noCache(HttpServletResponse httpServletResponse) {
-        httpServletResponse.setHeader("Cache-Control", "no-cache");
+    MimeType(String text) {
+        this.text=text;
     }
-
-    public void cache(HttpServletResponse httpServletResponse) {
-        cache(httpServletResponse, 60);
+    
+    public String getText() {
+        return this.text;
     }
-
-    public void cache(HttpServletResponse httpServletResponse, long expireSeconds) {
-        httpServletResponse.setHeader("Cache-Control", "private, no-transform, max-age=" + expireSeconds);
-    }
+    
+    
 }
