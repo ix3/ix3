@@ -22,11 +22,11 @@ import java.util.List;
  * La implmentacion por defecto no incluye ningún endpoint
  * @author logongas
  */
-public class EndPointFactoryImpl implements EndPointsFactory {
+public class EndPointsFactoryImpl implements EndPointsFactory {
 
     List<EndPoint> endPoints = new ArrayList<EndPoint>();
 
-    public EndPointFactoryImpl() {
+    public EndPointsFactoryImpl() {
         endPoints.add(EndPoint.createEndPoint("/**",  null, null));
     }
 
