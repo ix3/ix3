@@ -19,6 +19,8 @@ import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.security.authentication.Principal;
 import es.logongas.ix3.security.util.PrincipalLocator;
+import es.logongas.ix3.web.json.JsonFactory;
+import es.logongas.ix3.web.util.ExceptionManager;
 import java.io.IOException;
 import java.io.Serializable;
 import javax.servlet.Filter;
@@ -49,6 +51,9 @@ public class FilterImplSecurity implements Filter {
 
     @Autowired
     WebSessionSidStorage webSessionSidStorage;
+    
+    @Autowired
+    protected JsonFactory jsonFactory;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -61,20 +66,18 @@ public class FilterImplSecurity implements Filter {
 
         try {
             Principal principal = getPrincipal(httpServletRequest, httpServletResponse);
-            if (authorizationInterceptorImplURL.checkAuthorized(principal, httpServletRequest, httpServletResponse) == true) {
-                try {
-                    principalLocator.bindPrincipal(principal);
-                    filterChain.doFilter(servletRequest, servletResponse);
-                } finally {
-                    principalLocator.unbindPrincipal();
-                }
-            } else {
-                httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            authorizationInterceptorImplURL.checkAuthorized(principal, httpServletRequest, httpServletResponse);
+                        
+            try {
+                principalLocator.bindPrincipal(principal);
+                filterChain.doFilter(servletRequest, servletResponse);
+            } finally {
+                principalLocator.unbindPrincipal();
             }
-        } catch (BusinessException ex) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        }
 
+        } catch (Exception ex) {
+            ExceptionManager.exceptionToHttpResponse(ex, httpServletResponse, jsonFactory);
+        }
     }
 
     @Override
