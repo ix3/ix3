@@ -38,7 +38,7 @@ public class EndPoint {
     }
 
     public static EndPoint createEndPointCrud(String prefixPath, Class entityClass) {
-        return new EndPoint(prefixPath + "/" + entityClass.getSimpleName() + "/**", null, new BeanMapper(entityClass));
+        return new EndPoint(prefixPath + "/" + entityClass.getSimpleName() + "/**", null, null);
     }
 
     public static EndPoint createEndPointCrud(String prefixPath, BeanMapper beanMapper) {
