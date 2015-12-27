@@ -15,10 +15,8 @@
  */
 package es.logongas.ix3.web.json.beanmapper;
 
-import es.logongas.ix3.core.BusinessMessage;
 import es.logongas.ix3.util.ReflectionUtil;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -29,8 +27,8 @@ import java.util.regex.Pattern;
  */
 public final class BeanMapper {
 
-    private final static Pattern deletePropertiesPattern = Pattern.compile("(\\<?[_a-zA-Z0-9]+(\\.[_a-zA-Z0-9]+)*)\\>?(,\\<?([_a-zA-Z0-9]+(\\.[_a-zA-Z0-9]+)*)\\>?)*");
-    private final static Pattern expandPropertiesPattern = Pattern.compile("(\\<?([_a-zA-Z0-9]+(\\.[_a-zA-Z0-9]+)*)|\\<?\\*)\\>?(,\\<?(([_a-zA-Z0-9]+(\\.[_a-zA-Z0-9]+)*)|\\*)\\>?)*");
+    private final static Pattern deletePropertiesPattern = Pattern.compile("(\\s*\\<?[_a-zA-Z0-9]+(\\.[_a-zA-Z0-9]+)*)\\>?\\s*(\\s*,\\s*\\<?([_a-zA-Z0-9]+(\\.[_a-zA-Z0-9]+)*)\\>?)*\\s*");
+    private final static Pattern expandPropertiesPattern = Pattern.compile("(\\s*\\<?([_a-zA-Z0-9]+(\\.[_a-zA-Z0-9]+)*)|\\<?\\*)\\>?\\s*(\\s*,\\s*\\<?(([_a-zA-Z0-9]+(\\.[_a-zA-Z0-9]+)*)|\\*)\\>?)*\\s*");
 
     private final Class entityClass;
 
@@ -46,14 +44,12 @@ public final class BeanMapper {
 
     /**
      * Crea un nuevo objeto
+     *
      * @param entityClass Nombre de la clase Java sobre la que se aplicará el BeanMapper
-     * @param deleteProperties Propiedaes a borrar se paradas por comas. 
-     * Si se inclue '&lt;' delante del nombre de la propiedad, solo se borrará desde el objeto hacia Json
-     * Si se inclue '&gt;' detras del nombre de la propiedad, solo se borrará desde Json hacia el objeto
-     * @param expandProperties  Propiedaes a expandir se paradas por comas.
-     * Se permite el "*" para indicar que se expanden todas las propiedades.
-     * Si se inclue '&lt;' delante del nombre de la propiedad, solo se expandirán desde el objeto hacia Json
-     * Si se inclue '&gt;' detras del nombre de la propiedad, solo se expandirán desde Json hacia el objeto
+     * @param deleteProperties Propiedaes a borrar se paradas por comas. Si se inclue '&lt;' delante del nombre de la propiedad, solo se borrará desde el objeto hacia Json Si se inclue '&gt;' detras
+     * del nombre de la propiedad, solo se borrará desde Json hacia el objeto
+     * @param expandProperties Propiedaes a expandir se paradas por comas. Se permite el "*" para indicar que se expanden todas las propiedades. Si se inclue '&lt;' delante del nombre de la propiedad,
+     * solo se expandirán desde el objeto hacia Json Si se inclue '&gt;' detras del nombre de la propiedad, solo se expandirán desde Json hacia el objeto
      */
     public BeanMapper(Class entityClass, String deleteProperties, String expandProperties) {
 
@@ -61,47 +57,42 @@ public final class BeanMapper {
 
         this.inDeleteProperties = new ArrayList<String>();
         this.outDeleteProperties = new ArrayList<String>();
-        populateInOutLists(deleteProperties,deletePropertiesPattern,inDeleteProperties,outDeleteProperties);
-
+        populateInOutLists(deleteProperties, deletePropertiesPattern, inDeleteProperties, outDeleteProperties);
 
         this.inExpands = new Expands();
         this.outExpands = new Expands();
-        populateInOutLists(expandProperties,expandPropertiesPattern,inExpands,outExpands);
-        
+        populateInOutLists(expandProperties, expandPropertiesPattern, inExpands, outExpands);
 
         this.validate();
     }
 
-    private void populateInOutLists(String properties,Pattern pattern,List<String> in,List<String> out) {
+    private void populateInOutLists(String properties, Pattern pattern, List<String> in, List<String> out) {
         if ((properties != null) && (properties.trim().isEmpty() == false)) {
             if (pattern.matcher(properties).matches() == false) {
                 throw new RuntimeException("El parámetro properties no tiene el formato adecuado:" + properties + " , " + pattern.pattern());
             }
-            
-            String[] arrProperties=properties.split(",");
-            for(String rawProperty:arrProperties) {
-                String propertyName=rawProperty.replace(">","").replace("<","");
-                if ((rawProperty.startsWith("<")==true) && (rawProperty.endsWith(">")==true)) {
+
+            String[] arrProperties = properties.replace(" ", "").split(",");
+            for (String rawProperty : arrProperties) {
+                String propertyName = rawProperty.replace(">", "").replace("<", "");
+                if ((rawProperty.startsWith("<") == true) && (rawProperty.endsWith(">") == true)) {
                     in.add(propertyName);
                     out.add(propertyName);
-                } else if ((rawProperty.startsWith("<")==true) && (rawProperty.endsWith(">")==false)) {
+                } else if ((rawProperty.startsWith("<") == true) && (rawProperty.endsWith(">") == false)) {
                     out.add(propertyName);
-                } else if ((rawProperty.startsWith("<")==false) && (rawProperty.endsWith(">")==true)) {
+                } else if ((rawProperty.startsWith("<") == false) && (rawProperty.endsWith(">") == true)) {
                     in.add(propertyName);
-                } else if ((rawProperty.startsWith("<")==false) && (rawProperty.endsWith(">")==false)) {
+                } else if ((rawProperty.startsWith("<") == false) && (rawProperty.endsWith(">") == false)) {
                     in.add(propertyName);
                     out.add(propertyName);
                 } else {
                     throw new RuntimeException("Error de logica:" + rawProperty.startsWith("<") + " , " + rawProperty.endsWith(">"));
                 }
             }
-            
+
         }
-        
-        
+
     }
-
-
 
     public boolean isExpandInProperty(String propertyNameExpand) {
         return inExpands.isExpandProperty(propertyNameExpand);
@@ -180,5 +171,5 @@ public final class BeanMapper {
     public Class getEntityClass() {
         return entityClass;
     }
-
+    
 }
