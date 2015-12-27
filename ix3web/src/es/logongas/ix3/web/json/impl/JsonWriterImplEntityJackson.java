@@ -73,7 +73,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             }
             if (beanMapper == null) {
                 beanMapper = new BeanMapper(Object.class);
-            }
+            } 
             Object jsonValue = getJsonObjectFromObject(obj, expands, "", beanMapper);
             return objectMapper.writeValueAsString(jsonValue);
         } catch (JsonProcessingException ex) {
@@ -152,14 +152,14 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
-            String fullPropertyName;
+            String absolutePropertyName;
             if ((path == null) || (path.trim().length() == 0)) {
-                fullPropertyName = propertyName;
+                absolutePropertyName = propertyName;
             } else {
-                fullPropertyName = path + "." + propertyName;
+                absolutePropertyName = path + "." + propertyName;
             }
 
-            if (beanMapper.isDeleteOutProperty(fullPropertyName) == true) {
+            if (beanMapper.isDeleteOutProperty(absolutePropertyName) == true) {
                 //No se puede generar esa propiedad al "exterior"
                 continue;
             }
@@ -176,9 +176,9 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                                 //En el que realmente no sabemos los tipos
                                 Object rawValue = getValueFromBean(obj, propertyName);
 
-                                if ((expands.isExpandProperty(fullPropertyName)) || (beanMapper.isExpandOutProperty(fullPropertyName))) {
+                                if ((expands.isExpandProperty(absolutePropertyName)) || (beanMapper.isExpandOutProperty(absolutePropertyName))) {
                                     //En vez de poner solo la clave primaria , expandimos la entidad
-                                    value = getMapFromEntity(rawValue, metaDataFactory.getMetaData(value), expands, fullPropertyName, beanMapper);
+                                    value = getMapFromEntity(rawValue, metaDataFactory.getMetaData(value), expands, absolutePropertyName, beanMapper);
                                 } else {
                                     value = getMapFromForeingEntity(rawValue, metaDataFactory.getMetaData(value));
                                 }
@@ -190,9 +190,9 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                     case Entity: {
                         Object rawValue = getValueFromBean(obj, propertyName);
                         if (rawValue != null) {
-                            if ((expands.isExpandProperty(fullPropertyName)) || (beanMapper.isExpandOutProperty(fullPropertyName))) {
+                            if ((expands.isExpandProperty(absolutePropertyName)) || (beanMapper.isExpandOutProperty(absolutePropertyName))) {
                                 //En vez de poner solo la clave primaria , expandimos la entidad
-                                value = getMapFromEntity(rawValue, propertyMetaData, expands, fullPropertyName, beanMapper);
+                                value = getMapFromEntity(rawValue, propertyMetaData, expands, absolutePropertyName, beanMapper);
                             } else {
                                 value = getMapFromForeingEntity(rawValue, propertyMetaData);
                             }
@@ -204,7 +204,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                     case Component: {
                         Object rawValue = getValueFromBean(obj, propertyName);
                         if (rawValue != null) {
-                            value = getMapFromEntity(rawValue, propertyMetaData, expands, fullPropertyName, beanMapper);
+                            value = getMapFromEntity(rawValue, propertyMetaData, expands, absolutePropertyName, beanMapper);
                         } else {
                             value = null;
                         }
@@ -219,12 +219,12 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                 Object rawValue = getValueFromBean(obj, propertyName);
                 switch (propertyMetaData.getCollectionType()) {
                     case List: {
-                        if ((expands.isExpandProperty(fullPropertyName)) || (beanMapper.isExpandOutProperty(fullPropertyName))) {
+                        if ((expands.isExpandProperty(absolutePropertyName)) || (beanMapper.isExpandOutProperty(absolutePropertyName))) {
                             List list = (List) rawValue;
                             List jsonList = new ArrayList();
                             if (list != null) {
                                 for (Object element : list) {
-                                    jsonList.add(getJsonObjectFromObjectFromCollection(element, propertyMetaData, expands, fullPropertyName, beanMapper));
+                                    jsonList.add(getJsonObjectFromObjectFromCollection(element, propertyMetaData, expands, absolutePropertyName, beanMapper));
                                 }
                                 value = jsonList;
                             } else {
@@ -242,12 +242,12 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         break;
                     }
                     case Set: {
-                        if ((expands.isExpandProperty(fullPropertyName)) || (beanMapper.isExpandOutProperty(fullPropertyName))) {
+                        if ((expands.isExpandProperty(absolutePropertyName)) || (beanMapper.isExpandOutProperty(absolutePropertyName))) {
                             Set set = (Set) rawValue;
                             Set jsonSet = new HashSet();
                             if (set != null) {
                                 for (Object element : set) {
-                                    jsonSet.add(getJsonObjectFromObjectFromCollection(element, propertyMetaData, expands, fullPropertyName, beanMapper));
+                                    jsonSet.add(getJsonObjectFromObjectFromCollection(element, propertyMetaData, expands, absolutePropertyName, beanMapper));
                                 }
 
                                 value = jsonSet;
@@ -265,14 +265,14 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
                         break;
                     }
                     case Map: {
-                        if ((expands.isExpandProperty(fullPropertyName)) || (beanMapper.isExpandOutProperty(fullPropertyName))) {
+                        if ((expands.isExpandProperty(absolutePropertyName)) || (beanMapper.isExpandOutProperty(absolutePropertyName))) {
                             Map map = (Map) rawValue;
                             Map jsonMap = new LinkedHashMap();
                             if (map != null) {
                                 for (Object key : map.keySet()) {
                                     Object valueMap = map.get(key);
 
-                                    jsonMap.put(getJsonObjectFromObject(key, beanMapper), getJsonObjectFromObjectFromCollection(valueMap, propertyMetaData, expands, fullPropertyName, beanMapper));
+                                    jsonMap.put(getJsonObjectFromObject(key, beanMapper), getJsonObjectFromObjectFromCollection(valueMap, propertyMetaData, expands, absolutePropertyName, beanMapper));
                                 }
 
                                 value = jsonMap;
