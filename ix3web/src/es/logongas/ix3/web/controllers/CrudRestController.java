@@ -354,21 +354,33 @@ public class CrudRestController extends AbstractRestController {
     }
 
     @RequestMapping(value = {"{path}/{entityName}/{id}"}, method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
-    public void update(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @RequestBody String jsonIn) {
+    public void update(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName, @PathVariable("id") int id, @RequestBody String jsonIn) throws BusinessException {
         MetaData metaData = metaDataFactory.getMetaData(entityName);
         if (metaData == null) {
             throw new RuntimeException("No existe la entidad " + entityName);
         }
+        CRUDService crudService = crudServiceFactory.getService(metaData.getType());        
+        
         JsonReader jsonReader = jsonFactory.getJsonReader(metaData.getType());
         Object entity = jsonReader.fromJson(jsonIn, getBeanMapper(httpServletRequest));
 
+        int entityId=(Integer)ReflectionUtil.getValueFromBean(entity,metaData.getPrimaryKeyPropertyName());
+        
+        if (entityId!=id) {
+            throw new RuntimeException("No coincciden el id de la entidad y el de la url:" + id + "," + entityId);
+        }
+        
+        Object originalEntity=crudService.readOriginal(entityId);
+        
         restMethod(httpServletRequest, httpServletResponse, "update", metaData.getType(), new Command() {
             public MetaData metaData;
             public Object entity;
+            public Object originalEntity;
 
-            public Command inicialize(MetaData metaData, Object entity) {
+            public Command inicialize(MetaData metaData, Object entity, Object originalEntity) {
                 this.metaData = metaData;
                 this.entity = entity;
+                this.originalEntity = originalEntity;
 
                 return this;
             }
@@ -383,7 +395,7 @@ public class CrudRestController extends AbstractRestController {
                 return new CommandResult(metaData.getType(), entity);
 
             }
-        }.inicialize(metaData, entity));
+        }.inicialize(metaData, entity,originalEntity));
 
     }
 
