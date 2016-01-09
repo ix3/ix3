@@ -16,6 +16,7 @@
  */
 package es.logongas.ix3.service.rules.impl.hibernate;
 
+import es.logongas.ix3.service.rules.impl.RuleContextImplLazy;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package es.logongas.ix3.service.rules.impl.hibernate;
+package es.logongas.ix3.service.rules.impl;
 
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
