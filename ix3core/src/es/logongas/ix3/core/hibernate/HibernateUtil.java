@@ -15,13 +15,10 @@
  */
 package es.logongas.ix3.core.hibernate;
 
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
 
 public class HibernateUtil {
 
@@ -31,7 +28,6 @@ public class HibernateUtil {
     public static synchronized void buildSessionFactory() {
         Configuration configuration = new Configuration();
         configuration.configure();
-        configuration.setProperty("hibernate.current_session_context_class", "thread");
 
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         sessionFactory = configuration.buildSessionFactory(serviceRegistry);
@@ -51,12 +47,6 @@ public class HibernateUtil {
         }
     }
 
-    public static void openSessionAndBindToThread() {
-        Session session = sessionFactory.openSession();
-        ThreadLocalSessionContext.bind(session);
-        Session session2 = sessionFactory2.openSession();
-        ThreadLocalSessionContext.bind(session2);
-    }
 
     public static SessionFactory getSessionFactory() {
         if (sessionFactory==null)  {
@@ -76,17 +66,6 @@ public class HibernateUtil {
         }
         return sessionFactory2;
     }
-
-    public static void closeSessionAndUnbindFromThread() {
-        Session session = ThreadLocalSessionContext.unbind(sessionFactory);
-        if ((session!=null) && (session.isOpen()==true)) {
-            session.close();
-        }
-
-        Session session2 = ThreadLocalSessionContext.unbind(sessionFactory2);
-        if ((session2!=null) && (session2.isOpen()==true)) {
-            session2.close();
-        }
-    }
+    
 
 }
