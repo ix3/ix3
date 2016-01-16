@@ -16,11 +16,10 @@
 
 package es.logongas.ix3.dao.impl;
 
+import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.TransactionManager;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Implementación con la sesión de Hibernate
@@ -28,40 +27,43 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class TransactionManagerImplHibernate implements TransactionManager {
 
-    @Autowired
-    protected SessionFactory sessionFactory;
-    
+
     @Override
-    public void begin() {
-        Session session = sessionFactory.getCurrentSession();
+    public void begin(DataSession dataSession) {
+        
+        if (this.isActive(dataSession)==true) {
+            throw new RuntimeException("Ya hay una transacción activa");
+        }
+        
+        Session session = ((Session)dataSession.getDataBaseSessionImpl());
         session.beginTransaction();
     }
 
     @Override
-    public void commit() {
-        if (isActive()==false) {
+    public void commit(DataSession dataSession) {
+        if (isActive(dataSession)==false) {
             throw new RuntimeException("No hay ninguna transacción activa");
         }
         
-        Session session = sessionFactory.getCurrentSession();
+        Session session = ((Session)dataSession.getDataBaseSessionImpl());
         Transaction transaction=session.getTransaction();
         transaction.commit();
     }
 
     @Override
-    public void rollback() {
-        if (isActive()==false) {
+    public void rollback(DataSession dataSession) {
+        if (isActive(dataSession)==false) {
             throw new RuntimeException("No hay ninguna transacción activa");
         }
         
-        Session session = sessionFactory.getCurrentSession();
+        Session session = ((Session)dataSession.getDataBaseSessionImpl());
         Transaction transaction=session.getTransaction();
         transaction.rollback();
     }
 
     @Override
-    public boolean isActive() {     
-        Session session = sessionFactory.getCurrentSession();
+    public boolean isActive(DataSession dataSession) {     
+        Session session = ((Session)dataSession.getDataBaseSessionImpl());
         Transaction transaction=session.getTransaction();
         if (transaction==null) {
             return false;

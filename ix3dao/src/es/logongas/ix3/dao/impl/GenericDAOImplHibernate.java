@@ -20,6 +20,7 @@ import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.Page;
 import es.logongas.ix3.core.PageRequest;
+import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.FilterOperator;
 import es.logongas.ix3.dao.SearchResponse;
@@ -41,17 +42,10 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
 public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializable> implements GenericDAO<EntityType, PrimaryKeyType> {
-
-    @Autowired
-    protected SessionFactory sessionFactory;
-
-    @Autowired
-    protected SessionFactory sessionFactory2;
 
     @Autowired
     protected MetaDataFactory metaDataFactory;
@@ -61,13 +55,13 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     @Autowired
     protected ExceptionTranslator exceptionTranslator;
 
-    private Class<EntityType> entityType=null;
+    private Class<EntityType> entityType = null;
 
     protected final Log log = LogFactory.getLog(getClass());
 
     public GenericDAOImplHibernate() {
-        Type type=getClass().getGenericSuperclass();
-        if (type instanceof  ParameterizedType) {
+        Type type = getClass().getGenericSuperclass();
+        if (type instanceof ParameterizedType) {
             entityType = (Class<EntityType>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         }
     }
@@ -85,20 +79,13 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     public Class<EntityType> getEntityType() {
         return this.entityType;
     }
-    
+
     private MetaData getEntityMetaData() {
         return metaDataFactory.getMetaData(entityType);
     }
 
     @Override
-    final public EntityType create() throws BusinessException {
-        return create(null);
-    }
-
-    @Override
-    final public EntityType create(Map<String, Object> initialProperties) throws BusinessException {
-        Session session = sessionFactory.getCurrentSession();
-
+    final public EntityType create(DataSession dataSession, Map<String, Object> initialProperties) throws BusinessException {
         try {
             EntityType entity;
             entity = (EntityType) getEntityMetaData().getType().newInstance();
@@ -107,10 +94,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                     ReflectionUtil.setValueToBean(entity, key, initialProperties.get(key));
                 }
             }
-            this.postCreate(session, entity);
             return entity;
-        } catch (BusinessException ex) {
-            throw ex;
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -119,34 +103,23 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public void insert(EntityType entity) throws BusinessException {
-        Session session = sessionFactory.getCurrentSession();
-        boolean isActivePreviousTransaction = transactionManager.isActive();
+    final public EntityType insert(DataSession dataSession, EntityType entity) throws BusinessException {
+        Session session = (Session) dataSession.getDataBaseSessionImpl();
+        boolean isActivePreviousTransaction = transactionManager.isActive(dataSession);
         try {
-            this.preInsertBeforeTransaction(session, entity);
             if (isActivePreviousTransaction == false) {
-                transactionManager.begin();
+                transactionManager.begin(dataSession);
             }
-            this.preInsertInTransaction(session, entity);
             session.save(entity);
-            this.postInsertInTransaction(session, entity);
             if (isActivePreviousTransaction == false) {
-                transactionManager.commit();
+                transactionManager.commit(dataSession);
             }
-            this.postInsertAfterTransaction(session, entity);
-        } catch (BusinessException ex) {
-            try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
-            throw ex;
+
+            return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -154,8 +127,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -163,8 +136,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (RuntimeException ex) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -172,8 +145,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw ex;
         } catch (Exception ex) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -183,64 +156,24 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public boolean update(EntityType entity) throws BusinessException {
-        Session session = sessionFactory.getCurrentSession();
-        MetaData metaData = metaDataFactory.getMetaData(entity);
-        boolean isActivePreviousTransaction = transactionManager.isActive();
-        boolean hasUpdate;
+    final public EntityType update(DataSession dataSession, EntityType entity) throws BusinessException {
+        Session session = (Session) dataSession.getDataBaseSessionImpl();
+        boolean isActivePreviousTransaction = transactionManager.isActive(dataSession);
         try {
 
-            String idName = metaData.getPrimaryKeyPropertyName();
-            Serializable id = (Serializable) ReflectionUtil.getValueFromBean(entity, idName);
-            EntityType entity2;
-            if (id == null) {
-                entity2 = null;
-            } else {
-                entity2 = (EntityType) session.get(getEntityMetaData().getType(), id);
+            if (isActivePreviousTransaction == false) {
+                transactionManager.begin(dataSession);
+            }
+            session.update(entity);
+            if (isActivePreviousTransaction == false) {
+                transactionManager.commit(dataSession);
             }
 
-            if (entity2 == null) {
-                this.preInsertBeforeTransaction(session, entity);
-                if (isActivePreviousTransaction == false) {
-                    transactionManager.begin();
-                }
-                this.preInsertInTransaction(session, entity);
-                session.save(entity);
-                this.postInsertInTransaction(session, entity);
-                if (isActivePreviousTransaction == false) {
-                    transactionManager.commit();
-                }
-                this.postInsertAfterTransaction(session, entity);
-                hasUpdate = false;
-            } else {
-                this.preUpdateBeforeTransaction(session, entity);
-                if (isActivePreviousTransaction == false) {
-                    transactionManager.begin();
-                }
-                this.preUpdateInTransaction(session, entity);
-                session.evict(entity2);
-                session.update(entity);
-                this.postUpdateInTransaction(session, entity);
-                if (isActivePreviousTransaction == false) {
-                    transactionManager.commit();
-                }
-                this.postUpdateAfterTransaction(session, entity);
-                hasUpdate = true;
-            }
-            return hasUpdate;
-        } catch (BusinessException ex) {
-            try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
-            throw ex;
+            return entity;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -248,8 +181,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -257,8 +190,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (RuntimeException ex) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -266,8 +199,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw ex;
         } catch (Exception ex) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -277,15 +210,11 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public EntityType read(PrimaryKeyType id) throws BusinessException {
-        Session session = sessionFactory.getCurrentSession();
+    final public EntityType read(DataSession dataSession, PrimaryKeyType id) throws BusinessException {
+        Session session = (Session) dataSession.getDataBaseSessionImpl();
         try {
-            this.preRead(session, id);
             EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
-            this.postRead(session, id, entity);
             return entity;
-        } catch (BusinessException ex) {
-            throw ex;
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
@@ -298,16 +227,11 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public EntityType readByNaturalKey(Object naturalKey) throws BusinessException {
-        Session session = sessionFactory.getCurrentSession();
+    final public EntityType readByNaturalKey(DataSession dataSession, Object naturalKey) throws BusinessException {
+        Session session = (Session) dataSession.getDataBaseSessionImpl();
         try {
-
-            this.preReadByNaturalKey(session, naturalKey);
             EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(naturalKey);
-            this.postReadByNaturalKey(session, naturalKey, entity);
             return entity;
-        } catch (BusinessException ex) {
-            throw ex;
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
@@ -321,19 +245,15 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public EntityType readOriginalByNaturalKey(Object naturalKey) throws BusinessException {
-        Session session = sessionFactory2.getCurrentSession();
+    final public EntityType readOriginalByNaturalKey(DataSession dataSession, Object naturalKey) throws BusinessException {
+        Session session = (Session) dataSession.getDataBaseSessionAlternativeImpl();
         try {
             session.setCacheMode(CacheMode.IGNORE);
-            this.preReadByNaturalKey(session, naturalKey);
             EntityType entity = (EntityType) session.bySimpleNaturalId(getEntityMetaData().getType()).load(naturalKey);
             if (entity != null) {
                 session.evict(entity);
             }
-            this.postReadByNaturalKey(session, naturalKey, entity);
             return entity;
-        } catch (BusinessException ex) {
-            throw ex;
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
@@ -347,19 +267,15 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public EntityType readOriginal(PrimaryKeyType id) throws BusinessException {
-        Session session = sessionFactory2.getCurrentSession();
+    final public EntityType readOriginal(DataSession dataSession, PrimaryKeyType id) throws BusinessException {
+        Session session = (Session) dataSession.getDataBaseSessionAlternativeImpl();
         try {
             session.setCacheMode(CacheMode.IGNORE);
-            this.preRead(session, id);
             EntityType entity = (EntityType) session.get(getEntityMetaData().getType(), id);
             if (entity != null) {
                 session.evict(entity);
             }
-            this.postRead(session, id, entity);
             return entity;
-        } catch (BusinessException ex) {
-            throw ex;
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
@@ -372,48 +288,32 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public boolean delete(PrimaryKeyType id) throws BusinessException {
-        Session session = sessionFactory.getCurrentSession();
-        boolean isActivePreviousTransaction = transactionManager.isActive();
+    final public boolean delete(DataSession dataSession, EntityType entity) throws BusinessException {
+        Session session = (Session) dataSession.getDataBaseSessionImpl();
+        boolean isActivePreviousTransaction = transactionManager.isActive(dataSession);
         boolean exists;
-        EntityType entity = null;
         try {
-            this.preDeleteBeforeTransaction(session, id);
             if (isActivePreviousTransaction == false) {
-                transactionManager.begin();
+                transactionManager.begin(dataSession);
             }
-            entity = (EntityType) session.get(getEntityMetaData().getType(), id);
-            this.preDeleteInTransaction(session, id, entity);
             if (entity == null) {
                 exists = false;
-                this.postDeleteInTransaction(session, id, entity);
                 if (isActivePreviousTransaction == false) {
-                    transactionManager.commit();
+                    transactionManager.commit(dataSession);
                 }
             } else {
                 session.delete(entity);
                 exists = true;
-                this.postDeleteInTransaction(session, id, entity);
                 if (isActivePreviousTransaction == false) {
-                    transactionManager.commit();
+                    transactionManager.commit(dataSession);
                 }
             }
 
-            this.postDeleteAfterTransaction(session, id, entity);
             return exists;
-        } catch (BusinessException ex) {
-            try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
-                }
-            } catch (Exception exc) {
-                log.error("Falló al hacer un rollback", exc);
-            }
-            throw ex;
         } catch (javax.validation.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -421,8 +321,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -430,8 +330,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (RuntimeException ex) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -439,8 +339,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             throw ex;
         } catch (Exception ex) {
             try {
-                if ((transactionManager.isActive() == true) && (isActivePreviousTransaction == false)) {
-                    transactionManager.rollback();
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
                 }
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
@@ -450,48 +350,22 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public List<EntityType> search(List<Filter> filters) throws BusinessException {
-        return search(filters, new SearchResponse(false));
+    final public List<EntityType> search(DataSession dataSession, List<Filter> filters, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
+        return pageableSearch(dataSession, filters, orders, null, searchResponse).getContent();
     }
 
     @Override
-    final public List<EntityType> search(List<Filter> filters, List<Order> orders) throws BusinessException {
-        return pageableSearch(filters, orders, null, new SearchResponse(false)).getContent();
-    }
+    public Page<EntityType> pageableSearch(DataSession dataSession, List<Filter> filters, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
 
-    @Override
-    public Page<EntityType> pageableSearch(List<Filter> filters, PageRequest pageRequest) throws BusinessException {
-        return pageableSearch(filters, null, pageRequest, new SearchResponse(false));
-    }
-
-    @Override
-    public Page<EntityType> pageableSearch(List<Filter> filters, List<Order> orders, PageRequest pageRequest) throws BusinessException {
-        return pageableSearch(filters, orders, pageRequest, new SearchResponse(false));
-    }
-
-    @Override
-    final public List<EntityType> search(List<Filter> filters, SearchResponse searchResponse) throws BusinessException {
-        return search(filters, null, searchResponse);
-    }
-
-    @Override
-    final public List<EntityType> search(List<Filter> filters, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
-        return pageableSearch(filters, orders, null, searchResponse).getContent();
-    }
-
-    @Override
-    public Page<EntityType> pageableSearch(List<Filter> filters, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
-        return pageableSearch(filters, null, pageRequest, searchResponse);
-    }
-
-    @Override
-    public Page<EntityType> pageableSearch(List<Filter> filters, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
+        if (searchResponse == null) {
+            searchResponse = new SearchResponse(false);
+        }
 
         if (orders == null) {
             orders = new ArrayList<Order>();
         }
 
-        Session session = sessionFactory.getCurrentSession();
+        Session session = (Session) dataSession.getDataBaseSessionImpl();
         try {
             String sqlPartFrom = sqlPartFrom(filters);
             String sqlPartWhere = sqlPartWhere(filters);
@@ -510,7 +384,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
                 page = new PageImpl(results, Integer.MAX_VALUE, 0, 1);
             } else {
-                page = getPaginatedQuery(sqlData, sqlCount, pageRequest, getParameterFromFilters(filters));
+                page = getPaginatedQuery(dataSession, sqlData, sqlCount, pageRequest, getParameterFromFilters(filters));
             }
 
             return page;
@@ -632,7 +506,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 } else if (filterOperator == FilterOperator.lliker) {
                     sqlWhere.append(propertyName + " like :bind" + i + "");
                 } else if (filterOperator == FilterOperator.isnull) {
-                    if (filter.getValue()==Boolean.TRUE) {
+                    if (filter.getValue() == Boolean.TRUE) {
                         sqlWhere.append("(" + propertyName + " IS NULL) ");
                     } else {
                         sqlWhere.append("(" + propertyName + " IS NOT NULL) ");
@@ -690,8 +564,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     /**
-     * En una HQL contiene los datos del JOIN del FROM y de las propiedades del
-     * WHERE Esto se hace pq es necesario para buscar datos en colecciones
+     * En una HQL contiene los datos del JOIN del FROM y de las propiedades del WHERE Esto se hace pq es necesario para buscar datos en colecciones
      * http://stackoverflow.com/questions/24750754/org-hibernate-queryexception-illegal-attempt-to-dereference-collection
      */
     private class JoinProperty {
@@ -766,7 +639,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                     namedParameters.put("bind" + i, value);
                 }
 
-                
             }
         }
 
@@ -775,46 +647,49 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     /**
      * Crea una consulta pagina retornando la página que se solicita.
+     *
      * @param sqlData La SQL para Obtener los datos.
      * @param sqlCount La SQL para Obtener le Nº total de filas que retornaría sqlData. Se pasa para optimizar.
      * @param pageRequest La página que se solicita.
      * @param parameters La lista de parámetros se establecen por la posición en la lista
      * @return La pagina
      */
-    protected Page<EntityType> getPaginatedQuery(String sqlData, String sqlCount, PageRequest pageRequest, List<Object> parameters) {
+    protected Page<EntityType> getPaginatedQuery(DataSession dataSession, String sqlData, String sqlCount, PageRequest pageRequest, List<Object> parameters) {
         Map<Object, Object> indexParameters = new HashMap<Object, Object>();
         for (int i = 0; i < parameters.size(); i++) {
             indexParameters.put(i, parameters.get(i));
         }
 
-        return getGenericPaginatedQuery(sqlData, sqlCount, pageRequest, indexParameters);
+        return getGenericPaginatedQuery(dataSession, sqlData, sqlCount, pageRequest, indexParameters);
     }
 
     /**
      * Crea una consulta pagina retornando la página que se solicita.
+     *
      * @param sqlData La SQL para Obtener los datos.
      * @param sqlCount La SQL para Obtener le Nº total de filas que retornaría sqlData. Se pasa para optimizar.
      * @param pageRequest La página que se solicita.
      * @param parameters La lista de parámetros se por el nombre del parámetro de la clave del Map.
      * @return La pagina
-     */    
-    protected Page<EntityType> getPaginatedQuery(String sqlData, String sqlCount, PageRequest pageRequest, Map<String, Object> parameters) {
+     */
+    protected Page<EntityType> getPaginatedQuery(DataSession dataSession, String sqlData, String sqlCount, PageRequest pageRequest, Map<String, Object> parameters) {
         Map<Object, Object> namedParameters = new HashMap<Object, Object>();
         namedParameters.putAll(parameters);
 
-        return getGenericPaginatedQuery(sqlData, sqlCount, pageRequest, namedParameters);
+        return getGenericPaginatedQuery(dataSession, sqlData, sqlCount, pageRequest, namedParameters);
     }
 
     /**
      * Crea una consulta pagina retornando la página que se solicita.
+     *
      * @param sqlData La SQL para Obtener los datos.
      * @param sqlCount La SQL para Obtener le Nº total de filas que retornaría sqlData. Se pasa para optimizar.
      * @param pageRequest La página que se solicita.
      * @param parameters El map debe ser del tipo Map<String,Object> o Map<Integer,Object>. Y se pondrán los parámetros por nombre o por posición.
      * @return La pagina
      */
-    private Page<EntityType> getGenericPaginatedQuery(String sqlData, String sqlCount, PageRequest pageRequest, Map<Object, Object> parameters) {
-        Session session = sessionFactory.getCurrentSession();
+    private Page<EntityType> getGenericPaginatedQuery(DataSession dataSession, String sqlData, String sqlCount, PageRequest pageRequest, Map<Object, Object> parameters) {
+        Session session = (Session) dataSession.getDataBaseSessionImpl();
 
         Query queryDatos = session.createQuery(sqlData);
         queryDatos.setMaxResults(pageRequest.getPageSize());
@@ -841,6 +716,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     /**
      * Pone los parámetros en una Query
+     *
      * @param query La Query a la que se le pone los parámetros.
      * @param parameters El map debe ser del tipo Map<String,Object> o Map<Integer,Object>. Y se pondrán los parámetros por nombre o por posición.
      */
@@ -871,57 +747,6 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 }
             }
         }
-    }
-
-    protected void postCreate(Session session, EntityType entity) throws BusinessException {
-    }
-
-    protected void preInsertBeforeTransaction(Session session, EntityType entity) throws BusinessException {
-    }
-
-    protected void preInsertInTransaction(Session session, EntityType entity) throws BusinessException {
-    }
-
-    protected void postInsertInTransaction(Session session, EntityType entity) throws BusinessException {
-    }
-
-    protected void postInsertAfterTransaction(Session session, EntityType entity) throws BusinessException {
-    }
-
-    protected void preRead(Session session, PrimaryKeyType id) throws BusinessException {
-    }
-
-    protected void postRead(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
-    }
-
-    protected void preReadByNaturalKey(Session session, Object naturalKey) throws BusinessException {
-    }
-
-    protected void postReadByNaturalKey(Session session, Object naturalKey, EntityType entity) throws BusinessException {
-    }
-
-    protected void preUpdateBeforeTransaction(Session session, EntityType entity) throws BusinessException {
-    }
-
-    protected void preUpdateInTransaction(Session session, EntityType entity) throws BusinessException {
-    }
-
-    protected void postUpdateInTransaction(Session session, EntityType entity) throws BusinessException {
-    }
-
-    protected void postUpdateAfterTransaction(Session session, EntityType entity) throws BusinessException {
-    }
-
-    protected void preDeleteBeforeTransaction(Session session, PrimaryKeyType id) throws BusinessException {
-    }
-
-    protected void preDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
-    }
-
-    protected void postDeleteInTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
-    }
-
-    protected void postDeleteAfterTransaction(Session session, PrimaryKeyType id, EntityType entity) throws BusinessException {
     }
 
 }

@@ -15,13 +15,12 @@
  */
 package es.logongas.ix3.dao.impl;
 
+import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.NativeDAO;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Lanza consultas nativas usando Hibernate
@@ -30,12 +29,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class NativeDAOImplHibernate implements NativeDAO {
 
-    @Autowired
-    protected SessionFactory sessionFactory;
-
     @Override
-    public List<Object> createNativeQuery(String query, List<Object> params) {
-        Session session = sessionFactory.getCurrentSession();
+    public List<Object> createNativeQuery(DataSession dataSession,String query, List<Object> params) {
+        Session session = (Session) dataSession.getDataBaseSessionImpl();
 
         SQLQuery sqlQuery = session.createSQLQuery(query);
 
@@ -49,8 +45,8 @@ public class NativeDAOImplHibernate implements NativeDAO {
     }
 
     @Override
-    public List<Object> createNativeQuery(String query, Map<String, Object> params) {
-        Session session = sessionFactory.getCurrentSession();
+    public List<Object> createNativeQuery(DataSession dataSession,String query, Map<String, Object> params) {
+        Session session = (Session) dataSession.getDataBaseSessionImpl();
 
         SQLQuery sqlQuery = session.createSQLQuery(query);
         

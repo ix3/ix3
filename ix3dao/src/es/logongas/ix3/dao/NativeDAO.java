@@ -23,6 +23,6 @@ import java.util.Map;
  * @author logongas
  */
 public interface NativeDAO {
-    List<Object> createNativeQuery(String query,List<Object> params);
-    List<Object> createNativeQuery(String query,Map<String,Object> params);
+    List<Object> createNativeQuery(DataSession dataSession,String query,List<Object> params);
+    List<Object> createNativeQuery(DataSession dataSession,String query,Map<String,Object> params);
 }

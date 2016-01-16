@@ -27,6 +27,7 @@ limitations under the License.
     <bean class="es.logongas.ix3.dao.impl.TransactionManagerImplHibernate"                                   />      
     <bean class="es.logongas.ix3.dao.impl.ExceptionTranslator"                    name="exceptionTranslator" />
     <bean class="es.logongas.ix3.dao.impl.NativeDAOImplHibernate" />
+    <bean class="es.logongas.ix3.dao.impl.DataSessionFactoryImplHibernate" />
     <!-- Hay que ponerlo en cada aplicacion que hagamos -->
     <!--<bean class="es.logongas.ix3.dao.impl.DAOFactoryImplHibernate" >
         <property name="domainBasePackageName"     value="Nombre del paquete de las clases de negocio o de dominio" />

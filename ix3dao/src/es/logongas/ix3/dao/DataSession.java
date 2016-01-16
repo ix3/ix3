@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Lorenzo.
+ * Copyright 2016 logongas.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package es.logongas.ix3.dao;
 
 /**
- * Interface para gestionar transacciones
- * @author Lorenzo Gonzalez
+ * Sesion con las "conexiones" a la base de datos
+ * @author logongas
  */
-public interface TransactionManager {
-    public void begin(DataSession dataSession);
-    public void commit(DataSession dataSession);
-    public void rollback(DataSession dataSession);
-    public boolean isActive(DataSession dataSession);    
+public interface DataSession extends AutoCloseable {
+    
+    Object getDataBaseSessionImpl();
+    Object getDataBaseSessionAlternativeImpl();
+    Object getSessionImpl(String name);
+    
 }
