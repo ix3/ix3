@@ -16,10 +16,11 @@
 package es.logongas.ix3.security.authentication.impl;
 
 import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.security.authentication.AuthenticationProvider;
 import es.logongas.ix3.security.authentication.Credential;
-import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.core.Principal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +34,9 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
     private List<AuthenticationProvider> authenticationProviders=new ArrayList<AuthenticationProvider>();
 
     @Override
-    public Principal authenticate(Credential credential) throws BusinessException {
+    public Principal authenticate(Credential credential, DataSession dataSession) throws BusinessException {
         for(AuthenticationProvider authenticationProvider:getAuthenticationProviders()) {
-            Principal principal=authenticationProvider.authenticate(credential);
+            Principal principal=authenticationProvider.authenticate(credential, dataSession);
             if (principal!=null) {
                 return principal;
             }
@@ -45,9 +46,9 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
     }
 
     @Override
-    public Principal getPrincipalBySID(Serializable sid) throws BusinessException {
+    public Principal getPrincipalBySID(Serializable sid, DataSession dataSession) throws BusinessException {
         for(AuthenticationProvider authenticationProvider:getAuthenticationProviders()) {
-            Principal principal=authenticationProvider.getPrincipalBySID(sid);
+            Principal principal=authenticationProvider.getPrincipalBySID(sid, dataSession);
             if (principal!=null) {
                 return principal;
             }

@@ -15,12 +15,13 @@
  */
 package es.logongas.ix3.security.authorization;
 
-import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.dao.DataSession;
+import es.logongas.ix3.core.Principal;
 
 /**
  *
  * @author Lorenzo González
  */
 public interface AuthorizationManager {
-    boolean authorized(Principal principal,String secureResourceTypeName,String secureResource,String permissionName,Object arguments);
+    boolean authorized(Principal principal,String secureResourceTypeName,String secureResource,String permissionName,Object arguments,DataSession dataSession);
 }

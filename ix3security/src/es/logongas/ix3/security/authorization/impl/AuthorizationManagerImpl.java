@@ -15,7 +15,8 @@
  */
 package es.logongas.ix3.security.authorization.impl;
 
-import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.dao.DataSession;
+import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.security.authorization.AuthorizationManager;
 import es.logongas.ix3.security.authorization.AuthorizationProvider;
 import es.logongas.ix3.security.authorization.AuthorizationType;
@@ -32,9 +33,9 @@ public class AuthorizationManagerImpl implements AuthorizationManager {
 
 
     @Override
-    public boolean authorized(Principal principal,String secureResourceTypeName,String secureResource,String permissionName,Object arguments) {
+    public boolean authorized(Principal principal,String secureResourceTypeName,String secureResource,String permissionName,Object arguments, DataSession dataSession) {
         for(AuthorizationProvider authorizationProvider:authorizationProviders) {
-            AuthorizationType authorizationType=authorizationProvider.authorized(principal,secureResourceTypeName,secureResource, permissionName, arguments);
+            AuthorizationType authorizationType=authorizationProvider.authorized(principal,secureResourceTypeName,secureResource, permissionName, arguments, dataSession);
 
             if (authorizationType==AuthorizationType.AccessAllow) {
                 return true;

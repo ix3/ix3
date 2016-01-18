@@ -15,7 +15,9 @@
  */
 package es.logongas.ix3.security.authentication;
 
+import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.dao.DataSession;
 import java.io.Serializable;
 
 /**
@@ -23,6 +25,6 @@ import java.io.Serializable;
  * @author Lorenzo González
  */
 public interface AuthenticationManager {
-    Principal authenticate(Credential credential) throws BusinessException;
-    Principal getPrincipalBySID(Serializable sid) throws BusinessException;
+    Principal authenticate(Credential credential,DataSession dataSession) throws BusinessException;
+    Principal getPrincipalBySID(Serializable sid,DataSession dataSession) throws BusinessException;
 }
