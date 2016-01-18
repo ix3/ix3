@@ -21,8 +21,10 @@ import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.Page;
 import es.logongas.ix3.core.PageRequest;
+import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.SearchResponse;
+import es.logongas.ix3.core.Principal;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -34,22 +36,18 @@ import java.util.Map;
  * @param <PrimaryKeyType> 
  */
 public interface CRUDService<EntityType,PrimaryKeyType extends Serializable> extends Service<EntityType> {
-    EntityType create() throws BusinessException;
-    EntityType create(Map<String,Object> initialProperties) throws BusinessException;
-    void insert(EntityType entity) throws BusinessException;
-    EntityType read(PrimaryKeyType primaryKey) throws BusinessException;
-    EntityType readOriginal(PrimaryKeyType primaryKey) throws BusinessException;
-    boolean update(EntityType entity) throws BusinessException;
-    boolean delete(PrimaryKeyType primaryKey) throws BusinessException;
-    EntityType readByNaturalKey(Object value) throws BusinessException;
-    EntityType readOriginalByNaturalKey(Object value) throws BusinessException;
-    List<EntityType> search(List<Filter> filters) throws BusinessException;
-    List<EntityType> search(List<Filter> filters,List<Order> orders) throws BusinessException;
-    Page<EntityType> pageableSearch(List<Filter> filters,PageRequest pageRequest) throws BusinessException;
-    Page<EntityType> pageableSearch(List<Filter> filters,List<Order> orders,PageRequest pageRequest) throws BusinessException; 
-    List<EntityType> search(List<Filter> filters, SearchResponse searchResponse) throws BusinessException;
-    List<EntityType> search(List<Filter> filters,List<Order> orders, SearchResponse searchResponse) throws BusinessException;
-    Page<EntityType> pageableSearch(List<Filter> filters,PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException;
-    Page<EntityType> pageableSearch(List<Filter> filters,List<Order> orders,PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException;    
+    EntityType create(DataSession dataSession,Map<String,Object> initialProperties) throws BusinessException;
+    
+    EntityType read(DataSession dataSession,PrimaryKeyType primaryKey) throws BusinessException;
+    EntityType readOriginal(DataSession dataSession,PrimaryKeyType primaryKey) throws BusinessException;
+    EntityType readByNaturalKey(DataSession dataSession,Object value) throws BusinessException;
+    EntityType readOriginalByNaturalKey(DataSession dataSession,Object value) throws BusinessException;    
+    
+    EntityType insert(DataSession dataSession,EntityType entity) throws BusinessException;
+    EntityType update(DataSession dataSession,EntityType entity) throws BusinessException;
+    boolean delete(DataSession dataSession,EntityType entity) throws BusinessException;
+
+    List<EntityType> search(DataSession dataSession,List<Filter> filters,List<Order> orders, SearchResponse searchResponse) throws BusinessException;
+    Page<EntityType> pageableSearch(DataSession dataSession,List<Filter> filters,List<Order> orders,PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException;    
     
 }
