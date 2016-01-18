@@ -1,4 +1,5 @@
 INSERT INTO `sec_identity` (`ididentity`, `login`, `name`) VALUES
+	(0, 'Root', 'root'),
 	(1, 'All', 'Todos'),
 	(2, 'Authenticated', 'Autenticados');
 
@@ -16,14 +17,9 @@ INSERT INTO `sec_permission` (`idPermission`, `name`, `description`, `idSecureRe
 	(5, 'PATCH', 'PATCH', 1);
 
 
-INSERT INTO `sec_secureresourcetype` (`idSecureResourceType`, `name`, `description`) VALUES
-	(2, 'Service', 'Servicio');
-INSERT INTO `sec_permission` (`idPermission`, `name`, `description`, `idSecureResourceType`) VALUES
-	(20, 'PreExecuteService', 'Pre-Execute Service', 2),
-	(21, 'PostExecuteService', 'Post-Execute Service', 2);
 
 INSERT INTO `sec_secureresourcetype` (`idSecureResourceType`, `name`, `description`) VALUES
-	(3, 'Controller', 'Controladores públicos');
+	(3, 'BusinessProcess', 'Procesos de negocio');
 INSERT INTO `sec_permission` (`idPermission`, `name`, `description`, `idSecureResourceType`) VALUES
-	(22, 'PreExecuteController', 'Pre-Execute Controller', 3),
-	(23, 'PostExecuteController', 'Post-Execute Controller', 3);
+	(22, 'PreExecuteBusinessProcess', 'Pre-Execute Procesos de negocio', 3),
+	(23, 'PostExecuteBusinessProcess', 'Post-Execute Procesos de negocio', 3);

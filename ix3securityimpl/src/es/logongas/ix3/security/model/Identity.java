@@ -25,7 +25,7 @@ import org.hibernate.validator.constraints.NotBlank;
  *
  * @author Lorenzo González
  */
-public class Identity implements es.logongas.ix3.security.authentication.Principal {
+public class Identity implements es.logongas.ix3.core.Principal {
 
     protected int idIdentity;
     @NotBlank

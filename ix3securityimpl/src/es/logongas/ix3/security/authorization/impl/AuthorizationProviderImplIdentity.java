@@ -21,15 +21,14 @@ import es.logongas.ix3.security.model.SecureResourceType;
 import es.logongas.ix3.security.model.SpecialUsers;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
+import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.GenericDAO;
-import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.security.authorization.AuthorizationProvider;
 import es.logongas.ix3.security.authorization.AuthorizationType;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -41,32 +40,31 @@ public class AuthorizationProviderImplIdentity implements AuthorizationProvider 
 
     @Autowired
     DAOFactory daoFactory;
-
+    
     @Override
-    public AuthorizationType authorized(Principal principal,String secureResourceTypeName, String secureResource, String permissionName, Object arguments) {
+    public AuthorizationType authorized(Principal principal, String secureResourceTypeName, String secureResource, String permissionName, Object arguments, DataSession dataSession) {
         try {
             AuthorizationType authorizationType;
             GenericDAO<Identity, Integer> identityDAO = daoFactory.getDAO(es.logongas.ix3.security.model.Identity.class);
-            Permission permission=getPermission(secureResourceTypeName, permissionName);
-            
-            
+            Permission permission = getPermission(secureResourceTypeName, permissionName, dataSession);
+
             if (principal != null) {
                 if (principal instanceof Identity) {
                     Identity identity = (Identity) principal;
                     authorizationType = identity.authorized(secureResource, permission, arguments);
                     if (authorizationType == AuthorizationType.Abstain) {
-                        Identity authenticatedIdentity = identityDAO.readByNaturalKey(SpecialUsers.Authenticated.name());
-                        if (authenticatedIdentity!=null) {
+                        Identity authenticatedIdentity = identityDAO.readByNaturalKey(dataSession, SpecialUsers.Authenticated.name());
+                        if (authenticatedIdentity != null) {
                             authorizationType = authenticatedIdentity.authorized(secureResource, permission, arguments);
                         } else {
                             authorizationType = AuthorizationType.Abstain;
                         }
                         if (authorizationType == AuthorizationType.Abstain) {
-                            Identity allIdentity = identityDAO.readByNaturalKey(SpecialUsers.All.name());
-                            if (allIdentity!=null) {
+                            Identity allIdentity = identityDAO.readByNaturalKey(dataSession, SpecialUsers.All.name());
+                            if (allIdentity != null) {
                                 authorizationType = allIdentity.authorized(secureResource, permission, arguments);
                             } else {
-                               authorizationType = AuthorizationType.Abstain;
+                                authorizationType = AuthorizationType.Abstain;
                             }
                         }
                     }
@@ -74,11 +72,11 @@ public class AuthorizationProviderImplIdentity implements AuthorizationProvider 
                     authorizationType = AuthorizationType.Abstain;
                 }
             } else {
-                Identity allIdentity = identityDAO.readByNaturalKey(SpecialUsers.All.name());
-                if (allIdentity!=null) {
+                Identity allIdentity = identityDAO.readByNaturalKey(dataSession, SpecialUsers.All.name());
+                if (allIdentity != null) {
                     authorizationType = allIdentity.authorized(secureResource, permission, arguments);
                 } else {
-                   authorizationType = AuthorizationType.Abstain;
+                    authorizationType = AuthorizationType.Abstain;
                 }
             }
 
@@ -88,27 +86,27 @@ public class AuthorizationProviderImplIdentity implements AuthorizationProvider 
             return AuthorizationType.AccessDeny;
         }
     }
-    
-    private Permission getPermission(String secureResourceTypeName,String permissionName) throws BusinessException {
-            GenericDAO<SecureResourceType,Integer> secureResourceTypeDAO=daoFactory.getDAO(SecureResourceType.class);
-            GenericDAO<Permission,Integer> permissionDAO=daoFactory.getDAO(Permission.class);
 
-            SecureResourceType secureResourceType=secureResourceTypeDAO.readByNaturalKey(secureResourceTypeName);
-            List<Filter> filters=new ArrayList<Filter>();
-            filters.add(new Filter("secureResourceType", secureResourceType));
-            filters.add(new Filter("name", permissionName));
+    private Permission getPermission(String secureResourceTypeName, String permissionName, DataSession dataSession) throws BusinessException {
+        GenericDAO<SecureResourceType, Integer> secureResourceTypeDAO = daoFactory.getDAO(SecureResourceType.class);
+        GenericDAO<Permission, Integer> permissionDAO = daoFactory.getDAO(Permission.class);
 
-            List<Permission> permissions=permissionDAO.search(filters);
-            if (permissions.size()==0) {
-                throw new RuntimeException("No existe el permiso con nombre:"+permissionName + " del tipo:"+secureResourceType);
-            }
-            if (permissions.size()>1) {
-                throw new RuntimeException("Existe más de un permiso con nombre:"+permissionName + " del tipo:"+secureResourceType);
-            }
+        SecureResourceType secureResourceType = secureResourceTypeDAO.readByNaturalKey(dataSession, secureResourceTypeName);
+        List<Filter> filters = new ArrayList<Filter>();
+        filters.add(new Filter("secureResourceType", secureResourceType));
+        filters.add(new Filter("name", permissionName));
 
-            Permission permission=permissions.get(0);
-            
-            return permission;
+        List<Permission> permissions = permissionDAO.search(dataSession, filters, null, null);
+        if (permissions.size() == 0) {
+            throw new RuntimeException("No existe el permiso con nombre:" + permissionName + " del tipo:" + secureResourceType);
+        }
+        if (permissions.size() > 1) {
+            throw new RuntimeException("Existe más de un permiso con nombre:" + permissionName + " del tipo:" + secureResourceType);
+        }
+
+        Permission permission = permissions.get(0);
+
+        return permission;
     }
-    
+
 }

@@ -15,7 +15,7 @@
  */
 package es.logongas.ix3.security.model;
 
-import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.core.Principal;
 
 /**
  *
