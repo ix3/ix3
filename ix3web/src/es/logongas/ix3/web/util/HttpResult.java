@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.controllers.command;
+package es.logongas.ix3.web.util;
 
+import es.logongas.ix3.web.util.MimeType;
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 
 /**
  *
  * @author logongas
  */
-public class CommandResult {
+public class HttpResult {
     final private Class resultClass;
     final private Object result;
     final private int httpSuccessStatus;
@@ -29,19 +30,19 @@ public class CommandResult {
     final private BeanMapper beanMapper;
     final private MimeType mimeType;
 
-    public CommandResult() {
+    public HttpResult() {
         this.resultClass = null;
         this.result = null;
         this.httpSuccessStatus = 204; //No-content
         this.cache = false;
         this.beanMapper = null;
-        this.mimeType = MimeType.JSON;
+        this.mimeType = null;
     }
 
     
     
     
-    public CommandResult(Object result) {
+    public HttpResult(Object result) {
         Class resultClass;
         if (result!=null) {
             resultClass = result.getClass();
@@ -61,11 +62,11 @@ public class CommandResult {
         this.httpSuccessStatus=httpSuccessStatus;
         this.cache=false; 
         this.beanMapper=null;
-        this.mimeType = MimeType.JSON;
+        this.mimeType = null;
     }
     
 
-    public CommandResult(Class resultClass, Object result) {
+    public HttpResult(Class resultClass, Object result) {
         if ((result!=null) && (resultClass==null)) {
             resultClass = result.getClass();
         }   
@@ -82,11 +83,11 @@ public class CommandResult {
         this.httpSuccessStatus=httpSuccessStatus;
         this.cache=false;
         this.beanMapper=null;
-        this.mimeType = MimeType.JSON;
+        this.mimeType = null;
         
     }
     
-    public CommandResult(Class resultClass, Object result, int httpSuccessStatus) {
+    public HttpResult(Class resultClass, Object result, int httpSuccessStatus) {
         if (httpSuccessStatus<=0) {
             throw new RuntimeException("El argumento httpSuccessStatus no puede ser 0 o negativo");
         }          
@@ -99,10 +100,10 @@ public class CommandResult {
         this.httpSuccessStatus=httpSuccessStatus;
         this.cache=false;
         this.beanMapper=null;
-        this.mimeType = MimeType.JSON;
+        this.mimeType = null;
     } 
     
-    public CommandResult(Class resultClass, Object result, boolean cache) {
+    public HttpResult(Class resultClass, Object result, boolean cache) {
         if ((result!=null) && (resultClass==null)) {
             resultClass = result.getClass();
         }        
@@ -111,10 +112,10 @@ public class CommandResult {
         this.httpSuccessStatus=200;
         this.cache = cache;
         this.beanMapper=null;
-        this.mimeType = MimeType.JSON;
+        this.mimeType = null;
     }
     
-    public CommandResult(Class resultClass, Object result, int httpSuccessStatus, boolean cache,BeanMapper beanMapper, MimeType mimeType) {
+    public HttpResult(Class resultClass, Object result, int httpSuccessStatus, boolean cache,BeanMapper beanMapper, MimeType mimeType) {
         
         if (httpSuccessStatus<=0) {
             throw new RuntimeException("El argumento httpSuccessStatus no puede ser 0 o negativo");

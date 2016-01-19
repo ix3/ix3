@@ -23,14 +23,21 @@ limitations under the License.
 ">
 
     <bean  class="es.logongas.ix3.web.json.impl.JsonFactoryImpl" />
-        
+    
+    
+    <bean  class="es.logongas.ix3.web.controllers.SearchHelper" />
+    
     <!-- BEGIN:Seguridad -->
     <bean class="es.logongas.ix3.web.security.jwt.impl.JwsImplJose4j"  /> 
     <bean class="es.logongas.ix3.web.security.impl.WebCredentialFactoryImplLoginPassword" />
-    <bean class="es.logongas.ix3.web.service.impl.WebSessionServiceImpl" />
     <bean class="es.logongas.ix3.web.security.FilterImplSecurity" id="filterImplSecurity"/>
     <bean class="es.logongas.ix3.web.security.AuthorizationInterceptorImplURL" id="authorizationInterceptorImplURL"/>
-    <bean class="es.logongas.ix3.web.security.AuthorizationInterceptorImplController" id="authorizationInterceptorImplController"/>
+    
+    <bean class="es.logongas.ix3.web.businessprocess.impl.WebSessionBusinessProcessImpl" />
+    <bean class="es.logongas.ix3.web.businessprocess.impl.SchemaBusinessProcessImpl" />
+    <bean class="es.logongas.ix3.web.util.ControllerHelper" />
+    <bean class="es.logongas.ix3.web.util.ExceptionControllerAdvice" />
+    
     
     
     <!-- Usar una de las siguientes clases para decidir como se guarda la sesión -->

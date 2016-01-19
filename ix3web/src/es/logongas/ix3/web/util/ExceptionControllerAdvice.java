@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.controllers.helper;
+package es.logongas.ix3.web.util;
 
-import es.logongas.ix3.web.json.JsonFactory;
-import es.logongas.ix3.web.util.ExceptionManager;
+import es.logongas.ix3.web.util.ControllerHelper;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -30,11 +29,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class ExceptionControllerAdvice {
 
     @Autowired
-    protected JsonFactory jsonFactory;
+    protected ControllerHelper controllerHelper;
 
     @ExceptionHandler(Exception.class)
     public void exception(Exception ex, HttpServletResponse httpServletResponse) {
-        ExceptionManager.exceptionToHttpResponse(ex, httpServletResponse, jsonFactory);
+        controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
     }
 
 

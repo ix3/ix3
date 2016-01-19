@@ -16,6 +16,7 @@
 package es.logongas.ix3.web.controllers.schema;
 
 import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.metadata.ValuesList;
@@ -33,16 +34,15 @@ import java.util.List;
  */
 public class SchemaFactory {
 
-    public Schema getSchema(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, Expands expands) throws BusinessException {
+    public Schema getSchema(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, Expands expands, DataSession dataSession) throws BusinessException {
         Schema schema = new Schema();
-        String propertyPath="";
-        
+        String propertyPath = "";
+
         schema.setClassName(metaData.getType().getSimpleName());
         schema.setDescription(schema.getClassName());
         schema.setTitle(schema.getClassName());
         schema.setPrimaryKeyPropertyName(metaData.getPrimaryKeyPropertyName());
         schema.setNaturalKeyPropertiesName(metaData.getNaturalKeyPropertiesName());
-        
 
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
@@ -53,9 +53,9 @@ public class SchemaFactory {
             } else {
                 fullPropertyName = propertyPath + "." + propertyName;
             }
-            
+
             if ((propertyMetaData.isCollection() == false) || (expands.isExpandProperty(fullPropertyName))) {
-                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, expands,fullPropertyName);
+                Property property = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, expands, fullPropertyName, dataSession);
 
                 schema.getProperties().put(propertyName, property);
             }
@@ -64,7 +64,7 @@ public class SchemaFactory {
         return schema;
     }
 
-    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, Expands expands,String propertyPath) throws BusinessException {
+    private Property getPropertyFromMetaData(MetaData metaData, MetaDataFactory metaDataFactory, CRUDServiceFactory crudServiceFactory, Expands expands, String propertyPath, DataSession dataSession) throws BusinessException {
         Property property = new Property();
         property.setType(Type.getTypeFromClass(metaData.getType()));
 
@@ -72,7 +72,7 @@ public class SchemaFactory {
             property.setClassName(metaData.getType().getSimpleName());
             property.setPrimaryKeyPropertyName(metaData.getPrimaryKeyPropertyName());
             property.setNaturalKeyPropertiesName(metaData.getNaturalKeyPropertiesName());
-            
+
             for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
                 MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
@@ -81,10 +81,10 @@ public class SchemaFactory {
                     fullPropertyName = propertyName;
                 } else {
                     fullPropertyName = propertyPath + "." + propertyName;
-                }                
-                
+                }
+
                 if ((propertyMetaData.isCollection() == false) || (expands.isExpandProperty(fullPropertyName))) {
-                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, expands,fullPropertyName);
+                    Property subproperty = getPropertyFromMetaData(propertyMetaData, metaDataFactory, crudServiceFactory, expands, fullPropertyName, dataSession);
 
                     property.getProperties().put(propertyName, subproperty);
                 }
@@ -105,7 +105,7 @@ public class SchemaFactory {
                 CRUDService crudServiceEntityValuesList = crudServiceFactory.getService(metaData.getType());
                 MetaData metaDataEntityValuesList = metaDataFactory.getMetaData(metaData.getType());
                 String primaryKeyName = metaDataEntityValuesList.getPrimaryKeyPropertyName();
-                List<Object> data = crudServiceEntityValuesList.search(null);
+                List<Object> data = crudServiceEntityValuesList.search(dataSession, null, null, null);
                 property.setValues(getValuesFromData(data, primaryKeyName));
             } else {
                 property.setValues(null);
@@ -116,32 +116,32 @@ public class SchemaFactory {
         }
 
         property.setRequired(metaData.getConstraints().isRequired());
-        
-        if (metaData.getConstraints().getMinimum()==Long.MIN_VALUE) {
+
+        if (metaData.getConstraints().getMinimum() == Long.MIN_VALUE) {
             property.setMinimum(null);
         } else {
             property.setMinimum(metaData.getConstraints().getMinimum());
         }
-        
-        if (metaData.getConstraints().getMaximum()==Long.MAX_VALUE) {
+
+        if (metaData.getConstraints().getMaximum() == Long.MAX_VALUE) {
             property.setMaximum(null);
         } else {
             property.setMaximum(metaData.getConstraints().getMaximum());
         }
-        
-        if (metaData.getConstraints().getMinLength()==0) {
+
+        if (metaData.getConstraints().getMinLength() == 0) {
             property.setMinLength(null);
         } else {
             property.setMinLength(metaData.getConstraints().getMinLength());
         }
-        if (metaData.getConstraints().getMaxLength()==Integer.MAX_VALUE) {
+        if (metaData.getConstraints().getMaxLength() == Integer.MAX_VALUE) {
             property.setMaxLength(null);
         } else {
             property.setMaxLength(metaData.getConstraints().getMaxLength());
         }
-        
+
         property.setPattern(metaData.getConstraints().getPattern());
-        if (metaData.getConstraints().getFormat()!=null) {
+        if (metaData.getConstraints().getFormat() != null) {
             property.setFormat(Format.valueOf(metaData.getConstraints().getFormat().name())); //Transformamos de es.logongas.ix3.dao.metadata a es.logongas.ix3.web.controllers.schema.Format
         } else {
             property.setFormat(null);
@@ -164,18 +164,18 @@ public class SchemaFactory {
 
         for (int i = 0; i < enumConstants.length; i++) {
             Enum enumConstant = enumConstants[i];
-            Value value=new Value(enumConstant.name(),enumConstant.toString());
+            Value value = new Value(enumConstant.name(), enumConstant.toString());
             values.add(value);
         }
 
-        Collections.sort(values,new Comparator<Object>() {
+        Collections.sort(values, new Comparator<Object>() {
 
             @Override
             public int compare(Object value1, Object value2) {
                 return value1.toString().compareTo(value2.toString());
             }
         });
-        
+
         return values;
     }
 
@@ -189,18 +189,17 @@ public class SchemaFactory {
             throw new RuntimeException("El argumento primaryKeyName no puede estar vacio");
         }
 
-        values=data;
-        
-        Collections.sort(values,new Comparator<Object>() {
+        values = data;
+
+        Collections.sort(values, new Comparator<Object>() {
 
             @Override
             public int compare(Object value1, Object value2) {
                 return value1.toString().compareTo(value2.toString());
             }
         });
-        
+
         return values;
     }
-    
 
 }

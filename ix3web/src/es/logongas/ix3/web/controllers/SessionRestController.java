@@ -15,13 +15,12 @@
  */
 package es.logongas.ix3.web.controllers;
 
-import es.logongas.ix3.web.controllers.helper.AbstractRestController;
-import es.logongas.ix3.web.controllers.command.CommandResult;
-import es.logongas.ix3.web.controllers.command.Command;
-import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.security.authentication.Principal;
-import es.logongas.ix3.web.controllers.endpoint.EndPoint;
-import es.logongas.ix3.web.service.WebSessionService;
+import es.logongas.ix3.web.util.HttpResult;
+import es.logongas.ix3.dao.DataSession;
+import es.logongas.ix3.dao.DataSessionFactory;
+import es.logongas.ix3.core.Principal;
+import es.logongas.ix3.web.businessprocess.WebSessionBusinessProcess;
+import es.logongas.ix3.web.util.ControllerHelper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,58 +34,53 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @author Lorenzo González
  */
 @Controller
-public class SessionRestController extends AbstractRestController {
+public class SessionRestController {
 
-    @Autowired
-    WebSessionService webSessionService;
+    @Autowired WebSessionBusinessProcess webSessionBusinessProcess;
     
-
+    @Autowired private DataSessionFactory dataSessionFactory;
+    @Autowired private ControllerHelper controllerHelper;
+    
+    
     @RequestMapping(value = {"/session"}, method = RequestMethod.POST, headers = "Accept=application/json")
     public void login(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
         
-        restMethod(httpServletRequest, httpServletResponse,"login",null, new Command() {
-
-            @Override
-            public CommandResult run() throws Exception, BusinessException {
-
-                Principal principal=webSessionService.createWebSession(httpServletRequest, httpServletResponse);
-
-                return new CommandResult(Principal.class, principal,HttpServletResponse.SC_CREATED);
-
-            }
-        });
-
+        try (DataSession dataSession = dataSessionFactory.getDataSession()) {
+            Principal principal = controllerHelper.getPrincipal(httpServletRequest, httpServletResponse, dataSession);
+            
+            Principal outPrincipal=webSessionBusinessProcess.createWebSession(new WebSessionBusinessProcess.CreateWebSessionArguments(principal, dataSession, httpServletRequest, httpServletResponse));
+            controllerHelper.objectToHttpResponse(new HttpResult(outPrincipal),  httpServletRequest, httpServletResponse);
+        } catch (Exception ex) {
+            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+        }
+        
     }
 
     @RequestMapping(value = {"/session"}, method = RequestMethod.GET, headers = "Accept=application/json")
     public void logged(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
         
-        restMethod(httpServletRequest, httpServletResponse,"logged",null, new Command() {
-
-            @Override
-            public CommandResult run() throws Exception, BusinessException {
-
-                Principal principal=webSessionService.getCurrentWebSession(httpServletRequest, httpServletResponse);
-
-                return new CommandResult(Principal.class, principal);
-
-            }
-        });
+        try (DataSession dataSession = dataSessionFactory.getDataSession()) {
+            Principal principal = controllerHelper.getPrincipal(httpServletRequest, httpServletResponse, dataSession);
+            
+            Principal outPrincipal=webSessionBusinessProcess.getCurrentWebSession(new WebSessionBusinessProcess.GetCurrentWebSessionArguments(principal, dataSession,httpServletRequest, httpServletResponse));
+            controllerHelper.objectToHttpResponse(new HttpResult(outPrincipal),  httpServletRequest, httpServletResponse);
+        } catch (Exception ex) {
+            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+        }
 
     }
 
     @RequestMapping(value = {"/session"}, method = RequestMethod.DELETE)
     public void logout(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
-        restMethod(httpServletRequest, httpServletResponse,"logout",null, new Command() {
+        
+        try (DataSession dataSession = dataSessionFactory.getDataSession()) {
+            Principal principal = controllerHelper.getPrincipal(httpServletRequest, httpServletResponse, dataSession);
+            
+            webSessionBusinessProcess.deleteCurrentWebSession(new WebSessionBusinessProcess.DeleteCurrentWebSessionArguments(principal, dataSession,httpServletRequest,httpServletResponse));
+            controllerHelper.objectToHttpResponse(new HttpResult(null),  httpServletRequest, httpServletResponse);
+        } catch (Exception ex) {
+            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+        }        
 
-            @Override
-            public CommandResult run() throws Exception, BusinessException {
-                
-                webSessionService.deleteCurrentWebSession(httpServletRequest,httpServletResponse);
-
-                return new CommandResult(null);
-
-            }
-        });
     }
 }

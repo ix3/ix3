@@ -21,10 +21,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DAOFactory;
+import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.dao.metadata.CollectionType;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
+import es.logongas.ix3.service.CRUDService;
+import es.logongas.ix3.service.CRUDServiceFactory;
 import es.logongas.ix3.web.json.JsonReader;
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import java.beans.BeanInfo;
@@ -50,7 +53,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
     private final Class clazz;
     private final ObjectMapper objectMapper;
     @Autowired
-    private DAOFactory daoFactory;
+    private CRUDServiceFactory crudServiceFactory;
     @Autowired
     private MetaDataFactory metaDataFactory; 
     
@@ -65,13 +68,13 @@ public class JsonReaderImplEntityJackson implements JsonReader {
     }
 
     @Override
-    public Object fromJson(String json) {
-        return fromJson(json, null);
+    public Object fromJson(String json, DataSession dataSession) {
+        return fromJson(json, null,dataSession);
     }
 
 
     @Override
-    public Object fromJson(String json, BeanMapper beanMapper) {
+    public Object fromJson(String json, BeanMapper beanMapper, DataSession dataSession) {
         try {
             if (beanMapper == null) {
                 beanMapper = new BeanMapper(clazz);
@@ -81,7 +84,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
             MetaData metaData = metaDataFactory.getMetaData(clazz);
 
-            Object entity = readEntity(jsonObj, metaData, "", beanMapper);
+            Object entity = readEntity(jsonObj, metaData, "", beanMapper,dataSession);
 
             return entity;
         } catch (Exception ex) {
@@ -99,23 +102,23 @@ public class JsonReaderImplEntityJackson implements JsonReader {
      * @param metaData Los metadatos de la entidad a tranformar
      * @return El Objeto Entidad
      */
-    private Object readEntity(Object jsonObj, MetaData metaData, String path, BeanMapper beanMapper) {
+    private Object readEntity(Object jsonObj, MetaData metaData, String path, BeanMapper beanMapper,DataSession dataSession) {
         try {
 
             Object entity;
 
-            GenericDAO genericDAO = daoFactory.getDAO(metaData.getType());
+            CRUDService crudService = crudServiceFactory.getService(metaData.getType());
 
             if (emptyKey(getValueFromBean(jsonObj, metaData.getPrimaryKeyPropertyName())) == false) {
                 //Si hay clave primaria es que hay que leerla entidad pq ya existe
-                entity = genericDAO.read((Serializable) getValueFromBean(jsonObj, metaData.getPrimaryKeyPropertyName()));
+                entity = crudService.read(dataSession, (Serializable) getValueFromBean(jsonObj, metaData.getPrimaryKeyPropertyName()));
             } else {
                 //No hay clave primaria , así que creamos una nueva fila
 
-                entity = genericDAO.create();
+                entity = crudService.create(dataSession,null);
             }
 
-            populateEntity(entity, jsonObj, metaData, path, beanMapper);
+            populateEntity(entity, jsonObj, metaData, path, beanMapper, dataSession);
 
             return entity;
         } catch (Exception ex) {
@@ -131,7 +134,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
      * @param propertyMetaData
      * @return
      */
-    private Object readForeingEntity(Object propertyValue, MetaData propertyMetaData) {
+    private Object readForeingEntity(Object propertyValue, MetaData propertyMetaData, DataSession dataSession) {
         try {
             if (propertyValue == null) {
                 return null;
@@ -141,13 +144,13 @@ public class JsonReaderImplEntityJackson implements JsonReader {
             //Al ser un Set si son la misma se quedará solo una.
             Set entities = new HashSet();
 
-            GenericDAO genericDAO = daoFactory.getDAO(propertyMetaData.getType());
+            CRUDService crudService = crudServiceFactory.getService(propertyMetaData.getType());
 
             //Leer la entidad en función de su clave primaria
             String primaryKeyPropertyName = propertyMetaData.getPrimaryKeyPropertyName();
             Object primaryKey = getValueFromBean(propertyValue, primaryKeyPropertyName);
             if (primaryKey != null) {
-                Object entity = genericDAO.read((Serializable) primaryKey);
+                Object entity = crudService.read(dataSession, (Serializable) primaryKey);
                 if (entity != null) {
                     entities.add(entity);
                 }
@@ -157,7 +160,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
             for (String naturalKeyPropertyName : propertyMetaData.getNaturalKeyPropertiesName()) {
                 Object naturalKey = getValueFromBean(propertyValue, naturalKeyPropertyName);
                 if (naturalKey != null) {
-                    Object entity = genericDAO.readByNaturalKey((Serializable) naturalKey);
+                    Object entity = crudService.readByNaturalKey(dataSession, (Serializable) naturalKey);
                     if (entity != null) {
                         entities.add(entity);
                     }
@@ -196,7 +199,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         }
     }
 
-    private void populateEntity(Object entity, Object jsonObj, MetaData metaData, String path, BeanMapper beanMapper) throws BusinessException {
+    private void populateEntity(Object entity, Object jsonObj, MetaData metaData, String path, BeanMapper beanMapper, DataSession dataSession) throws BusinessException {
 
         if (jsonObj == null) {
             return;
@@ -232,7 +235,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                         //Debemos leer la referencia de la base de datos
                         Object rawValue = getValueFromBean(jsonObj, propertyName);
 
-                        Object value = readForeingEntity(rawValue, propertyMetaData);
+                        Object value = readForeingEntity(rawValue, propertyMetaData, dataSession);
                         setValueToBean(entity, value, propertyName);
                         break;
                     }
@@ -250,7 +253,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                                 throw new RuntimeException(ex);
                             }
                         }
-                        populateEntity(component, rawValue, propertyMetaData, absolutePropertyName, beanMapper);
+                        populateEntity(component, rawValue, propertyMetaData, absolutePropertyName, beanMapper, dataSession);
                         break;
                     }
                     default:
@@ -281,7 +284,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                             //Añadimos los elementos que vienen desde JSON
                             if (rawCollection != null) {
                                 for (Object rawValue : rawCollection) {
-                                    Object value = readEntity(rawValue, propertyMetaData, absolutePropertyName, beanMapper);
+                                    Object value = readEntity(rawValue, propertyMetaData, absolutePropertyName, beanMapper, dataSession);
                                     currentCollection.add(value);
                                 }
                             }
@@ -308,7 +311,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                             if (rawMap != null) {
                                 for (Object key : rawMap.keySet()) {
                                     Object rawValue = rawMap.get(key);
-                                    Object value = readEntity(rawValue, propertyMetaData, absolutePropertyName, beanMapper);
+                                    Object value = readEntity(rawValue, propertyMetaData, absolutePropertyName, beanMapper, dataSession);
                                     currentMap.put(key, value);
                                 }
                             }

@@ -15,7 +15,8 @@
  */
 package es.logongas.ix3.web.security;
 
-import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.dao.DataSession;
+import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.security.authorization.AuthorizationInterceptor;
 import es.logongas.ix3.security.authorization.AuthorizationManager;
 import es.logongas.ix3.security.authorization.BusinessSecurityException;
@@ -37,13 +38,13 @@ public class AuthorizationInterceptorImplURL implements AuthorizationInterceptor
     AuthorizationManager authorizationManager;
 
     
-    public void checkAuthorized(Principal principal,HttpServletRequest httpServletRequest,HttpServletResponse httpServletResponse) throws BusinessSecurityException {
+    public void checkAuthorized(Principal principal,HttpServletRequest httpServletRequest,HttpServletResponse httpServletResponse,DataSession dataSession) throws BusinessSecurityException {
         String secureResourceTypeName=SECURE_RESOURCE_TYPE_NAME;
         String secureResource=getSecureURI(httpServletRequest.getRequestURI(), httpServletRequest.getContextPath());
         String permissionName=httpServletRequest.getMethod();
         Object arguments=getArguments(httpServletRequest.getParameterMap()); 
         
-        boolean isAuthorized=authorizationManager.authorized(principal,secureResourceTypeName, secureResource, permissionName, arguments);
+        boolean isAuthorized=authorizationManager.authorized(principal,secureResourceTypeName, secureResource, permissionName, arguments, dataSession);
         
         if (isAuthorized==false) {
             throw new BusinessSecurityException("No tienes acceso a la URL:"+secureResource);

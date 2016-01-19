@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.controllers.command;
+package es.logongas.ix3.web.util;
 
 /**
  *

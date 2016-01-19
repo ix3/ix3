@@ -16,11 +16,12 @@
 package es.logongas.ix3.web.security;
 
 import es.logongas.ix3.core.BusinessException;
+import es.logongas.ix3.dao.DataSession;
+import es.logongas.ix3.dao.DataSessionFactory;
 import es.logongas.ix3.security.authentication.AuthenticationManager;
-import es.logongas.ix3.security.authentication.Principal;
-import es.logongas.ix3.security.util.PrincipalLocator;
+import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.web.json.JsonFactory;
-import es.logongas.ix3.web.util.ExceptionManager;
+import es.logongas.ix3.web.util.ControllerHelper;
 import java.io.IOException;
 import java.io.Serializable;
 import javax.servlet.Filter;
@@ -38,22 +39,16 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author Lorenzo González
  */
-public class FilterImplSecurity implements Filter {
+public final class FilterImplSecurity implements Filter {
 
     @Autowired
     AuthorizationInterceptorImplURL authorizationInterceptorImplURL;
 
-    @Autowired
-    AuthenticationManager authenticationManager;
 
     @Autowired
-    PrincipalLocator principalLocator;
-
+    ControllerHelper controllerHelper;
     @Autowired
-    WebSessionSidStorage webSessionSidStorage;
-    
-    @Autowired
-    protected JsonFactory jsonFactory;
+    DataSessionFactory dataSessionFactory;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -65,18 +60,14 @@ public class FilterImplSecurity implements Filter {
         HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
 
         try {
-            Principal principal = getPrincipal(httpServletRequest, httpServletResponse);
-            authorizationInterceptorImplURL.checkAuthorized(principal, httpServletRequest, httpServletResponse);
-                        
-            try {
-                principalLocator.bindPrincipal(principal);
-                filterChain.doFilter(servletRequest, servletResponse);
-            } finally {
-                principalLocator.unbindPrincipal();
-            }
 
+            try (DataSession dataSession = dataSessionFactory.getDataSession()) {
+                Principal principal = controllerHelper.getPrincipal(httpServletRequest, httpServletResponse, dataSession);
+                authorizationInterceptorImplURL.checkAuthorized(principal, httpServletRequest, httpServletResponse, dataSession);
+            }
+            filterChain.doFilter(servletRequest, servletResponse);
         } catch (Exception ex) {
-            ExceptionManager.exceptionToHttpResponse(ex, httpServletResponse, jsonFactory);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
         }
     }
 
@@ -84,17 +75,6 @@ public class FilterImplSecurity implements Filter {
     public void destroy() {
     }
 
-    private Principal getPrincipal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws BusinessException {
-        Principal principal;
 
-        Serializable sid = webSessionSidStorage.getSid(httpServletRequest, httpServletResponse);
-        if (sid == null) {
-            principal = null;
-        } else {
-            principal = authenticationManager.getPrincipalBySID(sid);
-        }
-
-        return principal;
-    }
 
 }

@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.service.impl;
+package es.logongas.ix3.web.businessprocess.impl;
 
 import es.logongas.ix3.web.security.WebCredentialFactory;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.security.authentication.Credential;
-import es.logongas.ix3.security.authentication.Principal;
+import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.web.security.WebSessionSidStorage;
-import es.logongas.ix3.web.service.WebSessionService;
+import es.logongas.ix3.web.businessprocess.WebSessionBusinessProcess;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author logongas
  */
-public class WebSessionServiceImpl implements WebSessionService {
+public class WebSessionBusinessProcessImpl implements WebSessionBusinessProcess {
 
     @Autowired
     WebSessionSidStorage webSessionSidStorage;
@@ -45,22 +43,22 @@ public class WebSessionServiceImpl implements WebSessionService {
     @Autowired
     WebCredentialFactory webCredentialFactory;
     
-    private Log log = LogFactory.getLog(WebSessionServiceImpl.class);
+    private Log log = LogFactory.getLog(WebSessionBusinessProcessImpl.class);
     
     @Override
-    final public Principal createWebSession(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws BusinessException {
+    final public Principal createWebSession(CreateWebSessionArguments createWebSessionArguments) throws BusinessException {
         try {
-            httpServletRequest.setCharacterEncoding("UTF-8");
+            createWebSessionArguments.httpServletRequest.setCharacterEncoding("UTF-8");
 
-            Credential credental=webCredentialFactory.getCredential(httpServletRequest, httpServletResponse);
-            Principal principal = authenticationManager.authenticate(credental);
+            Credential credental=webCredentialFactory.getCredential(createWebSessionArguments.httpServletRequest, createWebSessionArguments.httpServletResponse);
+            Principal principal = authenticationManager.authenticate(credental, createWebSessionArguments.dataSession);
             if (principal == null) {
                 if (log.isInfoEnabled()) {
                     log.info("Login fallido con la credencial:" + credental);
                 }
                 throw new BusinessException("El usuario o contraseña no son válidos");
             }
-            webSessionSidStorage.setSid(httpServletRequest, httpServletResponse, principal.getSid());
+            webSessionSidStorage.setSid(createWebSessionArguments.httpServletRequest, createWebSessionArguments.httpServletResponse, principal.getSid());
 
             if (log.isInfoEnabled()) {
                 log.info("Login usuario:" + principal.getName());
@@ -76,19 +74,19 @@ public class WebSessionServiceImpl implements WebSessionService {
 
     
     @Override
-    final public void deleteCurrentWebSession(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws BusinessException {
-        webSessionSidStorage.deleteSid(httpServletRequest,httpServletResponse);
+    final public void deleteCurrentWebSession(DeleteCurrentWebSessionArguments deleteCurrentWebSessionArguments) throws BusinessException {
+        webSessionSidStorage.deleteSid(deleteCurrentWebSessionArguments.httpServletRequest,deleteCurrentWebSessionArguments.httpServletResponse);
     }
 
     @Override
-    final public Principal getCurrentWebSession(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws BusinessException {
-        Serializable sid =  webSessionSidStorage.getSid(httpServletRequest,httpServletResponse);
+    final public Principal getCurrentWebSession(GetCurrentWebSessionArguments getCurrentWebSessionArguments) throws BusinessException {
+        Serializable sid =  webSessionSidStorage.getSid(getCurrentWebSessionArguments.httpServletRequest,getCurrentWebSessionArguments.httpServletResponse);
         
         if (sid == null) {
             return null;
         }
 
-        Principal principal = authenticationManager.getPrincipalBySID(sid);
+        Principal principal = authenticationManager.getPrincipalBySID(sid, getCurrentWebSessionArguments.dataSession);
 
         return principal;
     }

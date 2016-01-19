@@ -15,6 +15,7 @@
  */
 package es.logongas.ix3.web.json;
 
+import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 
 /**
@@ -22,6 +23,6 @@ import es.logongas.ix3.web.json.beanmapper.BeanMapper;
  * @author Lorenzo González
  */
 public interface JsonReader {
-    Object fromJson(String json);
-    Object fromJson(String json,BeanMapper beanMapper);
+    Object fromJson(String json,DataSession dataSession);
+    Object fromJson(String json,BeanMapper beanMapper,DataSession dataSession);
 }

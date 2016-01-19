@@ -15,16 +15,13 @@
  */
 package es.logongas.ix3.web.controllers;
 
-import es.logongas.ix3.web.controllers.helper.AbstractRestController;
-import es.logongas.ix3.web.controllers.command.CommandResult;
-import es.logongas.ix3.web.controllers.command.Command;
-import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.dao.NativeDAO;
-import es.logongas.ix3.web.controllers.endpoint.EndPoint;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import es.logongas.ix3.web.util.ControllerHelper;
+import es.logongas.ix3.businessprocess.echo.EchoBusinessProcess;
+import es.logongas.ix3.businessprocess.echo.EchoResult;
+import es.logongas.ix3.core.Principal;
+import es.logongas.ix3.web.util.HttpResult;
+import es.logongas.ix3.dao.DataSession;
+import es.logongas.ix3.dao.DataSessionFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -40,96 +37,38 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @author logongas
  */
 @Controller
-public class EchoController extends AbstractRestController {
+public class EchoController {
 
     private static final Log log = LogFactory.getLog(EchoController.class);
 
-    @Autowired
-    private NativeDAO nativeDAO;
+    @Autowired private EchoBusinessProcess echoBusinessProcess;
+    @Autowired private DataSessionFactory dataSessionFactory;
+    @Autowired private ControllerHelper controllerHelper;
 
-    @RequestMapping(value = {"/$echo/{id}"}, method = RequestMethod.GET, produces = "application/json")
-    public void echoDataBase(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse, final @PathVariable("id") int id) {
-        restMethod(httpServletRequest, httpServletResponse,"echoDataBase",null, new Command() {
+    @RequestMapping(value = {"/$echo/{id}"}, method = RequestMethod.GET)
+    public void echoDataBase(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final @PathVariable("id") long id)  {
 
-            public int id;
+        try (DataSession dataSession = dataSessionFactory.getDataSession()) {
+            Principal principal = controllerHelper.getPrincipal(httpServletRequest, httpServletResponse, dataSession);
             
-            Command initialize(int id) {
-                this.id=id;
-                return this;
-            };
-            
-            @Override
-            public CommandResult run() throws Exception, BusinessException {
+            EchoResult echoResult=echoBusinessProcess.echoDataBase(new EchoBusinessProcess.EchoDataBaseArguments(principal, dataSession, id));
+            controllerHelper.objectToHttpResponse(new HttpResult(echoResult),  httpServletRequest, httpServletResponse);
+        } catch (Exception ex) {
+            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+        }      
 
-                List<Object> resultado = nativeDAO.createNativeQuery("select now() from dual", (List<Object>) null);
-                Date date = (Date) resultado.get(0);
-
-                EchoResult echoResult = new EchoResult(id, date);
-
-                return new CommandResult(EchoResult.class, echoResult);
-
-            }
-        }.initialize(id));
     }
-    
+
     @RequestMapping(value = {"/$echo"}, method = RequestMethod.GET, produces = "application/json")
-    public void echoNoDatabase(final HttpServletRequest httpServletRequest,final HttpServletResponse httpServletResponse) {
-        restMethod(httpServletRequest, httpServletResponse,"echoNoDatabase",null, new Command() {
+    public void echoNoDatabase(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) {
 
-            @Override
-            public CommandResult run() throws Exception, BusinessException {
-
-                Date date = new Date();
-
-                EchoResult echoResult = new EchoResult(date.getTime(), date);
-
-                return new CommandResult(EchoResult.class, echoResult);
-
-            }            
-        });
-    }
-    
-    public class EchoResult {
-
-        private long id;
-        private Date date;
-
-        public EchoResult(long id, Date date) {
-            this.id = id;
-            this.date = date;
-        }
-
-        /**
-         * @return the id
-         */
-        public long getId() {
-            return id;
-        }
-
-        /**
-         * @param id the id to set
-         */
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        /**
-         * @return the date
-         */
-        public Date getDate() {
-            return date;
-        }
-
-        /**
-         * @param date the date to set
-         */
-        public void setDate(Date date) {
-            this.date = date;
-        }
-
-        @Override
-        public String toString() {
-            return id + "-" + date.getTime();
+        try (DataSession dataSession = dataSessionFactory.getDataSession()) {
+            Principal principal = controllerHelper.getPrincipal(httpServletRequest, httpServletResponse, dataSession);
+            
+            EchoResult echoResult=echoBusinessProcess.echoNoDataBase(new EchoBusinessProcess.EchoNoDataBaseArguments(principal, dataSession));
+            controllerHelper.objectToHttpResponse(new HttpResult(echoResult), httpServletRequest, httpServletResponse);
+        } catch (Exception ex) {
+            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
         }
 
     }
