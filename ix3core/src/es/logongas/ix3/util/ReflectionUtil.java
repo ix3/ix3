@@ -21,6 +21,10 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -130,12 +134,76 @@ public class ReflectionUtil {
     static public Method getMethod(Class clazz, String methodName) {
         Method[] methods = clazz.getMethods();
 
+        return findUniqueMethodByName(methods, methodName);
+    }
+    static public Method getDeclaredMethod(Class clazz, String methodName) {
+        Method[] methods = clazz.getDeclaredMethods();
+
+        return findUniqueMethodByName(methods, methodName);
+    }    
+    
+    
+    
+    public static boolean isFieldParametrizedList(Field field,Class listClass) {
+        Type type=field.getGenericType();
+        
+        if (type instanceof ParameterizedType) {
+            ParameterizedType parameterizedType=(ParameterizedType)type;
+            if (parameterizedType.getRawType().equals(List.class)) {
+                Type[] actualTypeArguments=parameterizedType.getActualTypeArguments();
+                
+                if ((actualTypeArguments==null) || (actualTypeArguments.length!=1)) {
+                    return false;
+                } else {
+                    if (actualTypeArguments[0].equals(listClass)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+                
+            } else {
+                return false;
+            }
+            
+        } else {
+            return false;
+        }
+    }
+    public static boolean isFieldParametrizedMap(Field field,Class keyClass,Class valueClass) {
+        Type type=field.getGenericType();
+        
+        if (type instanceof ParameterizedType) {
+            ParameterizedType parameterizedType=(ParameterizedType)type;
+            if (parameterizedType.getRawType().equals(Map.class)) {
+                Type[] actualTypeArguments=parameterizedType.getActualTypeArguments();
+                
+                if ((actualTypeArguments==null) || (actualTypeArguments.length!=2)) {
+                    return false;
+                } else {
+                    if ((actualTypeArguments[0].equals(keyClass)) && (actualTypeArguments[1].equals(valueClass))) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+                
+            } else {
+                return false;
+            }
+            
+        } else {
+            return false;
+        }
+    }
+    
+    static private Method findUniqueMethodByName(Method[] methods, String methodName) {
         Method method = null;
         for (int i = 0; i < methods.length; i++) {
             if (methods[i].getName().equals(methodName)) {
 
                 if (method != null) {
-                    throw new RuntimeException("Existen dos o mas metodos llamados '" + methodName + "' en '" + clazz.getName() + "'");
+                    throw new RuntimeException("Existen dos o mas metodos llamados '" + methodName);
                 }
 
                 method = methods[i];
@@ -144,7 +212,7 @@ public class ReflectionUtil {
 
         return method;
 
-    }
+    }    
 
     /**
      * Obtiene el valor de la propiedad de un Bean
