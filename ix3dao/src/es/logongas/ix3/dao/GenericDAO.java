@@ -42,6 +42,6 @@ public interface GenericDAO<EntityType,PrimaryKeyType extends Serializable>  ext
     EntityType update(DataSession dataSession,EntityType entity) throws BusinessException;
     boolean delete(DataSession dataSession,EntityType entity) throws BusinessException;
 
-    List<EntityType> search(DataSession dataSession,List<Filter> filters,List<Order> orders,SearchResponse searchResponse) throws BusinessException;
-    Page<EntityType> pageableSearch(DataSession dataSession,List<Filter> filters,List<Order> orders,PageRequest pageRequest,SearchResponse searchResponse) throws BusinessException;       
+    List<EntityType> search(DataSession dataSession,Filters filters,List<Order> orders,SearchResponse searchResponse) throws BusinessException;
+    Page<EntityType> pageableSearch(DataSession dataSession,Filters filters,List<Order> orders,PageRequest pageRequest,SearchResponse searchResponse) throws BusinessException;       
 }

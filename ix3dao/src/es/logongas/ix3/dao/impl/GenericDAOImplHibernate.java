@@ -23,6 +23,7 @@ import es.logongas.ix3.core.PageRequest;
 import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.FilterOperator;
+import es.logongas.ix3.dao.Filters;
 import es.logongas.ix3.dao.SearchResponse;
 import es.logongas.ix3.dao.TransactionManager;
 import es.logongas.ix3.dao.metadata.MetaData;
@@ -350,12 +351,12 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
     }
 
     @Override
-    final public List<EntityType> search(DataSession dataSession, List<Filter> filters, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
+    final public List<EntityType> search(DataSession dataSession, Filters filters, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
         return pageableSearch(dataSession, filters, orders, null, searchResponse).getContent();
     }
 
     @Override
-    public Page<EntityType> pageableSearch(DataSession dataSession, List<Filter> filters, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
+    public Page<EntityType> pageableSearch(DataSession dataSession, Filters filters, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
 
         if (searchResponse == null) {
             searchResponse = new SearchResponse(false);
@@ -430,7 +431,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
      * @param orders
      * @return
      */
-    private String sqlPartFrom(List<Filter> filters) {
+    private String sqlPartFrom(Filters filters) {
         StringBuilder sbFrom = new StringBuilder();
 
         sbFrom.append(" FROM " + getEntityMetaData().getType().getSimpleName() + " e ");
@@ -456,7 +457,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
      * @param filters
      * @return
      */
-    private String sqlPartWhere(List<Filter> filters) {
+    private String sqlPartWhere(Filters filters) {
 
         StringBuilder sqlWhere = new StringBuilder();
         sqlWhere.append(" WHERE 1=1 ");
@@ -521,7 +522,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     }
 
-    private List<JoinProperty> getJoinsProperties(List<Filter> filters) {
+    private List<JoinProperty> getJoinsProperties(Filters filters) {
         List<JoinProperty> joinsProperties = new ArrayList<JoinProperty>();
 
         for (int i = 0; i < filters.size(); i++) {
@@ -615,7 +616,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
      * @param query
      * @param filters
      */
-    private Map<String, Object> getParameterFromFilters(List<Filter> filters) {
+    private Map<String, Object> getParameterFromFilters(Filters filters) {
         Map<String, Object> namedParameters = new HashMap<String, Object>();
 
         if (filters != null) {
