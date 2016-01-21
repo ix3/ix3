@@ -22,7 +22,7 @@ import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.core.Page;
 import es.logongas.ix3.core.PageRequest;
 import es.logongas.ix3.dao.DataSession;
-import es.logongas.ix3.dao.Filter;
+import es.logongas.ix3.dao.Filters;
 import es.logongas.ix3.dao.SearchResponse;
 import es.logongas.ix3.dao.TransactionManager;
 import es.logongas.ix3.dao.metadata.MetaData;
@@ -176,7 +176,7 @@ public class CRUDServiceImpl<EntityType, PrimaryKeyType extends Serializable> im
     }
 
     @Override
-    public List<EntityType> search(DataSession dataSession, List<Filter> filters, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
+    public List<EntityType> search(DataSession dataSession, Filters filters, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
         List<EntityType> entities = getDAO().search(dataSession, filters, orders, searchResponse);
         
         RuleEngine ruleEngine = ruleEngineFactory.getRuleEngine(this.entityType);
@@ -192,7 +192,7 @@ public class CRUDServiceImpl<EntityType, PrimaryKeyType extends Serializable> im
     }
 
     @Override
-    public Page<EntityType> pageableSearch(DataSession dataSession, List<Filter> filters, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
+    public Page<EntityType> pageableSearch(DataSession dataSession, Filters filters, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException {
         Page<EntityType> page = getDAO().pageableSearch(dataSession, filters, orders, pageRequest, searchResponse);
         
         RuleEngine ruleEngine = ruleEngineFactory.getRuleEngine(this.entityType);

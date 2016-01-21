@@ -22,9 +22,8 @@ import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.Page;
 import es.logongas.ix3.core.PageRequest;
 import es.logongas.ix3.dao.DataSession;
-import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.SearchResponse;
-import es.logongas.ix3.core.Principal;
+import es.logongas.ix3.dao.Filters;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +46,7 @@ public interface CRUDService<EntityType,PrimaryKeyType extends Serializable> ext
     EntityType update(DataSession dataSession,EntityType entity) throws BusinessException;
     boolean delete(DataSession dataSession,EntityType entity) throws BusinessException;
 
-    List<EntityType> search(DataSession dataSession,List<Filter> filters,List<Order> orders, SearchResponse searchResponse) throws BusinessException;
-    Page<EntityType> pageableSearch(DataSession dataSession,List<Filter> filters,List<Order> orders,PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException;    
+    List<EntityType> search(DataSession dataSession,Filters filters,List<Order> orders, SearchResponse searchResponse) throws BusinessException;
+    Page<EntityType> pageableSearch(DataSession dataSession,Filters filters,List<Order> orders,PageRequest pageRequest, SearchResponse searchResponse) throws BusinessException;    
     
 }
