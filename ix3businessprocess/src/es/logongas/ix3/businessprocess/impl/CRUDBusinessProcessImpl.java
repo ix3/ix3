@@ -16,22 +16,16 @@
 package es.logongas.ix3.businessprocess.impl;
 
 import es.logongas.ix3.core.BusinessException;
-import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.Page;
-import es.logongas.ix3.core.PageRequest;
-import es.logongas.ix3.dao.Filter;
-import es.logongas.ix3.dao.SearchResponse;
 import es.logongas.ix3.dao.TransactionManager;
 import es.logongas.ix3.businessprocess.CRUDBusinessProcess;
 import es.logongas.ix3.dao.DAOFactory;
-import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.rule.RuleContext;
 import es.logongas.ix3.rule.RuleEngine;
 import es.logongas.ix3.rule.RuleEngineFactory;
 import es.logongas.ix3.rule.RuleGroupPredefined;
 import es.logongas.ix3.rule.impl.RuleContextImpl;
-import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.service.CRUDService;
 import es.logongas.ix3.service.CRUDServiceFactory;
 import java.io.Serializable;

@@ -20,9 +20,9 @@ import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.Page;
 import es.logongas.ix3.core.PageRequest;
 import es.logongas.ix3.dao.DataSession;
-import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.SearchResponse;
 import es.logongas.ix3.core.Principal;
+import es.logongas.ix3.dao.Filters;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -131,7 +131,7 @@ public interface CRUDBusinessProcess<EntityType, PrimaryKeyType extends Serializ
     
     public class SearchArguments extends BusinessProcessArguments {
 
-        public List<Filter> filters;
+        public Filters filters;
         public List<Order> orders;
         public SearchResponse searchResponse;
 
@@ -140,7 +140,7 @@ public interface CRUDBusinessProcess<EntityType, PrimaryKeyType extends Serializ
 
         
         
-        public SearchArguments(Principal principal, DataSession dataSession, List<Filter> filters, List<Order> orders, SearchResponse searchResponse) {
+        public SearchArguments(Principal principal, DataSession dataSession, Filters filters, List<Order> orders, SearchResponse searchResponse) {
             super(principal, dataSession);
             this.filters = filters;
             this.orders = orders;
@@ -157,7 +157,7 @@ public interface CRUDBusinessProcess<EntityType, PrimaryKeyType extends Serializ
         }
         
         
-        public PageableSearchArguments(Principal principal, DataSession dataSession, List<Filter> filters, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse) {
+        public PageableSearchArguments(Principal principal, DataSession dataSession, Filters filters, List<Order> orders, PageRequest pageRequest, SearchResponse searchResponse) {
             super(principal, dataSession, filters, orders, searchResponse);
             this.filters = filters;
             this.orders = orders;
