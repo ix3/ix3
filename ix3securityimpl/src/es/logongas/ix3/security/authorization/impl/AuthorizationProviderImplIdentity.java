@@ -25,6 +25,7 @@ import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.GenericDAO;
 import es.logongas.ix3.core.Principal;
+import es.logongas.ix3.dao.Filters;
 import es.logongas.ix3.security.authorization.AuthorizationProvider;
 import es.logongas.ix3.security.authorization.AuthorizationType;
 import java.util.ArrayList;
@@ -92,7 +93,7 @@ public class AuthorizationProviderImplIdentity implements AuthorizationProvider 
         GenericDAO<Permission, Integer> permissionDAO = daoFactory.getDAO(Permission.class);
 
         SecureResourceType secureResourceType = secureResourceTypeDAO.readByNaturalKey(dataSession, secureResourceTypeName);
-        List<Filter> filters = new ArrayList<Filter>();
+        Filters filters = new Filters();
         filters.add(new Filter("secureResourceType", secureResourceType));
         filters.add(new Filter("name", permissionName));
 
