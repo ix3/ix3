@@ -1,1 +1,10 @@
 /.sonar 
+/ix3businessprocess/nbproject/private/
+/ix3process/nbproject/private/
+/ix3process/build/
+/ix3rules/nbproject/private/
+/ix3rule/nbproject/private/
+/ix3rule/build/
+/ix3rule/dist/
+/ix3businessprocess/build/
+/ix3businessprocess/dist/
