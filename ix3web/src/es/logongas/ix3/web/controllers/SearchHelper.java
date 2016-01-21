@@ -26,6 +26,7 @@ import es.logongas.ix3.core.conversion.Conversion;
 import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.FilterOperator;
+import es.logongas.ix3.dao.Filters;
 import es.logongas.ix3.dao.SearchResponse;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
@@ -129,8 +130,8 @@ public class SearchHelper {
         return searchResponse;
     }
 
-    public List<Filter> getFiltersSearchFromWebParameters(Map<String, String[]> parametersMap, MetaData metaData) {
-        List<Filter> filters = new ArrayList<Filter>();
+    public Filters getFiltersSearchFromWebParameters(Map<String, String[]> parametersMap, MetaData metaData) {
+        Filters filters = new Filters();
         for (Map.Entry<String, String[]> entry : parametersMap.entrySet()) {
             String rawPropertyName = entry.getKey();
             Filter filter = getFilterFromPropertyName(rawPropertyName);
@@ -386,14 +387,14 @@ public class SearchHelper {
         }
     }
 
-    public Object executeNamedSearchFilters(Principal principal, DataSession dataSession, CRUDBusinessProcess crudBusinessProcess, String namedSearch, List<Filter> filters, PageRequest pageRequest, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
+    public Object executeNamedSearchFilters(Principal principal, DataSession dataSession, CRUDBusinessProcess crudBusinessProcess, String namedSearch, Filters filters, PageRequest pageRequest, List<Order> orders, SearchResponse searchResponse) throws BusinessException {
         try {
             if (getNamedSearchType(crudBusinessProcess, namedSearch) != NameSearchType.FILTER) {
                 throw new RuntimeException("El método '" + namedSearch + "' de '" + crudBusinessProcess.getClass() + "' debe ser de tipo Filter");
             }
 
             if (filters == null) {
-                filters = new ArrayList<Filter>();
+                filters = new Filters();
             }
 
             if (orders == null) {

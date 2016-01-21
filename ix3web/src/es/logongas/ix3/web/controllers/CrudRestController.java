@@ -29,6 +29,7 @@ import es.logongas.ix3.dao.metadata.MetaDataFactory;
 import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.DataSessionFactory;
 import es.logongas.ix3.core.Principal;
+import es.logongas.ix3.dao.Filters;
 import es.logongas.ix3.service.CRUDServiceFactory;
 import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.businessprocess.SchemaBusinessProcess;
@@ -128,7 +129,7 @@ public class CrudRestController {
             if ((namedSearch != null) && (namedSearch.trim().equals("") == false)) {
                 switch (searchHelper.getNamedSearchType(crudBusinessProcess, namedSearch)) {
                     case FILTER:
-                        List<Filter> filters = searchHelper.getFiltersSearchFromWebParameters(parametersMap, metaData);
+                        Filters filters = searchHelper.getFiltersSearchFromWebParameters(parametersMap, metaData);
                         result = searchHelper.executeNamedSearchFilters(principal, dataSession, crudBusinessProcess, namedSearch, filters, pageRequest, orders, searchResponse);
 
                         break;
@@ -140,7 +141,7 @@ public class CrudRestController {
                         throw new RuntimeException("El tipo del name search es desconocido:" + searchHelper.getNamedSearchType(crudBusinessProcess, namedSearch));
                 }
             } else {
-                List<Filter> filters = searchHelper.getFiltersSearchFromWebParameters(parametersMap, metaData);
+                Filters filters = searchHelper.getFiltersSearchFromWebParameters(parametersMap, metaData);
                 if (pageRequest == null) {
                     result = crudBusinessProcess.search(new CRUDBusinessProcess.SearchArguments(principal, dataSession, filters, orders, searchResponse));
                 } else {
