@@ -23,21 +23,29 @@ import java.util.ArrayList;
  */
 public class Filters extends ArrayList<Filter> {
     
-    public Filter getFilter(String propertyName) {
+
+    /**
+     * Busca un filtro con nombre 'propertyName' pero si hay mas de uno con ese nombre, retorna null. Además filtra por el operador 'withFilterOperator'
+     * @param propertyName
+     * @param withFilterOperator
+     * @return 
+     */
+    public Filter getUniquePropertyNameFilter(String propertyName,FilterOperator withFilterOperator) {
         Filter searchFilter=null;
         
         for(Filter filter:this) {
             if (filter.getPropertyName().equals(propertyName)) {
                 if (searchFilter!=null) {
-                    throw new RuntimeException("Existe mas de un filtro con el campo:" + propertyName);
+                    return null;
                 }
                 
-                
-                searchFilter = filter;
+                if (filter.getFilterOperator()==withFilterOperator) {
+                    searchFilter = filter;
+                }
             }
         }
         
-        return null;
+        return searchFilter;
     }
     
 }
