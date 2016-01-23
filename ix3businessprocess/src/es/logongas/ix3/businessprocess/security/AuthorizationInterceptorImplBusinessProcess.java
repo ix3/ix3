@@ -131,7 +131,7 @@ public class AuthorizationInterceptorImplBusinessProcess implements Authorizatio
         BusinessProcess businessProcess = (BusinessProcess) joinPoint.getTarget();
         String methodName = joinPoint.getSignature().getName();
 
-        String secureResource = getInterfaceBusinessProcess(businessProcess).getName() + (businessProcess.getEntityType() != null ? "." + businessProcess.getEntityType().getSimpleName() : "") + "." + methodName;
+        String secureResource = getInterfaceBusinessProcess(businessProcess).getSimpleName() + (businessProcess.getEntityType() != null ? "." + businessProcess.getEntityType().getSimpleName() : "") + "." + methodName;
 
         return secureResource;
     }
