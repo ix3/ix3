@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package es.logongas.ix3.web.json.impl;
 
 import com.fasterxml.jackson.core.JsonLocation;
@@ -36,12 +35,17 @@ public class DateDeserializer extends JsonDeserializer<Date> {
     @Override
     public Date deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        
+
         try {
             return sdf.parse(jsonParser.getText());
         } catch (ParseException ex) {
-            throw new JsonParseException ("El formato de la fecha '" + jsonParser.getText() + "' no es correcto",JsonLocation.NA);
+            try {
+                long numericDate = Long.parseLong(jsonParser.getText());
+                return new Date(numericDate);
+            } catch (NumberFormatException ex2) {
+                throw new JsonParseException ("El formato de la fecha '" + jsonParser.getText() + "' no es correcto",JsonLocation.NA);
+            }
         }
     }
-    
+
 }
