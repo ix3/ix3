@@ -22,7 +22,6 @@ import es.logongas.ix3.web.util.HttpResult;
 import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.core.Order;
 import es.logongas.ix3.core.PageRequest;
-import es.logongas.ix3.dao.Filter;
 import es.logongas.ix3.dao.SearchResponse;
 import es.logongas.ix3.dao.metadata.MetaData;
 import es.logongas.ix3.dao.metadata.MetaDataFactory;
@@ -30,6 +29,7 @@ import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.DataSessionFactory;
 import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.dao.Filters;
+import es.logongas.ix3.service.CRUDService;
 import es.logongas.ix3.service.CRUDServiceFactory;
 import es.logongas.ix3.util.ReflectionUtil;
 import es.logongas.ix3.web.businessprocess.SchemaBusinessProcess;
@@ -260,7 +260,7 @@ public class CrudRestController {
         try (DataSession dataSession = dataSessionFactory.getDataSession()) {
             Principal principal = controllerHelper.getPrincipal(httpServletRequest, httpServletResponse, dataSession);
             MetaData metaData = metaDataFactory.getMetaData(entityName);
-            if (metaData == null) {
+            if (metaData == null) { 
                 throw new RuntimeException("No existe la entidad " + entityName);
             }
             CRUDBusinessProcess crudBusinessProcess = crudBusinessProcessFactory.getBusinessProcess(metaData.getType());
@@ -293,9 +293,11 @@ public class CrudRestController {
             if (metaData == null) {
                 throw new RuntimeException("No existe la entidad " + entityName);
             }
+            
+            CRUDService crudservice = crudServiceFactory.getService(metaData.getType());
+            Object entity = crudservice.read(dataSession, id);
+            
             CRUDBusinessProcess crudBusinessProcess = crudBusinessProcessFactory.getBusinessProcess(metaData.getType());
-            Object entity = crudBusinessProcess.read(new CRUDBusinessProcess.ReadArguments(principal, dataSession, id));
-
             boolean deletedSuccess = crudBusinessProcess.delete(new CRUDBusinessProcess.DeleteArguments(principal, dataSession, entity));
             if (deletedSuccess == false) {
                 throw new BusinessException("No existe la entidad a borrar");
