@@ -47,7 +47,7 @@ public class AuthorizationInterceptorImplURL implements AuthorizationInterceptor
         boolean isAuthorized=authorizationManager.authorized(principal,secureResourceTypeName, secureResource, permissionName, arguments, dataSession);
         
         if (isAuthorized==false) {
-            throw new BusinessSecurityException("No tienes acceso a la URL:"+secureResource);
+            throw new BusinessSecurityException("El usuario " + principal + " no tiene acceso a la URL:"+secureResource);
         } 
     } 
     
