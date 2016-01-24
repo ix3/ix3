@@ -55,8 +55,8 @@ public class JsonReaderImplEntityJackson implements JsonReader {
     @Autowired
     private CRUDServiceFactory crudServiceFactory;
     @Autowired
-    private MetaDataFactory metaDataFactory; 
-    
+    private MetaDataFactory metaDataFactory;
+
     public JsonReaderImplEntityJackson(Class clazz) {
         this.clazz = clazz;
         objectMapper = new ObjectMapper();
@@ -69,9 +69,8 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
     @Override
     public Object fromJson(String json, DataSession dataSession) {
-        return fromJson(json, null,dataSession);
+        return fromJson(json, null, dataSession);
     }
-
 
     @Override
     public Object fromJson(String json, BeanMapper beanMapper, DataSession dataSession) {
@@ -84,25 +83,23 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
             MetaData metaData = metaDataFactory.getMetaData(clazz);
 
-            Object entity = readEntity(jsonObj, metaData, "", beanMapper,dataSession);
+            Object entity = readEntity(jsonObj, metaData, "", beanMapper, dataSession);
 
             return entity;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
 
-    }    
-    
+    }
 
     /**
-     * Crea una entidad completa en base a la clave primaria y a los datos que
-     * vienen desde JSON
+     * Crea una entidad completa en base a la clave primaria y a los datos que vienen desde JSON
      *
      * @param jsonObj Los datos JSON
      * @param metaData Los metadatos de la entidad a tranformar
      * @return El Objeto Entidad
      */
-    private Object readEntity(Object jsonObj, MetaData metaData, String path, BeanMapper beanMapper,DataSession dataSession) {
+    private Object readEntity(Object jsonObj, MetaData metaData, String path, BeanMapper beanMapper, DataSession dataSession) {
         try {
 
             Object entity;
@@ -111,11 +108,15 @@ public class JsonReaderImplEntityJackson implements JsonReader {
 
             if (emptyKey(getValueFromBean(jsonObj, metaData.getPrimaryKeyPropertyName())) == false) {
                 //Si hay clave primaria es que hay que leerla entidad pq ya existe
-                entity = crudService.read(dataSession, (Serializable) getValueFromBean(jsonObj, metaData.getPrimaryKeyPropertyName()));
+                Serializable primaryKey = (Serializable) getValueFromBean(jsonObj, metaData.getPrimaryKeyPropertyName());
+                entity = crudService.read(dataSession, primaryKey);
+                if (entity == null) {
+                    throw new RuntimeException("No existe la entidad " + metaData.getType() + " con PK:" + primaryKey);
+                }
             } else {
                 //No hay clave primaria , así que creamos una nueva fila
 
-                entity = crudService.create(dataSession,null);
+                entity = crudService.create(dataSession, null);
             }
 
             populateEntity(entity, jsonObj, metaData, path, beanMapper, dataSession);
@@ -127,8 +128,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
     }
 
     /**
-     * Lee una entidad de la base de datos en función de su clave primaria o de
-     * alguna de sus claves naturales
+     * Lee una entidad de la base de datos en función de su clave primaria o de alguna de sus claves naturales
      *
      * @param propertyValue
      * @param propertyMetaData
@@ -208,7 +208,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         if (metaData == null) {
             throw new IllegalArgumentException("El argumento 'metaData' no puede ser null");
         }
-        
+
         for (String propertyName : metaData.getPropertiesMetaData().keySet()) {
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(propertyName);
 
@@ -263,7 +263,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                 switch (propertyMetaData.getCollectionType()) {
                     case List:
                     case Set: {
-                        if (beanMapper.isExpandInProperty(absolutePropertyName)) { 
+                        if (beanMapper.isExpandInProperty(absolutePropertyName)) {
                             Collection rawCollection = (Collection) getValueFromBean(jsonObj, propertyName);
                             Collection currentCollection = (Collection) getValueFromBean(entity, propertyName);
 
@@ -284,7 +284,7 @@ public class JsonReaderImplEntityJackson implements JsonReader {
                             //Añadimos los elementos que vienen desde JSON
                             if (rawCollection != null) {
                                 for (Object rawValue : rawCollection) {
-                                    Object value = readEntity(rawValue, propertyMetaData, absolutePropertyName, beanMapper, dataSession);
+                                    Object value = readForeingEntity(rawValue, propertyMetaData, dataSession);
                                     currentCollection.add(value);
                                 }
                             }
@@ -407,5 +407,5 @@ public class JsonReaderImplEntityJackson implements JsonReader {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }  
+    }
 }
