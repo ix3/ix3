@@ -29,6 +29,7 @@ public class RuleGroupPredefined {
     public static class PreUpdateOrDelete {}
     
     
+    public static class PostCreate {}
     public static class PostRead {}
     public static class PostInsert {}
     public static class PostUpdate {}

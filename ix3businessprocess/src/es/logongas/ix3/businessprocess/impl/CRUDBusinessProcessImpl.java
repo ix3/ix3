@@ -82,6 +82,10 @@ public class CRUDBusinessProcessImpl<EntityType, PrimaryKeyType extends Serializ
     @Override
     public EntityType create(CreateArguments createArguments) throws BusinessException {
         EntityType entity = getCRUDService().create(createArguments.dataSession, createArguments.initialProperties);
+        
+        RuleContext<EntityType> ruleContext = new RuleContextImpl(entity, null, createArguments.principal);
+        fireRules(ruleContext, RuleGroupPredefined.PostCreate.class);
+        
         return entity;
     }
 
@@ -92,7 +96,7 @@ public class CRUDBusinessProcessImpl<EntityType, PrimaryKeyType extends Serializ
 
         RuleContext<EntityType> ruleContext = new RuleContextImpl(entity, null, readArguments.principal);
         fireRules(ruleContext, RuleGroupPredefined.PostRead.class);
-        
+
         return entity;
     }
 
