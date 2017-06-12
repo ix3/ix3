@@ -120,7 +120,10 @@ public class ControllerHelper {
     ;
 
     private void noCache(HttpServletResponse httpServletResponse) {
-        httpServletResponse.setHeader("Cache-Control", "no-cache");
+        httpServletResponse.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        httpServletResponse.addHeader("Cache-Control", "post-check=0, pre-check=0");
+        httpServletResponse.setHeader("Pragma", "no-cache");
+        httpServletResponse.setHeader("Expires", "Sat, 6 May 1995 12:00:00 GMT");        
     }
 
     private void cache(HttpServletResponse httpServletResponse) {
