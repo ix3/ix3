@@ -591,7 +591,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                     sbOrder.append(",");
                 }
 
-                sbOrder.append(order.getFieldName());
+                sbOrder.append(" e."+order.getFieldName());
 
                 switch (order.getOrderDirection()) {
                     case Ascending:
