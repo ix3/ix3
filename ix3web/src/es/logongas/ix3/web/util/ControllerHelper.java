@@ -101,13 +101,14 @@ public class ControllerHelper {
                     httpServletResponse.getWriter().println(jsonOut);
                     break;
                 case OCTET_STREAM:
+                case PDF:
                     if (httpResult.getResult() instanceof byte[]) {
                         byte[] result = (byte[]) httpResult.getResult();
                         httpServletResponse.getOutputStream().write(result);
                         httpServletResponse.getOutputStream().flush();
                         httpServletResponse.getOutputStream().close();
                     } else {
-                        throw new RuntimeException("Si el MimeType es OCTET_STREAM es tipo de result debe ser byte[] pero es " + httpResult.getResult().getClass().getName());
+                        throw new RuntimeException("Si el MimeType es " + mimeType + " es tipo de result debe ser byte[] pero es " + httpResult.getResult().getClass().getName());
                     }
 
                     break;
