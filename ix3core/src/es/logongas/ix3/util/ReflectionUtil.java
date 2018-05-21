@@ -226,6 +226,10 @@ public class ReflectionUtil {
         try {
             Object value;
 
+            if (obj==null) {
+                return null;
+            }
+            
             BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
 
@@ -267,7 +271,7 @@ public class ReflectionUtil {
 
             return value;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException(propertyName,ex);
         }
     }
 
