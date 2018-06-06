@@ -437,12 +437,12 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         sbFrom.append(" FROM " + getEntityMetaData().getType().getSimpleName() + " e ");
 
         if (filters != null) {
-            List<JoinProperty> joinsProperties = getJoinsProperties(filters);
+            JoinProperties joinsProperties = getJoinsProperties(filters);
             for (int i = 0; i < joinsProperties.size(); i++) {
                 JoinProperty joinProperty = joinsProperties.get(i);
 
-                if ((joinProperty.join != null) && (joinProperty.join.isEmpty() == false)) {
-                    sbFrom.append(" JOIN e." + joinProperty.join + " j" + i + " ");
+                if ((joinProperty.joinTable != null) && (joinProperty.joinTable.isEmpty() == false) && (joinProperty.repeatJoinTable==false)) {
+                    sbFrom.append(" JOIN e." + joinProperty.joinTable + " " + joinProperty.tableAlias);
                 }
 
             }
@@ -464,7 +464,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
         if (filters != null) {
 
-            List<JoinProperty> joinsProperties = getJoinsProperties(filters);
+            JoinProperties joinsProperties = getJoinsProperties(filters);
 
             for (int i = 0; i < filters.size(); i++) {
                 Filter filter = filters.get(i);
@@ -472,8 +472,8 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
                 Object value = filter.getValue();
                 String propertyName;
-                if ((joinProperty.join != null) && (joinProperty.join.isEmpty() == false)) {
-                    propertyName = "j" + i + "." + joinProperty.property;
+                if ((joinProperty.joinTable != null) && (joinProperty.joinTable.isEmpty() == false)) {
+                    propertyName = joinProperty.tableAlias + "." + joinProperty.propertyName;
                 } else {
                     propertyName = "e." + filter.getPropertyName();
                 }
@@ -522,13 +522,24 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     }
 
-    private List<JoinProperty> getJoinsProperties(Filters filters) {
-        List<JoinProperty> joinsProperties = new ArrayList<JoinProperty>();
+    private JoinProperties getJoinsProperties(Filters filters) {
+        JoinProperties joinsProperties = new JoinProperties();
 
         for (int i = 0; i < filters.size(); i++) {
             Filter filter = filters.get(i);
 
-            joinsProperties.add(getJoinProperty(filter));
+            JoinProperty joinProperty=getJoinProperty(filter);
+            JoinProperty previousJoinProperty=joinsProperties.findPropertyByJoinTable(joinProperty.joinTable);
+            if (previousJoinProperty!=null) {
+                joinProperty.repeatJoinTable=true;
+                joinProperty.tableAlias=previousJoinProperty.tableAlias;
+            } else {
+                joinProperty.repeatJoinTable=false;
+                joinProperty.tableAlias="j"+i;
+            }
+            
+            
+            joinsProperties.add(joinProperty);
         }
 
         return joinsProperties;
@@ -554,11 +565,11 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         }
 
         if (splitIndex == -1) {
-            joinProperty.join = null;
-            joinProperty.property = filter.getPropertyName();
+            joinProperty.joinTable = null;
+            joinProperty.propertyName = filter.getPropertyName();
         } else {
-            joinProperty.join = StringUtils.collectionToDelimitedString(Arrays.asList(Arrays.copyOfRange(propertiesName, 0, splitIndex + 1)), ".");
-            joinProperty.property = StringUtils.collectionToDelimitedString(Arrays.asList(Arrays.copyOfRange(propertiesName, splitIndex + 1, propertiesName.length)), ".");
+            joinProperty.joinTable = StringUtils.collectionToDelimitedString(Arrays.asList(Arrays.copyOfRange(propertiesName, 0, splitIndex + 1)), ".");
+            joinProperty.propertyName = StringUtils.collectionToDelimitedString(Arrays.asList(Arrays.copyOfRange(propertiesName, splitIndex + 1, propertiesName.length)), ".");
         }
 
         return joinProperty;
@@ -570,9 +581,27 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
      */
     private class JoinProperty {
 
-        String join;
-        String property;
+        boolean repeatJoinTable;
+        String tableAlias;
+        String joinTable;
+        String propertyName;
     }
+    
+    private class JoinProperties extends ArrayList<JoinProperty> {
+    
+        
+        public JoinProperty findPropertyByJoinTable(String joinTable) {
+            
+            for(JoinProperty joinProperty:this) {
+                if ((joinProperty.joinTable!=null) && (joinProperty.joinTable.equalsIgnoreCase(joinTable))) {
+                    return joinProperty;
+                }
+            }
+            
+            return null;
+        }
+    }
+    
 
     /**
      * Obtener la parte de la SQL relativa al ORDER BY
