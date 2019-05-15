@@ -25,5 +25,6 @@ limitations under the License.
     <bean class="es.logongas.ix3.core.database.impl.ConstraintViolationTranslatorImplMySQL" />   
     <bean name="sessionFactory" class="es.logongas.ix3.core.hibernate.HibernateUtil" factory-method="getSessionFactory"  />
     <bean name="sessionFactory2" class="es.logongas.ix3.core.hibernate.HibernateUtil" factory-method="getSessionFactory2"  />
-    <bean class="es.logongas.ix3.core.database.impl.DatabaseMigrationImplFlywayHibernate" />     
+    <bean class="es.logongas.ix3.core.database.impl.DatabaseMigrationImplFlywayHibernate" />  
+    <bean class="es.logongas.ix3.core.conversion.impl.ConversionImpl" />       
 </beans>
