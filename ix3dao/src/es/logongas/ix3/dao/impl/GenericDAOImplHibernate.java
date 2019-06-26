@@ -512,6 +512,18 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                     } else {
                         sqlWhere.append("(" + propertyName + " IS NOT NULL) ");
                     }
+                } else if (filterOperator == FilterOperator.deq) {
+                    sqlWhere.append(toOnlyDate(propertyName )+ " = " + toOnlyDate(":bind" + i) + "");
+                } else if (filterOperator == FilterOperator.dne) {
+                    sqlWhere.append(toOnlyDate(propertyName )+ " != " + toOnlyDate(":bind" + i) + "");
+                } else if (filterOperator == FilterOperator.dgt) {
+                    sqlWhere.append(toOnlyDate(propertyName )+ " > " + toOnlyDate(":bind" + i) + "");
+                } else if (filterOperator == FilterOperator.dge) {
+                    sqlWhere.append(toOnlyDate(propertyName )+ " >= " + toOnlyDate(":bind" + i) + "");
+                } else if (filterOperator == FilterOperator.dlt) {
+                    sqlWhere.append(toOnlyDate(propertyName )+ " < " + toOnlyDate(":bind" + i) + "");
+                } else if (filterOperator == FilterOperator.dle) {
+                    sqlWhere.append(toOnlyDate(propertyName )+ " <= " + toOnlyDate(":bind" + i) + "");
                 } else {
                     throw new RuntimeException("El nombre del operador no es válido:" + filterOperator);
                 }
@@ -522,6 +534,12 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
 
     }
 
+    private String toOnlyDate(String parameter) {
+        //Es específico de MySQL
+        return "DATE_FORMAT(" + parameter + ", '%Y-%m-%d')";
+    }
+    
+    
     private JoinProperties getJoinsProperties(Filters filters) {
         JoinProperties joinsProperties = new JoinProperties();
 

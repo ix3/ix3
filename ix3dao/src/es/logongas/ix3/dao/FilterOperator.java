@@ -20,15 +20,21 @@ package es.logongas.ix3.dao;
  * @author logongas
  */
 public enum FilterOperator {
-    eq,
-    ne,
-    gt,
-    ge,
-    lt,
-    le,
-    like,
-    llike,
-    liker,
-    lliker,
-    isnull
+    eq,//Equal
+    ne,//Not Equal
+    gt,//Greater Than
+    ge,//Greater than or Equal
+    lt,//Less than
+    le,//Less than or Equal
+    like,//like
+    llike,//  like % valor ( % left)
+    liker,// like valor %  ( % right)
+    lliker,// like % valor % ( % left and  right)
+    isnull,// is null
+    deq,//Date only Equal
+    dne,//Date only Not Equal
+    dgt,//Date only Greater Than
+    dge,//Date only Greater than or Equal
+    dlt,//Date only Less than
+    dle //Date only Less than or Equal
 }
