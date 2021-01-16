@@ -30,12 +30,14 @@ public class PageImpl<T> implements Page<T> {
     private final int pageSize;
     private final int pageNumber;
     private final int totalPages;
+    private final long totalRows;
 
-    public PageImpl(List<T> content, int pageSize, int pageNumber, int totalPages) {
+    public PageImpl(List<T> content, int pageSize, int pageNumber, int totalPages, long totalRows) {
         this.content = content;
         this.pageSize = pageSize;
         this.pageNumber = pageNumber;
         this.totalPages = totalPages;
+        this.totalRows = totalRows;
     }
 
     /**
@@ -68,6 +70,11 @@ public class PageImpl<T> implements Page<T> {
     @Override
     public int getTotalPages() {
         return totalPages;
+    }
+
+    @Override
+    public long getTotalRows() {
+        return totalRows;
     }
     
 }

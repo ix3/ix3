@@ -383,7 +383,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
                 setParameters(queryDatos, new HashMap<Object, Object>(getParameterFromFilters(filters)));
                 List results = queryDatos.list();
 
-                page = new PageImpl(results, Integer.MAX_VALUE, 0, 1);
+                page = new PageImpl(results, Integer.MAX_VALUE, 0, 1,results.size());
             } else {
                 page = getPaginatedQuery(dataSession, sqlData, sqlCount, pageRequest, getParameterFromFilters(filters));
             }
@@ -757,7 +757,7 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             totalPages = (int) (Math.ceil(((double) totalCount) / ((double) pageRequest.getPageSize())));
         }
 
-        Page<EntityType> page = new PageImpl<EntityType>(results, pageRequest.getPageSize(), pageRequest.getPageNumber(), totalPages);
+        Page<EntityType> page = new PageImpl<EntityType>(results, pageRequest.getPageSize(), pageRequest.getPageNumber(), totalPages,totalCount);
 
         return page;
     }

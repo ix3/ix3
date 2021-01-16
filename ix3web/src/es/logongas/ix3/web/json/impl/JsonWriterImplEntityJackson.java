@@ -113,6 +113,7 @@ public class JsonWriterImplEntityJackson implements JsonWriter {
             jsonMap.put("pageSize", page.getPageSize());
             jsonMap.put("pageNumber", page.getPageNumber());
             jsonMap.put("totalPages", page.getTotalPages());
+            jsonMap.put("totalRows", page.getTotalRows());
             jsonMap.put("content", getJsonObjectFromObject(page.getContent(), expands, path, beanMapper));
             return jsonMap;
         } else {

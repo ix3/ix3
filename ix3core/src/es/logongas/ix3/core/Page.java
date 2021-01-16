@@ -28,4 +28,5 @@ public interface Page<T> {
     int getPageSize();
     int getPageNumber();
     int getTotalPages();
+    long getTotalRows();    
 }
