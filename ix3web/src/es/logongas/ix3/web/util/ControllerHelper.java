@@ -30,6 +30,7 @@ import es.logongas.ix3.web.json.beanmapper.Expands;
 import es.logongas.ix3.web.security.WebSessionSidStorage;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Enumeration;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -135,7 +136,7 @@ public class ControllerHelper {
         httpServletResponse.setHeader("Cache-Control", "private, no-transform, max-age=" + expireSeconds);
     }
 
-    public void exceptionToHttpResponse(Throwable throwable, HttpServletResponse httpServletResponse) {
+    public void exceptionToHttpResponse(Throwable throwable, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         try {
             BusinessException businessException = ExceptionUtil.getBusinessExceptionFromThrowable(throwable);
 
@@ -144,7 +145,7 @@ public class ControllerHelper {
                 if (businessException instanceof BusinessSecurityException) {
                     BusinessSecurityException businessSecurityException = (BusinessSecurityException) businessException;
                     Log log = LogFactory.getLog(ControllerHelper.class);
-                    log.info(businessSecurityException);
+                    log.warn("BusinessSecurityException:"+businessException.getLocalizedMessage()+getHttpRequestAsString(httpServletRequest),businessException);
 
                     httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     httpServletResponse.setContentType("text/plain; charset=UTF-8");
@@ -167,7 +168,7 @@ public class ControllerHelper {
 
             } else {
                 Log log = LogFactory.getLog(ControllerHelper.class);
-                log.error("Falló la llamada al servidor:", throwable);
+                log.error("Falló la llamada al servidor:"+throwable.getLocalizedMessage()+getHttpRequestAsString(httpServletRequest), throwable);
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 httpServletResponse.setContentType("text/plain");
@@ -199,4 +200,29 @@ public class ControllerHelper {
         return endPoint.getBeanMapper();
 
     }
+    
+    private String getHttpRequestAsString(HttpServletRequest httpServletRequest) {
+        StringBuilder sb=new StringBuilder();
+        sb.append("\n\tURL=");
+        sb.append(httpServletRequest.getRequestURI()); 
+        sb.append("\n\tQueryString=");
+        sb.append(httpServletRequest.getQueryString()); 
+        sb.append("\n\tMethod=");
+        sb.append(httpServletRequest.getMethod()); 
+        sb.append("\n\tHeaders:");
+        Enumeration<String> names=httpServletRequest.getHeaderNames();
+        while (names.hasMoreElements()) {
+            String name=names.nextElement();
+            String value=httpServletRequest.getHeader(name);
+
+            sb.append("\n\t\t");
+            sb.append(name);
+            sb.append("=");
+            sb.append(value);
+         
+        }
+
+        return sb.toString();
+    }
+    
 }

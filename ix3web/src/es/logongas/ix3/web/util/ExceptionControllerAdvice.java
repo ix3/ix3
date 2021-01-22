@@ -15,7 +15,7 @@
  */
 package es.logongas.ix3.web.util;
 
-import es.logongas.ix3.web.util.ControllerHelper;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -32,8 +32,8 @@ public class ExceptionControllerAdvice {
     protected ControllerHelper controllerHelper;
 
     @ExceptionHandler(Exception.class)
-    public void exception(Exception ex, HttpServletResponse httpServletResponse) {
-        controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+    public void exception(Exception ex, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
     }
 
 

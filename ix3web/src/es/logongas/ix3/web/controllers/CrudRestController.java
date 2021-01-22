@@ -104,7 +104,7 @@ public class CrudRestController {
 
             controllerHelper.objectToHttpResponse(httpResult, httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
 
     }
@@ -152,7 +152,7 @@ public class CrudRestController {
             controllerHelper.objectToHttpResponse(new HttpResult(metaData.getType(), result), httpServletRequest, httpServletResponse);
 
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
     }
 
@@ -169,7 +169,7 @@ public class CrudRestController {
             Object entity = crudBusinessProcess.read(new CRUDBusinessProcess.ReadArguments(principal, dataSession, id));
             controllerHelper.objectToHttpResponse(new HttpResult(metaData.getType(), entity), httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
 
     }
@@ -203,7 +203,7 @@ public class CrudRestController {
             controllerHelper.objectToHttpResponse(new HttpResult(metaData.getPropertiesMetaData().get(child).getType(), childData), httpServletRequest, httpServletResponse);
 
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
 
     }
@@ -225,7 +225,7 @@ public class CrudRestController {
             controllerHelper.objectToHttpResponse(new HttpResult(metaData.getType(), entity), httpServletRequest, httpServletResponse);
 
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
 
     }
@@ -250,7 +250,7 @@ public class CrudRestController {
             controllerHelper.objectToHttpResponse(new HttpResult(metaData.getType(), resultEntity, HttpServletResponse.SC_CREATED), httpServletRequest, httpServletResponse);
 
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
 
     }
@@ -281,7 +281,7 @@ public class CrudRestController {
             controllerHelper.objectToHttpResponse(new HttpResult(metaData.getType(), resultEntity), httpServletRequest, httpServletResponse);
 
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
     }
 
@@ -306,7 +306,7 @@ public class CrudRestController {
             controllerHelper.objectToHttpResponse(new HttpResult(null), httpServletRequest, httpServletResponse);
 
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
     }
 

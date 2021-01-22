@@ -51,7 +51,7 @@ public class SessionRestController {
             Principal outPrincipal=webSessionBusinessProcess.createWebSession(new WebSessionBusinessProcess.CreateWebSessionArguments(principal, dataSession, httpServletRequest, httpServletResponse));
             controllerHelper.objectToHttpResponse(new HttpResult(outPrincipal),  httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
         
     }
@@ -65,7 +65,7 @@ public class SessionRestController {
             Principal outPrincipal=webSessionBusinessProcess.getCurrentWebSession(new WebSessionBusinessProcess.GetCurrentWebSessionArguments(principal, dataSession,httpServletRequest, httpServletResponse));
             controllerHelper.objectToHttpResponse(new HttpResult(outPrincipal),  httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
 
     }
@@ -79,7 +79,7 @@ public class SessionRestController {
             webSessionBusinessProcess.deleteCurrentWebSession(new WebSessionBusinessProcess.DeleteCurrentWebSessionArguments(principal, dataSession,httpServletRequest,httpServletResponse));
             controllerHelper.objectToHttpResponse(new HttpResult(null),  httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }        
 
     }

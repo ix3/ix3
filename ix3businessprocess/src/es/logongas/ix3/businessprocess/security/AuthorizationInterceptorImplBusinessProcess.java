@@ -64,7 +64,7 @@ public class AuthorizationInterceptorImplBusinessProcess implements Authorizatio
             isAuthorized = authorizationManager.authorized(principal, SECURE_RESOURCE_TYPE_NAME, secureResource, PERMISSION_NAME_PRE_EXECUTE, arguments, dataSession);
         }
         if (isAuthorized == false) {
-            throw new BusinessSecurityException("El usuario " + principal + " no tiene permiso para ejecutar el proceso de negocio:" + secureResource);
+            throw new BusinessSecurityException("El usuario " + principal.getSid() + " no tiene permiso para ejecutar el proceso de negocio:" + secureResource);
         }
 
     }
@@ -87,7 +87,7 @@ public class AuthorizationInterceptorImplBusinessProcess implements Authorizatio
             isAuthorized = authorizationManager.authorized(principal, SECURE_RESOURCE_TYPE_NAME, secureResource, PERMISSION_NAME_POST_EXECUTE, arguments, dataSession);
         }
         if (isAuthorized == false) {
-            throw new BusinessSecurityException("El usuario " + principal + " no tiene permiso para devolver los datos del proceso de negocio:" + secureResource);
+            throw new BusinessSecurityException("El usuario " + principal.getSid() + " no tiene permiso para devolver los datos del proceso de negocio:" + secureResource);
         }
 
     }

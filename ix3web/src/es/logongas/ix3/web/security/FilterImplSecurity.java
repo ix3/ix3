@@ -67,7 +67,7 @@ public final class FilterImplSecurity implements Filter {
             }
             filterChain.doFilter(servletRequest, servletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
     }
 

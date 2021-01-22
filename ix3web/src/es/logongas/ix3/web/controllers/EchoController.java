@@ -54,7 +54,7 @@ public class EchoController {
             EchoResult echoResult=echoBusinessProcess.echoDataBase(new EchoBusinessProcess.EchoDataBaseArguments(principal, dataSession, id));
             controllerHelper.objectToHttpResponse(new HttpResult(echoResult),  httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }      
 
     }
@@ -68,7 +68,7 @@ public class EchoController {
             EchoResult echoResult=echoBusinessProcess.echoNoDataBase(new EchoBusinessProcess.EchoNoDataBaseArguments(principal, dataSession));
             controllerHelper.objectToHttpResponse(new HttpResult(echoResult), httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletResponse);
+            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
 
     }
