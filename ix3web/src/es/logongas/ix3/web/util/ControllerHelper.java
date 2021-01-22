@@ -54,7 +54,9 @@ public class ControllerHelper {
     private WebSessionSidStorage webSessionSidStorage;
     @Autowired
     private AuthenticationManager authenticationManager;
-
+    @Autowired
+    private ExceptionNotify exceptionNotify;
+    
     public Expands getRequestExpands(HttpServletRequest httpServletRequest) {
         return Expands.createExpandsWithoutAsterisk(httpServletRequest.getParameter(PARAMETER_EXPAND));
     }
@@ -145,8 +147,9 @@ public class ControllerHelper {
                 if (businessException instanceof BusinessSecurityException) {
                     BusinessSecurityException businessSecurityException = (BusinessSecurityException) businessException;
                     Log log = LogFactory.getLog(ControllerHelper.class);
-                    log.warn("BusinessSecurityException:"+businessException.getLocalizedMessage()+getHttpRequestAsString(httpServletRequest),businessException);
-
+                    log.warn("BusinessSecurityException:"+businessException.getLocalizedMessage()+getHttpRequestAsString(httpServletRequest),businessSecurityException);
+                    exceptionNotify.notify("BusinessSecurityException:"+businessException.getLocalizedMessage(), getHttpRequestAsString(httpServletRequest), businessSecurityException);
+                    
                     httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     httpServletResponse.setContentType("text/plain; charset=UTF-8");
                     if (businessSecurityException.getBusinessMessages().size() > 0) {
@@ -169,6 +172,7 @@ public class ControllerHelper {
             } else {
                 Log log = LogFactory.getLog(ControllerHelper.class);
                 log.error("Falló la llamada al servidor:"+throwable.getLocalizedMessage()+getHttpRequestAsString(httpServletRequest), throwable);
+                exceptionNotify.notify("Exception:"+throwable.getLocalizedMessage(), getHttpRequestAsString(httpServletRequest), throwable);
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 httpServletResponse.setContentType("text/plain");
