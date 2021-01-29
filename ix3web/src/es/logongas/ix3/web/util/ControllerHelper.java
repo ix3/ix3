@@ -21,7 +21,6 @@ import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.security.authorization.BusinessSecurityException;
 import es.logongas.ix3.util.ExceptionUtil;
-import es.logongas.ix3.web.controllers.CrudRestController;
 import es.logongas.ix3.web.controllers.endpoint.EndPoint;
 import es.logongas.ix3.web.controllers.endpoint.EndPointsFactory;
 import es.logongas.ix3.web.json.JsonFactory;
@@ -158,7 +157,7 @@ public class ControllerHelper {
                     try {
                         exceptionNotify.notify(businessSecurityException, httpServletRequest);
                     } catch (Exception ex) {
-
+                        log.error("Fallo la notificación:"+ex.getLocalizedMessage(),ex);
                     } 
 
                 } else  {
@@ -179,7 +178,7 @@ public class ControllerHelper {
                 try {
                     exceptionNotify.notify(throwable, httpServletRequest);
                 } catch (Exception ex) {
-
+                    log.error("Fallo la notificación:"+ex.getLocalizedMessage(),ex);
                 } 
                 
             }
@@ -197,7 +196,7 @@ public class ControllerHelper {
             try {
                 exceptionNotify.notify(throwable, httpServletRequest);
             } catch (Exception ex) {
-                
+                log.error("Fallo la notificación:"+ex.getLocalizedMessage(),ex);
             } 
             
         }
