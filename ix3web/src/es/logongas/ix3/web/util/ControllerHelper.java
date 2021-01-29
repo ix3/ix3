@@ -21,6 +21,7 @@ import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.security.authorization.BusinessSecurityException;
 import es.logongas.ix3.util.ExceptionUtil;
+import es.logongas.ix3.web.controllers.CrudRestController;
 import es.logongas.ix3.web.controllers.endpoint.EndPoint;
 import es.logongas.ix3.web.controllers.endpoint.EndPointsFactory;
 import es.logongas.ix3.web.json.JsonFactory;
@@ -28,7 +29,6 @@ import es.logongas.ix3.web.json.JsonWriter;
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import es.logongas.ix3.web.json.beanmapper.Expands;
 import es.logongas.ix3.web.security.WebSessionSidStorage;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Enumeration;
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +43,10 @@ import org.springframework.web.servlet.HandlerMapping;
  * @author logongas
  */
 public class ControllerHelper {
-
+    
+    private static final Log log = LogFactory.getLog(ControllerHelper.class);
+    
+    
     private final String PARAMETER_EXPAND = "$expand";
 
     @Autowired
@@ -146,47 +149,60 @@ public class ControllerHelper {
 
                 if (businessException instanceof BusinessSecurityException) {
                     BusinessSecurityException businessSecurityException = (BusinessSecurityException) businessException;
-                    Log log = LogFactory.getLog(ControllerHelper.class);
-                    log.warn("BusinessSecurityException:"+businessException.getLocalizedMessage()+getHttpRequestAsString(httpServletRequest),businessSecurityException);
-                    exceptionNotify.notify("BusinessSecurityException:"+businessException.getLocalizedMessage(), getHttpRequestAsString(httpServletRequest), businessSecurityException);
+                    log.warn("BusinessSecurityException:"+businessException.getLocalizedMessage());
+                    
                     
                     httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     httpServletResponse.setContentType("text/plain; charset=UTF-8");
-                    if (businessSecurityException.getBusinessMessages().size() > 0) {
-                        httpServletResponse.getWriter().println(businessSecurityException.getBusinessMessages().get(0).getMessage());
-                    }
-                } else if (businessException instanceof BusinessException) {
+                    
+                    try {
+                        exceptionNotify.notify(businessSecurityException, httpServletRequest);
+                    } catch (Exception ex) {
 
+                    } 
+
+                } else  {
                     httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     httpServletResponse.setContentType("application/json; charset=UTF-8");
                     httpServletResponse.getWriter().println(jsonFactory.getJsonWriter().toJson(businessException.getBusinessMessages()));
-                } else {
-                    Log log = LogFactory.getLog(ControllerHelper.class);
-                    log.error("Es un tipo de businessException desconocida:", businessException);
-
-                    httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    httpServletResponse.setContentType("text/plain");
-                    businessException.printStackTrace(httpServletResponse.getWriter());
                 }
 
             } else {
-                Log log = LogFactory.getLog(ControllerHelper.class);
                 log.error("Falló la llamada al servidor:"+throwable.getLocalizedMessage()+getHttpRequestAsString(httpServletRequest), throwable);
-                exceptionNotify.notify("Exception:"+throwable.getLocalizedMessage(), getHttpRequestAsString(httpServletRequest), throwable);
+
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 httpServletResponse.setContentType("text/plain");
-                throwable.printStackTrace(httpServletResponse.getWriter());
+                httpServletResponse.getWriter().println(throwable.getClass().getName());
+                
+                
+                try {
+                    exceptionNotify.notify(throwable, httpServletRequest);
+                } catch (Exception ex) {
+
+                } 
+                
             }
-        } catch (IOException ioException) {
-            Log log = LogFactory.getLog(ControllerHelper.class);
-            log.error("Falló al devolver la excepción por la HttpResponse:", ioException);
+        } catch (Exception exception) {
+            log.error("Falló al gestionar la excepción:"+ getHttpRequestAsString(httpServletRequest) , exception);
             log.error("Excepcion original:", throwable);
+
             httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+            try {
+                exceptionNotify.notify(exception, httpServletRequest);
+            } catch (Exception ex) {
+                
+            }
+            try {
+                exceptionNotify.notify(throwable, httpServletRequest);
+            } catch (Exception ex) {
+                
+            } 
+            
         }
 
     }
-
     public EndPoint getEndPoint(HttpServletRequest httpServletRequest) {
         String path = (String) httpServletRequest.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         String method = httpServletRequest.getMethod();

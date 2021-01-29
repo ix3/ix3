@@ -15,10 +15,12 @@
  */
 package es.logongas.ix3.web.util;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  *
  * @author logongas
  */
 public interface ExceptionNotify {
-    void notify(String title,String body,Throwable throwable);
+    void notify(Throwable throwable,HttpServletRequest httpServletRequest);
 }
