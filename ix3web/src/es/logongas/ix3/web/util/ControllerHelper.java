@@ -30,10 +30,13 @@ import es.logongas.ix3.web.json.beanmapper.Expands;
 import es.logongas.ix3.web.security.WebSessionSidStorage;
 import java.io.Serializable;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.HandlerMapping;
 
@@ -43,7 +46,8 @@ import org.springframework.web.servlet.HandlerMapping;
  */
 public class ControllerHelper {
     
-    private static final Log log = LogFactory.getLog(ControllerHelper.class);
+    private static final Logger logException = LogManager.getLogger(Exception.class);
+    private static final Logger logBusinessSecurityException = LogManager.getLogger(BusinessSecurityException.class);
     
     
     private final String PARAMETER_EXPAND = "$expand";
@@ -148,7 +152,7 @@ public class ControllerHelper {
 
                 if (businessException instanceof BusinessSecurityException) {
                     BusinessSecurityException businessSecurityException = (BusinessSecurityException) businessException;
-                    log.warn("BusinessSecurityException:"+businessException.getLocalizedMessage());
+                    logBusinessSecurityException.warn(getMapMessage(null,httpServletRequest),businessSecurityException);
                     
                     
                     httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -157,7 +161,7 @@ public class ControllerHelper {
                     try {
                         exceptionNotify.notify(businessSecurityException, httpServletRequest);
                     } catch (Exception ex) {
-                        log.error("Fallo la notificación:"+ex.getLocalizedMessage(),ex);
+                        logException.error("Fallo la notificación",ex);
                     } 
 
                 } else  {
@@ -167,7 +171,7 @@ public class ControllerHelper {
                 }
 
             } else {
-                log.error("Falló la llamada al servidor:"+throwable.getLocalizedMessage()+getHttpRequestAsString(httpServletRequest), throwable);
+                logException.error(getMapMessage("Falló la llamada al servidor",httpServletRequest), throwable);
 
 
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -178,27 +182,14 @@ public class ControllerHelper {
                 try {
                     exceptionNotify.notify(throwable, httpServletRequest);
                 } catch (Exception ex) {
-                    log.error("Fallo la notificación:"+ex.getLocalizedMessage(),ex);
+                    logException.error("Fallo la notificación",ex);
                 } 
                 
             }
         } catch (Exception exception) {
-            log.error("Falló al gestionar la excepción:"+ getHttpRequestAsString(httpServletRequest) , exception);
-            log.error("Excepcion original:", throwable);
-
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
-            try {
-                exceptionNotify.notify(exception, httpServletRequest);
-            } catch (Exception ex) {
-                
-            }
-            try {
-                exceptionNotify.notify(throwable, httpServletRequest);
-            } catch (Exception ex) {
-                log.error("Fallo la notificación:"+ex.getLocalizedMessage(),ex);
-            } 
+            logException.error("Falló al gestionar la excepción", exception);
             
+            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); 
         }
 
     }
@@ -220,28 +211,24 @@ public class ControllerHelper {
 
     }
     
-    private String getHttpRequestAsString(HttpServletRequest httpServletRequest) {
-        StringBuilder sb=new StringBuilder();
-        sb.append("\n\tURL=");
-        sb.append(httpServletRequest.getRequestURI()); 
-        sb.append("\n\tQueryString=");
-        sb.append(httpServletRequest.getQueryString()); 
-        sb.append("\n\tMethod=");
-        sb.append(httpServletRequest.getMethod()); 
-        sb.append("\n\tHeaders:");
+    private MapMessage getMapMessage(String msg,HttpServletRequest httpServletRequest) {
+        Map<String,String> map=new HashMap<>();
+        
+        map.put("message",msg);
+        map.put("RemoteAddr",httpServletRequest.getRemoteAddr());
+        map.put("RequestURI",httpServletRequest.getRequestURI());
+        map.put("RequestURL",httpServletRequest.getRequestURL()+"");
+        map.put("QueryString",httpServletRequest.getQueryString());
+        map.put("Method",httpServletRequest.getMethod());
         Enumeration<String> names=httpServletRequest.getHeaderNames();
         while (names.hasMoreElements()) {
             String name=names.nextElement();
             String value=httpServletRequest.getHeader(name);
 
-            sb.append("\n\t\t");
-            sb.append(name);
-            sb.append("=");
-            sb.append(value);
-         
+            map.put("Header_"+name,value);
         }
-
-        return sb.toString();
+        
+        return new MapMessage(map);
     }
     
 }

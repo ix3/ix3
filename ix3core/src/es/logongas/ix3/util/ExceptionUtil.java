@@ -48,4 +48,27 @@ public class ExceptionUtil {
         }
 
     }
+    
+    /**
+     * Obtiene la excepción original
+     *
+     * @param ex
+     * @return
+     */
+    static public Throwable getOriginalExceptionFromThrowable(Throwable ex) {
+
+        if (ex==null) {
+            return null;
+        }
+        
+        if (ex.getCause() == null) {
+            return ex;
+        } else if (ex == ex.getCause()) {
+            return ex;
+        } else {
+            return getOriginalExceptionFromThrowable(ex.getCause());
+        }
+
+    }
+    
 }
