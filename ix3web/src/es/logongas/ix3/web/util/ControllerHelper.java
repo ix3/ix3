@@ -46,6 +46,7 @@ import org.springframework.web.servlet.HandlerMapping;
  */
 public class ControllerHelper {
     
+    private static final Logger log = LogManager.getLogger(ControllerHelper.class);
     private static final Logger logException = LogManager.getLogger(Exception.class);
     private static final Logger logBusinessSecurityException = LogManager.getLogger(BusinessSecurityException.class);
     
@@ -162,6 +163,8 @@ public class ControllerHelper {
                     if (httpServletResponse.isCommitted()==false) {
                         httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
                         httpServletResponse.setContentType("text/plain; charset=UTF-8");
+                    } else {
+                        log.warn("La respuesta BusinessSecurityException isCommitted=true");
                     }
                     
 
@@ -170,6 +173,8 @@ public class ControllerHelper {
                         httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         httpServletResponse.setContentType("application/json; charset=UTF-8");
                         httpServletResponse.getWriter().println(jsonFactory.getJsonWriter().toJson(businessException.getBusinessMessages()));
+                    } else {
+                        log.warn("La respuesta BusinessException isCommitted=true");
                     }
                 }
 
@@ -185,6 +190,8 @@ public class ControllerHelper {
                     httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     httpServletResponse.setContentType("text/plain");
                     httpServletResponse.getWriter().println(throwable.getClass().getName());
+                } else {
+                    log.warn("La respuesta Exception isCommitted=true");
                 }
                 
             }
@@ -193,6 +200,8 @@ public class ControllerHelper {
             
             if (httpServletResponse.isCommitted()==false) {
                 httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); 
+            } else {
+                log.warn("La respuesta gestion Exception isCommitted=true");
             }
         }
 
