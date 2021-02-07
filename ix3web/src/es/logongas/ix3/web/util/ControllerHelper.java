@@ -153,43 +153,47 @@ public class ControllerHelper {
                 if (businessException instanceof BusinessSecurityException) {
                     BusinessSecurityException businessSecurityException = (BusinessSecurityException) businessException;
                     logBusinessSecurityException.warn(getMapMessage(null,httpServletRequest),businessSecurityException);
-                    
-                    
-                    httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    httpServletResponse.setContentType("text/plain; charset=UTF-8");
-                    
                     try {
                         exceptionNotify.notify(businessSecurityException, httpServletRequest);
                     } catch (Exception ex) {
                         logException.error("Fallo la notificación",ex);
                     } 
+                    
+                    if (httpServletResponse.isCommitted()==false) {
+                        httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        httpServletResponse.setContentType("text/plain; charset=UTF-8");
+                    }
+                    
 
                 } else  {
-                    httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    httpServletResponse.setContentType("application/json; charset=UTF-8");
-                    httpServletResponse.getWriter().println(jsonFactory.getJsonWriter().toJson(businessException.getBusinessMessages()));
+                    if (httpServletResponse.isCommitted()==false) {
+                        httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        httpServletResponse.setContentType("application/json; charset=UTF-8");
+                        httpServletResponse.getWriter().println(jsonFactory.getJsonWriter().toJson(businessException.getBusinessMessages()));
+                    }
                 }
 
             } else {
                 logException.error(getMapMessage("Falló la llamada al servidor",httpServletRequest), throwable);
-
-
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                httpServletResponse.setContentType("text/plain");
-                httpServletResponse.getWriter().println(throwable.getClass().getName());
-                
-                
                 try {
                     exceptionNotify.notify(throwable, httpServletRequest);
                 } catch (Exception ex) {
                     logException.error("Fallo la notificación",ex);
-                } 
+                }
+
+                if (httpServletResponse.isCommitted()==false) {
+                    httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    httpServletResponse.setContentType("text/plain");
+                    httpServletResponse.getWriter().println(throwable.getClass().getName());
+                }
                 
             }
         } catch (Exception exception) {
-            logException.error("Falló al gestionar la excepción", exception);
+            logException.error(getMapMessage("Falló al gestionar la excepción",httpServletRequest), exception);
             
-            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); 
+            if (httpServletResponse.isCommitted()==false) {
+                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); 
+            }
         }
 
     }
