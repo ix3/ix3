@@ -19,8 +19,6 @@ import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.core.Principal;
-import es.logongas.ix3.security.authorization.BusinessSecurityException;
-import es.logongas.ix3.util.ExceptionUtil;
 import es.logongas.ix3.web.controllers.endpoint.EndPoint;
 import es.logongas.ix3.web.controllers.endpoint.EndPointsFactory;
 import es.logongas.ix3.web.json.JsonFactory;
@@ -29,14 +27,10 @@ import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import es.logongas.ix3.web.json.beanmapper.Expands;
 import es.logongas.ix3.web.security.WebSessionSidStorage;
 import java.io.Serializable;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.HandlerMapping;
 
@@ -47,9 +41,7 @@ import org.springframework.web.servlet.HandlerMapping;
 public class ControllerHelper {
     
     private static final Logger log = LogManager.getLogger(ControllerHelper.class);
-    private static final Logger logException = LogManager.getLogger(Exception.class);
-    private static final Logger logBusinessSecurityException = LogManager.getLogger(BusinessSecurityException.class);
-    
+ 
     
     private final String PARAMETER_EXPAND = "$expand";
 
@@ -61,9 +53,7 @@ public class ControllerHelper {
     private WebSessionSidStorage webSessionSidStorage;
     @Autowired
     private AuthenticationManager authenticationManager;
-    @Autowired
-    private ExceptionNotify exceptionNotify;
-    
+
     public Expands getRequestExpands(HttpServletRequest httpServletRequest) {
         return Expands.createExpandsWithoutAsterisk(httpServletRequest.getParameter(PARAMETER_EXPAND));
     }
@@ -145,67 +135,6 @@ public class ControllerHelper {
         httpServletResponse.setHeader("Cache-Control", "private, no-transform, max-age=" + expireSeconds);
     }
 
-    public void exceptionToHttpResponse(Throwable throwable, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        try {
-            BusinessException businessException = ExceptionUtil.getBusinessExceptionFromThrowable(throwable);
-
-            if (businessException != null) {
-
-                if (businessException instanceof BusinessSecurityException) {
-                    BusinessSecurityException businessSecurityException = (BusinessSecurityException) businessException;
-                    logBusinessSecurityException.warn(getMapMessage(null,httpServletRequest),businessSecurityException);
-                    try {
-                        exceptionNotify.notify(businessSecurityException, httpServletRequest);
-                    } catch (Exception ex) {
-                        logException.error("Fallo la notificación",ex);
-                    } 
-                    
-                    if (httpServletResponse.isCommitted()==false) {
-                        httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                        httpServletResponse.setContentType("text/plain; charset=UTF-8");
-                    } else {
-                        log.warn("La respuesta BusinessSecurityException isCommitted=true");
-                    }
-                    
-
-                } else  {
-                    if (httpServletResponse.isCommitted()==false) {
-                        httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        httpServletResponse.setContentType("application/json; charset=UTF-8");
-                        httpServletResponse.getWriter().println(jsonFactory.getJsonWriter().toJson(businessException.getBusinessMessages()));
-                    } else {
-                        log.warn("La respuesta BusinessException isCommitted=true");
-                    }
-                }
-
-            } else {
-                logException.error(getMapMessage("Falló la llamada al servidor",httpServletRequest), throwable);
-                try {
-                    exceptionNotify.notify(throwable, httpServletRequest);
-                } catch (Exception ex) {
-                    logException.error("Fallo la notificación",ex);
-                }
-
-                if (httpServletResponse.isCommitted()==false) {
-                    httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    httpServletResponse.setContentType("text/plain");
-                    httpServletResponse.getWriter().println(throwable.getClass().getName());
-                } else {
-                    log.warn("La respuesta Exception isCommitted=true");
-                }
-                
-            }
-        } catch (Exception exception) {
-            logException.error(getMapMessage("Falló al gestionar la excepción",httpServletRequest), exception);
-            
-            if (httpServletResponse.isCommitted()==false) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); 
-            } else {
-                log.warn("La respuesta gestion Exception isCommitted=true");
-            }
-        }
-
-    }
     public EndPoint getEndPoint(HttpServletRequest httpServletRequest) {
         String path = (String) httpServletRequest.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         String method = httpServletRequest.getMethod();
@@ -222,26 +151,6 @@ public class ControllerHelper {
 
         return endPoint.getBeanMapper();
 
-    }
-    
-    private MapMessage getMapMessage(String msg,HttpServletRequest httpServletRequest) {
-        Map<String,String> map=new HashMap<>();
-        
-        map.put("message",msg);
-        map.put("RemoteAddr",httpServletRequest.getRemoteAddr());
-        map.put("RequestURI",httpServletRequest.getRequestURI());
-        map.put("RequestURL",httpServletRequest.getRequestURL()+"");
-        map.put("QueryString",httpServletRequest.getQueryString());
-        map.put("Method",httpServletRequest.getMethod());
-        Enumeration<String> names=httpServletRequest.getHeaderNames();
-        while (names.hasMoreElements()) {
-            String name=names.nextElement();
-            String value=httpServletRequest.getHeader(name);
-
-            map.put("Header_"+name,value);
-        }
-        
-        return new MapMessage(map);
     }
     
 }

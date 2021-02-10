@@ -22,6 +22,7 @@ import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.web.util.HttpResult;
 import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.DataSessionFactory;
+import es.logongas.ix3.web.util.exception.ExceptionHelper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -44,6 +45,7 @@ public class EchoController {
     @Autowired private EchoBusinessProcess echoBusinessProcess;
     @Autowired private DataSessionFactory dataSessionFactory;
     @Autowired private ControllerHelper controllerHelper;
+    @Autowired private ExceptionHelper exceptionHelper;
 
     @RequestMapping(value = {"/$echo/{id}"}, method = RequestMethod.GET)
     public void echoDataBase(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final @PathVariable("id") long id)  {
@@ -54,7 +56,7 @@ public class EchoController {
             EchoResult echoResult=echoBusinessProcess.echoDataBase(new EchoBusinessProcess.EchoDataBaseArguments(principal, dataSession, id));
             controllerHelper.objectToHttpResponse(new HttpResult(echoResult),  httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
+            exceptionHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }      
 
     }
@@ -68,7 +70,7 @@ public class EchoController {
             EchoResult echoResult=echoBusinessProcess.echoNoDataBase(new EchoBusinessProcess.EchoNoDataBaseArguments(principal, dataSession));
             controllerHelper.objectToHttpResponse(new HttpResult(echoResult), httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
+            exceptionHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
 
     }

@@ -21,6 +21,7 @@ import es.logongas.ix3.dao.DataSessionFactory;
 import es.logongas.ix3.core.Principal;
 import es.logongas.ix3.web.businessprocess.WebSessionBusinessProcess;
 import es.logongas.ix3.web.util.ControllerHelper;
+import es.logongas.ix3.web.util.exception.ExceptionHelper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,7 @@ public class SessionRestController {
     
     @Autowired private DataSessionFactory dataSessionFactory;
     @Autowired private ControllerHelper controllerHelper;
+    @Autowired private ExceptionHelper exceptionHelper;
     
     
     @RequestMapping(value = {"/session"}, method = RequestMethod.POST, headers = "Accept=application/json")
@@ -51,7 +53,7 @@ public class SessionRestController {
             Principal outPrincipal=webSessionBusinessProcess.createWebSession(new WebSessionBusinessProcess.CreateWebSessionArguments(principal, dataSession, httpServletRequest, httpServletResponse));
             controllerHelper.objectToHttpResponse(new HttpResult(outPrincipal),  httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
+            exceptionHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
         
     }
@@ -65,7 +67,7 @@ public class SessionRestController {
             Principal outPrincipal=webSessionBusinessProcess.getCurrentWebSession(new WebSessionBusinessProcess.GetCurrentWebSessionArguments(principal, dataSession,httpServletRequest, httpServletResponse));
             controllerHelper.objectToHttpResponse(new HttpResult(outPrincipal),  httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
+            exceptionHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
 
     }
@@ -79,7 +81,7 @@ public class SessionRestController {
             webSessionBusinessProcess.deleteCurrentWebSession(new WebSessionBusinessProcess.DeleteCurrentWebSessionArguments(principal, dataSession,httpServletRequest,httpServletResponse));
             controllerHelper.objectToHttpResponse(new HttpResult(null),  httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
+            exceptionHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }        
 
     }

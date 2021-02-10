@@ -15,15 +15,12 @@
  */
 package es.logongas.ix3.web.security;
 
-import es.logongas.ix3.core.BusinessException;
 import es.logongas.ix3.dao.DataSession;
 import es.logongas.ix3.dao.DataSessionFactory;
-import es.logongas.ix3.security.authentication.AuthenticationManager;
 import es.logongas.ix3.core.Principal;
-import es.logongas.ix3.web.json.JsonFactory;
 import es.logongas.ix3.web.util.ControllerHelper;
+import es.logongas.ix3.web.util.exception.ExceptionHelper;
 import java.io.IOException;
-import java.io.Serializable;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -48,6 +45,8 @@ public final class FilterImplSecurity implements Filter {
     @Autowired
     ControllerHelper controllerHelper;
     @Autowired
+    ExceptionHelper exceptionHelper;    
+    @Autowired
     DataSessionFactory dataSessionFactory;
 
     @Override
@@ -67,7 +66,7 @@ public final class FilterImplSecurity implements Filter {
             }
             filterChain.doFilter(servletRequest, servletResponse);
         } catch (Exception ex) {
-            controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
+            exceptionHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
         }
     }
 

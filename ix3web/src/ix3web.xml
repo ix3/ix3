@@ -36,8 +36,9 @@ limitations under the License.
     <bean class="es.logongas.ix3.web.businessprocess.impl.WebSessionBusinessProcessImpl" />
     <bean class="es.logongas.ix3.web.businessprocess.impl.SchemaBusinessProcessImpl" />
     <bean class="es.logongas.ix3.web.util.ControllerHelper" />
-    <bean class="es.logongas.ix3.web.util.ExceptionControllerAdvice" />
-    
+    <bean class="es.logongas.ix3.web.util.exception.ExceptionControllerAdvice" />
+    <bean class="es.logongas.ix3.web.util.exception.ExceptionHelper" />
+
     
     
     <!-- Usar una de las siguientes clases para decidir como se guarda la sesión -->

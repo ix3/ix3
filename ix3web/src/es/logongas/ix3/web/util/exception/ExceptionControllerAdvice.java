@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.util;
+package es.logongas.ix3.web.util.exception;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,11 +29,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class ExceptionControllerAdvice {
 
     @Autowired
-    protected ControllerHelper controllerHelper;
+    protected ExceptionHelper exceptionHelper;
 
     @ExceptionHandler(Exception.class)
     public void exception(Exception ex, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        controllerHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
+        exceptionHelper.exceptionToHttpResponse(ex, httpServletRequest, httpServletResponse);
     }
 
 
