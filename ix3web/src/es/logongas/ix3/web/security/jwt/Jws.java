@@ -32,9 +32,10 @@ public interface Jws {
      * Verifica si un token es correcto
      * @param jwsCompactSerialization El token Jws en base64
      * @param secretKey La contraseña para verificarlos
+     * @param maxMinutesValid El número máximo de minutos que el Jws es válido desde su creacion
      * @return Retorna 'true' si es válido
      */
-    boolean verifyJwsCompactSerialization(String jwsCompactSerialization, byte[] secretKey);
+    boolean verifyJwsCompactSerialization(String jwsCompactSerialization, byte[] secretKey,int maxMinutesValid);
     
     /**
      * Obtiene el copntenido del token Jws <strong>aunque la firma no sea válida</strong>

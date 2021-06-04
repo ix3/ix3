@@ -63,6 +63,7 @@ public final class FilterImplSecurity implements Filter {
             try (DataSession dataSession = dataSessionFactory.getDataSession()) {
                 Principal principal = controllerHelper.getPrincipal(httpServletRequest, httpServletResponse, dataSession);
                 authorizationInterceptorImplURL.checkAuthorized(principal, httpServletRequest, httpServletResponse, dataSession);
+                controllerHelper.refreshSession(httpServletRequest, httpServletResponse, dataSession);
             }
             filterChain.doFilter(servletRequest, servletResponse);
         } catch (Exception ex) {

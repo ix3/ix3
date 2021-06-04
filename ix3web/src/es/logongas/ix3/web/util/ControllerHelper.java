@@ -70,6 +70,15 @@ public class ControllerHelper {
 
         return principal;
     }
+    
+    public void refreshSession(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, DataSession dataSession) throws BusinessException {
+
+        Serializable sid = webSessionSidStorage.getSid(httpServletRequest, httpServletResponse);
+        if (sid != null) {
+            webSessionSidStorage.setSid(httpServletRequest, httpServletResponse, sid);
+        }
+
+    }
 
     public void objectToHttpResponse(HttpResult httpResult, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
         httpServletResponse.setStatus(httpResult.getHttpSuccessStatus());

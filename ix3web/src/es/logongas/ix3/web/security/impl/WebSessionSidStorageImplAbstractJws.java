@@ -42,6 +42,8 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
     private String jwsCookieName = "XSRF-TOKEN";
     private String jwsHeaderName = "X-XSRF-TOKEN";
     private boolean checkHeader = false;
+    private int maxAgeCookieMinutes = 15;    
+    private int maxAgeJwsMinutes = 15;    
 
     @Override
     public void setSid(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Serializable sid) {
@@ -49,6 +51,7 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
 
         String jwsCompact = jws.getJwsCompactSerialization(payload, getSecretKey(sid));
         Cookie cookie = new Cookie(jwsCookieName, jwsCompact);
+        cookie.setMaxAge(60*maxAgeCookieMinutes);
         cookie.setHttpOnly(false);
         cookie.setPath(httpServletRequest.getContextPath() + "/");
         httpServletResponse.addCookie(cookie);
@@ -100,7 +103,7 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
             return null;
         }
 
-        if ((jws.verifyJwsCompactSerialization(jwsCompactCookie, secretKey) == false)) {
+        if ((jws.verifyJwsCompactSerialization(jwsCompactCookie, secretKey, maxAgeJwsMinutes) == false)) {
             return null;
         }
 
@@ -201,6 +204,34 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
      */
     public void setCheckHeader(boolean checkHeader) {
         this.checkHeader = checkHeader;
+    }
+
+    /**
+     * @return the maxAgeCookieMinutes
+     */
+    public int getMaxAgeCookieMinutes() {
+        return maxAgeCookieMinutes;
+    }
+
+    /**
+     * @param maxAgeCookieMinutes the maxAgeCookieMinutes to set
+     */
+    public void setMaxAgeCookieMinutes(int maxAgeCookieMinutes) {
+        this.maxAgeCookieMinutes = maxAgeCookieMinutes;
+    }
+
+    /**
+     * @return the maxAgeJwsMinutes
+     */
+    public int getMaxAgeJwsMinutes() {
+        return maxAgeJwsMinutes;
+    }
+
+    /**
+     * @param maxAgeJwsMinutes the maxAgeJwsMinutes to set
+     */
+    public void setMaxAgeJwsMinutes(int maxAgeJwsMinutes) {
+        this.maxAgeJwsMinutes = maxAgeJwsMinutes;
     }
 
 }
