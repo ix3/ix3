@@ -134,7 +134,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve,getEntityType()));
+        } catch (org.hibernate.exception.DataException de) {
+            try {
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
+                }
+            } catch (Exception exc) {
+                log.error("Falló al hacer un rollback", de);
+            }
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(de,getEntityType()));            
         } catch (RuntimeException ex) {
             try {
                 if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
@@ -188,7 +197,17 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve,getEntityType()));
+        } catch (org.hibernate.exception.DataException de) {
+            try {
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
+                }
+            } catch (Exception exc) {
+                log.error("Falló al hacer un rollback", de);
+            }
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(de,getEntityType()));            
+            
         } catch (RuntimeException ex) {
             try {
                 if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
@@ -219,7 +238,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
-            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve,getEntityType()));
+        } catch (org.hibernate.exception.DataException de) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(de,getEntityType()));            
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -236,7 +257,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
-            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve,getEntityType()));
+        } catch (org.hibernate.exception.DataException de) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(de,getEntityType()));
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -258,7 +281,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
-            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve,getEntityType()));
+        } catch (org.hibernate.exception.DataException de) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(de,getEntityType()));
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -280,7 +305,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
-            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve,getEntityType()));
+        } catch (org.hibernate.exception.DataException de) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(de,getEntityType()));
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -328,7 +355,16 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
             } catch (Exception exc) {
                 log.error("Falló al hacer un rollback", exc);
             }
-            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve,getEntityType()));
+        } catch (org.hibernate.exception.DataException de) {
+            try {
+                if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
+                    transactionManager.rollback(dataSession);
+                }
+            } catch (Exception exc) {
+                log.error("Falló al hacer un rollback", de);
+            }
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(de,getEntityType()));             
         } catch (RuntimeException ex) {
             try {
                 if ((transactionManager.isActive(dataSession) == true) && (isActivePreviousTransaction == false)) {
@@ -392,7 +428,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         } catch (javax.validation.ConstraintViolationException cve) {
             throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
         } catch (org.hibernate.exception.ConstraintViolationException cve) {
-            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve));
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(cve,getEntityType()));
+        } catch (org.hibernate.exception.DataException de) {
+            throw new BusinessException(exceptionTranslator.getBusinessMessages(de,getEntityType()));            
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {

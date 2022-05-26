@@ -18,10 +18,14 @@ package es.logongas.ix3.dao.impl;
 import es.logongas.ix3.core.annotations.Label;
 import es.logongas.ix3.core.BusinessMessage;
 import es.logongas.ix3.core.database.ConstraintViolationTranslator;
+import es.logongas.ix3.dao.metadata.MetaData;
+import es.logongas.ix3.dao.metadata.MetaDataFactory;
+import es.logongas.ix3.dao.metadata.MetaType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Path;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +41,12 @@ public class ExceptionTranslator {
 
     @Autowired
     ConstraintViolationTranslator constraintViolationTranslator;
+    
+    @Autowired
+    MetaDataFactory metaDataFactory;
 
     public List<BusinessMessage> getBusinessMessages(javax.validation.ConstraintViolationException cve) {
-        List<BusinessMessage> businessMessages = new ArrayList<BusinessMessage>();
+        List<BusinessMessage> businessMessages = new ArrayList<>();
 
         for (ConstraintViolation constraintViolation : cve.getConstraintViolations()) {
             String propertyName;
@@ -54,8 +61,8 @@ public class ExceptionTranslator {
         return businessMessages;
     }
 
-    public List<BusinessMessage> getBusinessMessages(org.hibernate.exception.ConstraintViolationException cve) {
-        List<BusinessMessage> businessMessages = new ArrayList<BusinessMessage>();
+    public List<BusinessMessage> getBusinessMessages(org.hibernate.exception.ConstraintViolationException cve,Class entityType) {
+        List<BusinessMessage> businessMessages = new ArrayList<>();
         BusinessMessage businessMessage;
 
         String message;
@@ -77,14 +84,48 @@ public class ExceptionTranslator {
         if (constraintViolation == null) {
             throw cve;
         } else {
-            businessMessage = new BusinessMessage(constraintViolation.getMessage());
+            MetaData metaData=metaDataFactory.getMetaData(entityType);
+            String propertyName=getPropertyNameFromDataBasePropertyName(metaData,constraintViolation.getPropertyName());
+            
+            businessMessage = new BusinessMessage(propertyName,constraintViolation.getMessage());
         }
 
         businessMessages.add(businessMessage);
 
         return businessMessages;
     }
+    public List<BusinessMessage> getBusinessMessages(org.hibernate.exception.DataException de,Class entityType) {
+        List<BusinessMessage> businessMessages = new ArrayList<>();
+        BusinessMessage businessMessage;
+        String message;
+        int errorCode;
+        String sqlState;
 
+        if (de.getSQLException() != null) {
+            message = de.getSQLException().getLocalizedMessage();
+            errorCode = de.getSQLException().getErrorCode();
+            sqlState = de.getSQLException().getSQLState();
+        } else {
+            message = de.getLocalizedMessage();
+            errorCode = de.getErrorCode();
+            sqlState = de.getSQLState();
+        }
+
+        es.logongas.ix3.core.database.ConstraintViolation constraintViolation = constraintViolationTranslator.translate(message, errorCode, sqlState);
+
+        if (constraintViolation == null) {
+            throw de;
+        } else {
+            MetaData metaData=metaDataFactory.getMetaData(entityType);
+            String propertyName=getPropertyNameFromDataBasePropertyName(metaData,constraintViolation.getPropertyName());
+            
+            businessMessage = new BusinessMessage(propertyName,constraintViolation.getMessage());
+        }
+
+        businessMessages.add(businessMessage);
+
+        return businessMessages;
+    }
     private String getPropertyNameFromPath(Class clazz, Path path) {
         StringBuilder sb = new StringBuilder();
         if (path != null) {
@@ -124,6 +165,29 @@ public class ExceptionTranslator {
 
     }
 
+    private String getPropertyNameFromDataBasePropertyName(MetaData metaData, String dataBasePropertyName) {
+
+        Set<String> propertyNames=metaData.getPropertiesMetaData().keySet();
+        for (String propertyName:propertyNames) {
+            MetaData metaDataProperty=metaData.getPropertyMetaData(propertyName);
+            
+            if (propertyName.equalsIgnoreCase(dataBasePropertyName)) {
+                return metaDataProperty.getLabel();
+            } else if ((metaDataProperty.isCollection()==false) && (metaDataProperty.getMetaType()==MetaType.Component)) {
+                String realPropertyName=getPropertyNameFromDataBasePropertyName(metaDataProperty,dataBasePropertyName);
+                
+                if (realPropertyName!=null) {
+                    return realPropertyName;
+                }
+            }
+        }
+        
+        return null;
+        
+    }
+    
+    
+    
     private ClassAndLabel getSingleCaption(Class clazz, String fieldName) {
         ClassAndLabel clazzAndLabelField;
         ClassAndLabel clazzAndLabelMethod;

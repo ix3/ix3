@@ -39,12 +39,21 @@ public class ConstraintViolationTranslatorImplMySQL implements ConstraintViolati
 
                 return new ConstraintViolation(propertyName, value,ConstraintViolation.Type.DuplicateEntry);
             } else {
-                //Si el mensaje no tiene el formato que conocemos no pasa nada
-                //retornamos el propio mensaje.
-                return new ConstraintViolation(null,message);
+                return new ConstraintViolation(null,null,ConstraintViolation.Type.DuplicateEntry);
             }
         } else if ((errorCode == 1451) && (sqlState.equals("23000"))) {
             return new ConstraintViolation(null, null,ConstraintViolation.Type.CannotDeleteByForeignKeyConstraint);
+        } else if ((errorCode == 1406) && (sqlState.equals("22001"))) {
+            Pattern pattern = Pattern.compile("Data truncation: Data too long for column '(.*)' at row (.*)");
+
+            Matcher matcher = pattern.matcher(message);
+            if (matcher.matches()) {
+                String propertyName =matcher.group(1);
+
+                return new ConstraintViolation(propertyName, null,ConstraintViolation.Type.DataTooLong);
+            } else {
+                return new ConstraintViolation(null,null,ConstraintViolation.Type.DataTooLong);
+            }           
         } else {
             return null;
         }
