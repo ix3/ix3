@@ -83,8 +83,14 @@ public class AuthorizationInterceptorImplBusinessProcess implements Authorizatio
         PostArguments arguments = new PostArguments(getMethodArguments(joinPoint), result);
 
         boolean isAuthorized;
-        try (DataSession dataSession = dataSessionFactory.getDataSession()) {
-            isAuthorized = authorizationManager.authorized(principal, SECURE_RESOURCE_TYPE_NAME, secureResource, PERMISSION_NAME_POST_EXECUTE, arguments, dataSession);
+        
+        if (result==null) {
+            //Si no hay resultado seguro que está autorizado
+            isAuthorized=true;
+        } else {
+            try (DataSession dataSession = dataSessionFactory.getDataSession()) {
+                isAuthorized = authorizationManager.authorized(principal, SECURE_RESOURCE_TYPE_NAME, secureResource, PERMISSION_NAME_POST_EXECUTE, arguments, dataSession);
+            }
         }
         if (isAuthorized == false) {
             throw new BusinessSecurityException("El usuario " + principal + " no tiene permiso para devolver los datos del proceso de negocio:" + secureResource);
