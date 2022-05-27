@@ -86,6 +86,21 @@ public class MetaDataImplHibernate implements MetaData {
     }
 
     @Override
+    public String toString() {
+        String strEntityType;
+        if (this.entityType!=null) {
+            strEntityType=this.entityType.getName();
+        } else {
+            strEntityType="NOClass";
+        }
+        
+        return strEntityType+":"+this.propertyName;
+        
+    }
+
+    
+    
+    @Override
     public Class getType() {
         if (isCollection()) {
             return ((org.hibernate.type.CollectionType) type).getElementType((SessionFactoryImplementor) this.sessionFactory).getReturnedClass();

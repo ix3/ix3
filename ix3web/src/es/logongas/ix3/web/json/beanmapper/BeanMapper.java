@@ -104,7 +104,7 @@ public final class BeanMapper {
 
     public boolean isDeleteInProperty(String propertyNameDelete) {
         for (String propertyName : inDeleteProperties) {
-            if (propertyName.equals(propertyNameDelete)) {
+            if (propertyNameDelete.startsWith(propertyName)) {
                 return true;
             }
         }
@@ -114,7 +114,7 @@ public final class BeanMapper {
 
     public boolean isDeleteOutProperty(String propertyNameDelete) {
         for (String propertyName : outDeleteProperties) {
-            if (propertyName.equals(propertyNameDelete)) {
+            if (propertyNameDelete.startsWith(propertyName)) {
                 return true;
             }
         }

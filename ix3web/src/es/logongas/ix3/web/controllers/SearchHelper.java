@@ -35,6 +35,7 @@ import es.logongas.ix3.service.CRUDService;
 import es.logongas.ix3.service.CRUDServiceFactory;
 import es.logongas.ix3.util.ExceptionUtil;
 import es.logongas.ix3.util.ReflectionUtil;
+import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -46,6 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -54,6 +57,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class SearchHelper {
 
+    private static final Log log = LogFactory.getLog(SearchHelper.class);    
+    
     @Autowired
     private Conversion conversion;
     @Autowired
@@ -130,12 +135,20 @@ public class SearchHelper {
         return searchResponse;
     }
 
-    public Filters getFiltersSearchFromWebParameters(Map<String, String[]> parametersMap, MetaData metaData) {
+    public Filters getFiltersSearchFromWebParameters(Map<String, String[]> parametersMap, MetaData metaData,BeanMapper beanMapper) {
         Filters filters = new Filters();
         for (Map.Entry<String, String[]> entry : parametersMap.entrySet()) {
             String rawPropertyName = entry.getKey();
             Filter filter = getFilterFromPropertyName(rawPropertyName);
-
+            
+            //Comprobar que no estamos filtrando por una columna de la que no podemos obtener datos.
+            if (beanMapper!=null) {
+                if (beanMapper.isDeleteOutProperty(filter.getPropertyName())) {
+                    log.warn("Eliminado filtro '" + filter.getPropertyName() + "' en consulta de la entidad '" + metaData + "'");
+                    break;
+                }
+            }
+            
             MetaData propertyMetaData = metaData.getPropertiesMetaData().get(filter.getPropertyName());
             if (propertyMetaData != null) {
                 Class propertyType = propertyMetaData.getType();

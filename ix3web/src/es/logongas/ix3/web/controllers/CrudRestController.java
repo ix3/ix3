@@ -89,7 +89,7 @@ public class CrudRestController {
     private SearchHelper searchHelper;
     @Autowired
     private SchemaBusinessProcess schemaBusinessProcess;
-
+    
     @RequestMapping(value = {"{path}/{entityName}/" + PATH_SCHEMA}, method = RequestMethod.GET, produces = "application/json")
     public void schema(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable("entityName") String entityName) {
 
@@ -127,12 +127,13 @@ public class CrudRestController {
             SearchResponse searchResponse = searchHelper.getSearchResponse(httpServletRequest.getParameter(PARAMETER_DISTINCT));
             String namedSearch = httpServletRequest.getParameter(PARAMETER_NAMEDSEARCH);
             Map<String, String[]> parametersMap = httpServletRequest.getParameterMap();
-
+            BeanMapper beanMapper=controllerHelper.getBeanMapper(httpServletRequest);
+                    
             Object result;
             if ((namedSearch != null) && (namedSearch.trim().equals("") == false)) {
                 switch (searchHelper.getNamedSearchType(crudBusinessProcess, namedSearch)) {
                     case FILTER:
-                        Filters filters = searchHelper.getFiltersSearchFromWebParameters(parametersMap, metaData);
+                        Filters filters = searchHelper.getFiltersSearchFromWebParameters(parametersMap, metaData,beanMapper);
                         result = searchHelper.executeNamedSearchFilters(principal, dataSession, crudBusinessProcess, namedSearch, filters, pageRequest, orders, searchResponse);
 
                         break;
@@ -144,7 +145,7 @@ public class CrudRestController {
                         throw new RuntimeException("El tipo del name search es desconocido:" + searchHelper.getNamedSearchType(crudBusinessProcess, namedSearch));
                 }
             } else {
-                Filters filters = searchHelper.getFiltersSearchFromWebParameters(parametersMap, metaData);
+                Filters filters = searchHelper.getFiltersSearchFromWebParameters(parametersMap, metaData,beanMapper);
                 if (pageRequest == null) {
                     result = crudBusinessProcess.search(new CRUDBusinessProcess.SearchArguments(principal, dataSession, filters, orders, searchResponse));
                 } else {
