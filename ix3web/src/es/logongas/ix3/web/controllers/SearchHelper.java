@@ -145,7 +145,7 @@ public class SearchHelper {
             if (beanMapper!=null) {
                 if (beanMapper.isDeleteOutProperty(filter.getPropertyName())) {
                     log.warn("Eliminado filtro '" + filter.getPropertyName() + "' en consulta de la entidad '" + metaData + "'");
-                    break;
+                    continue;
                 }
             }
             
