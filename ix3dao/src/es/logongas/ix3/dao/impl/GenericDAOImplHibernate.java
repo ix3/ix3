@@ -610,6 +610,9 @@ public class GenericDAOImplHibernate<EntityType, PrimaryKeyType extends Serializ
         int splitIndex = -1;
         for (int i = 0; i < propertiesName.length; i++) {
             currentMetaData = currentMetaData.getPropertyMetaData(propertiesName[i]);
+            if (currentMetaData==null) {
+                throw new RuntimeException("No existe el campo " + propertiesName[i] + " en " + getEntityMetaData().getPropertyName());
+            }
             if (currentMetaData.isCollection() == true) {
 
                 if (splitIndex != -1) {
