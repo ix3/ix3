@@ -28,6 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.MapMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 
 /**
  *
@@ -76,6 +77,13 @@ public class ExceptionHelper {
                     }
                 }
 
+            } if (throwable instanceof HttpMediaTypeNotAcceptableException) {
+                if (httpServletResponse.isCommitted() == false) {
+                    httpServletResponse.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
+                    httpServletResponse.setContentType("text/plain; charset=UTF-8");
+                } else {
+                    log.warn("La respuesta HttpMediaTypeNotAcceptableException isCommitted=true");
+                }
             } else {
                 logException.error(getMapMessage("Falló la llamada al servidor", httpServletRequest), throwable);
                 try {
