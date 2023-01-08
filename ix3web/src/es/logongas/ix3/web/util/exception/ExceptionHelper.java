@@ -77,7 +77,7 @@ public class ExceptionHelper {
                     }
                 }
 
-            } if (throwable instanceof HttpMediaTypeNotAcceptableException) {
+            } else if (throwable instanceof HttpMediaTypeNotAcceptableException) {
                 if (httpServletResponse.isCommitted() == false) {
                     httpServletResponse.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
                     httpServletResponse.setContentType("text/plain; charset=UTF-8");
