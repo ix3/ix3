@@ -72,19 +72,24 @@ public class FactoryHelper<T> {
             fqcn = getFQCNImplInSpecificPackage(entityClass, domainBasePackageName, implBasePackageName);
             tClass = Class.forName(fqcn);
             t = (T) context.getAutowireCapableBeanFactory().createBean(tClass);
-        } catch (Exception ex) {
+        } catch (ClassNotFoundException ex) {
             //Si no existe probamos con la siguiente
             try {
                 fqcn = getFQCNImplInSamePackage(entityClass, implBasePackageName);
                 tClass = Class.forName(fqcn);
                 t = (T) context.getAutowireCapableBeanFactory().createBean(tClass);
-            } catch (Exception ex1) {
+            } catch (ClassNotFoundException ex1) {
                 try {
                     fqcn = getFQCNImplInSubPackage(entityClass, domainBasePackageName, implBasePackageName);
                     tClass = Class.forName(fqcn);
                     t = (T) context.getAutowireCapableBeanFactory().createBean(tClass);
-                } catch (Exception ex2) {
+                } catch (ClassNotFoundException ex2) {
 
+                    
+                    if (defaultImplClass==null) {
+                        throw new RuntimeException("No se ha encontrado la implementación y no había una implementación por defecto"+entityClass.getName());
+                    }
+                    
                     Object bean;
                     try {
                         bean = context.getAutowireCapableBeanFactory().createBean(defaultImplClass);
