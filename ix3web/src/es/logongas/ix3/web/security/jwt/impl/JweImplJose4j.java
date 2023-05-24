@@ -50,7 +50,7 @@ public class JweImplJose4j implements Jwe {
 
         if (now.after(maxDate)) {
             //Ha caducado el Token
-            throw new RuntimeException("El token no es válido:" + encryptedJwsCompactSerialization);
+            throw new RuntimeException("El token no es válido:" + encryptedJwsCompactSerialization + " creationDate="+creationDate + " maxMinutesValid="+maxMinutesValid+ " maxDate="+maxDate+ " now="+now);
         }
 
         return JwUtil.getPayloadFromStructuredPayload(structuredPayload);
