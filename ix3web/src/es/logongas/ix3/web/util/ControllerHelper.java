@@ -27,6 +27,10 @@ import es.logongas.ix3.web.json.beanmapper.BeanMapper;
 import es.logongas.ix3.web.json.beanmapper.Expands;
 import es.logongas.ix3.web.security.WebSessionSidStorage;
 import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
@@ -160,6 +164,48 @@ public class ControllerHelper {
 
         return endPoint.getBeanMapper();
 
+    }
+    
+    
+    public String getParameter(HttpServletRequest httpServletRequest,String parameterName) {
+
+        String valueOriginal=httpServletRequest.getParameter(parameterName);
+        String valueUTF8=changeCharset(valueOriginal,StandardCharsets.ISO_8859_1,StandardCharsets.UTF_8);
+
+        return valueUTF8;
+
+    }
+    
+    public Map<String, String[]> getParameterMap(HttpServletRequest httpServletRequest) {
+
+        Map<String, String[]> parametersUTF8=new HashMap<>();
+
+        Map<String, String[]> parametersOriginal=httpServletRequest.getParameterMap();
+
+        for (String parameterName:parametersOriginal.keySet()) {
+            String[] valuesOriginal=parametersOriginal.get(parameterName);
+            String[] valuesUTF8=new String[valuesOriginal.length];
+
+            for (int i=0;i<valuesOriginal.length;i++) {
+                valuesUTF8[i]=changeCharset(valuesOriginal[i],StandardCharsets.ISO_8859_1,StandardCharsets.UTF_8);
+            }
+
+
+            parametersUTF8.put(parameterName, valuesUTF8);
+        }
+
+
+        return parametersUTF8;
+
+    }
+    
+    
+    private String changeCharset(String s,Charset currentCharset,Charset newCharset) {
+        if (s==null) {
+            return null;
+        }
+        
+        return new String(s.getBytes(currentCharset),newCharset);
     }
     
 }

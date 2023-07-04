@@ -126,7 +126,7 @@ public class CrudRestController {
             PageRequest pageRequest = searchHelper.getPageRequest(httpServletRequest.getParameter(PARAMETER_PAGENUMBER), httpServletRequest.getParameter(PARAMETER_PAGESIZE));
             SearchResponse searchResponse = searchHelper.getSearchResponse(httpServletRequest.getParameter(PARAMETER_DISTINCT));
             String namedSearch = httpServletRequest.getParameter(PARAMETER_NAMEDSEARCH);
-            Map<String, String[]> parametersMap = httpServletRequest.getParameterMap();
+            Map<String, String[]> parametersMap = controllerHelper.getParameterMap(httpServletRequest);
             BeanMapper beanMapper=controllerHelper.getBeanMapper(httpServletRequest);
                     
             Object result;
@@ -221,7 +221,7 @@ public class CrudRestController {
                 throw new RuntimeException("No existe la entidad " + entityName);
             }
             CRUDBusinessProcess crudBusinessProcess = crudBusinessProcessFactory.getBusinessProcess(metaData.getType());
-            Map<String, String[]> parametersMap = httpServletRequest.getParameterMap();
+            Map<String, String[]> parametersMap = controllerHelper.getParameterMap(httpServletRequest);
 
             Map<String, Object> initialProperties = searchHelper.getPropertiesFromParameters(metaData, searchHelper.removeDollarParameters(parametersMap), dataSession);
             Object entity = crudBusinessProcess.create(new CRUDBusinessProcess.CreateArguments(principal, dataSession, initialProperties));
