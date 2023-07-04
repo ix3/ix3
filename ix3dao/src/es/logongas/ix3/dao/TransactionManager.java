@@ -16,13 +16,15 @@
 
 package es.logongas.ix3.dao;
 
+import es.logongas.ix3.core.BusinessException;
+
 /**
  * Interface para gestionar transacciones
  * @author Lorenzo Gonzalez
  */
 public interface TransactionManager {
-    public void begin(DataSession dataSession);
-    public void commit(DataSession dataSession);
-    public void rollback(DataSession dataSession);
+    public void begin(DataSession dataSession) throws BusinessException;
+    public void commit(DataSession dataSession) throws BusinessException;
+    public void rollback(DataSession dataSession) throws BusinessException;
     public boolean isActive(DataSession dataSession);    
 }

@@ -84,10 +84,16 @@ public class ExceptionTranslator {
         if (constraintViolation == null) {
             throw cve;
         } else {
-            MetaData metaData=metaDataFactory.getMetaData(entityType);
-            String propertyName=getPropertyNameFromDataBasePropertyName(metaData,constraintViolation.getPropertyName());
             
+            String propertyName;
+            if (entityType!=null) {
+                MetaData metaData=metaDataFactory.getMetaData(entityType);
+                propertyName=getPropertyNameFromDataBasePropertyName(metaData,constraintViolation.getPropertyName());
+            } else {
+                propertyName=constraintViolation.getPropertyName();
+            }
             businessMessage = new BusinessMessage(propertyName,constraintViolation.getMessage());
+
         }
 
         businessMessages.add(businessMessage);
@@ -116,8 +122,14 @@ public class ExceptionTranslator {
         if (constraintViolation == null) {
             throw de;
         } else {
-            MetaData metaData=metaDataFactory.getMetaData(entityType);
-            String propertyName=getPropertyNameFromDataBasePropertyName(metaData,constraintViolation.getPropertyName());
+            String propertyName;
+            
+            if (entityType!=null) {
+                MetaData metaData=metaDataFactory.getMetaData(entityType);
+                propertyName=getPropertyNameFromDataBasePropertyName(metaData,constraintViolation.getPropertyName());
+            } else {
+                propertyName=constraintViolation.getPropertyName();
+            }
             
             businessMessage = new BusinessMessage(propertyName,constraintViolation.getMessage());
         }
