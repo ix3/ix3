@@ -17,13 +17,10 @@ package es.logongas.ix3.security.model;
 
 import es.logongas.ix3.core.annotations.ValuesList;
 import es.logongas.ix3.security.authorization.AuthorizationType;
-import es.logongas.ix3.util.ScriptEvaluator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.expression.EvaluationContext;
@@ -48,10 +45,6 @@ public class ACE {
     private String conditionalExpression;
     private Integer priority;
     private String description;
-
-    private static final ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-    private static final ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
-    private static final ScriptEvaluator scriptEvaluator = new ScriptEvaluator(scriptEngine);
 
     private static final ExpressionParser expressionParser = new SpelExpressionParser();
 
@@ -152,30 +145,25 @@ public class ACE {
      * @return El resultado de evaluarlo
      */
     private boolean evaluateConditionalScript(ACE ace, Identity identity, String secureResourceName, Object arguments, List<String> mg) {
+        String fqcn=null;
         try {
+            
             if ((ace.getConditionalScript() == null) || (ace.getConditionalScript().trim().length() == 0)) {
                 throw new RuntimeException("No podemos evaluar un Script vacio del ACE:" + ace.getIdACE());
             }
 
-            String functionName = "conditionalScript_" + ace.getIdACE() + "_" + Math.abs(ace.getConditionalScript().hashCode());
-
-            //Si aun no se ha compilado el Script lo hacemos ahora
-            if (((Boolean) scriptEvaluator.evaluate("typeof " + functionName + "=='function'")) == false) {
-                scriptEvaluator.evaluate("function " + functionName + "(ace,identity,secureResourceName,arguments,mg) {" + ace.getConditionalScript() + "}");
-                log.debug("Compilando código del ACE " + ace.getIdACE());
+            fqcn=ace.getConditionalScript();
+            Object objScript = ConditionalScriptEvaluator.class.getClassLoader().loadClass(fqcn).newInstance();
+            if (!(objScript instanceof ConditionalScriptEvaluator)) {
+                throw new RuntimeException("La clase:" + fqcn + " no implementa el interfaz " + ConditionalScriptEvaluator.class.getName());
             }
+            ConditionalScriptEvaluator conditionalScriptEvaluator=(ConditionalScriptEvaluator)objScript;
+            
+            Boolean result=conditionalScriptEvaluator.evaluate(ace, identity, secureResourceName, arguments, mg);
 
-            Object result = scriptEvaluator.invokeFunction(functionName, ace, identity, secureResourceName, arguments, mg);
-            if (result == null) {
-                throw new RuntimeException("El Script no puede retornar null en el ACE:" + ace.getIdACE());
-            }
-            if (!(result instanceof Boolean)) {
-                throw new RuntimeException("El Script no es un boolean en el ACE:" + ace.getIdACE());
-            }
-
-            return (Boolean) result;
+            return result;
         } catch (Exception ex) {
-            throw new RuntimeException("ACE:" + ace.toString(), ex);
+            throw new RuntimeException("ACE:" + ace.toString()+",fqcn="+fqcn, ex);
         }
     }
 
@@ -454,4 +442,8 @@ public class ACE {
 
     }
 
+    public interface ConditionalScriptEvaluator {
+        boolean evaluate(ACE ace, Identity identity, String secureResourceName, Object arguments, List<String> mg);
+    }    
+    
 }
