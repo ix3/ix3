@@ -94,8 +94,8 @@ public class ExceptionHelper {
 
                 if (httpServletResponse.isCommitted() == false) {
                     httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    httpServletResponse.setContentType("text/plain");
-                    httpServletResponse.getWriter().println(throwable.getClass().getName());
+                    httpServletResponse.setContentType("text/plain;charset=utf-8");
+                    httpServletResponse.getWriter().println("El código ha generado una excepción en el servidor");
                 } else {
                     log.warn("La respuesta Exception isCommitted=true");
                 }
