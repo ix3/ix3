@@ -53,6 +53,7 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
         Cookie cookie = new Cookie(jwsCookieName, jwsCompact);
         cookie.setMaxAge(60*maxAgeCookieMinutes);
         cookie.setHttpOnly(true);
+        cookie.setSecure(true);        
         cookie.setPath(httpServletRequest.getContextPath() + "/");
         httpServletResponse.addCookie(cookie);
     }
@@ -61,6 +62,7 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
     public void deleteSid(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         Cookie cookie = new Cookie(jwsCookieName, "");
         cookie.setHttpOnly(true);
+        cookie.setSecure(true);        
         cookie.setPath(httpServletRequest.getContextPath() + "/");
         httpServletResponse.addCookie(cookie);
     }
