@@ -410,7 +410,7 @@ public class ReflectionUtil {
             }
 
             if (propertyDescriptorFind == null) {
-                throw new RuntimeException("No existe el propertyDescriptorFind de " + leftPropertyName);
+                throw new RuntimeException("No existe el propertyDescriptorFind de " + leftPropertyName + " en " + clazz.getName());
             }
 
             if (rigthPropertyName != null) {

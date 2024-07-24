@@ -19,17 +19,32 @@ package es.logongas.ix3.core;
 public class BusinessMessage {
     private final String propertyName;
     private final String message;
+    private final Class<? extends BusinessMessageUID> businessMessageUID;
 
     public BusinessMessage(String propertyName, String message) {
         this.propertyName = propertyName;
         this.message = message;
+        this.businessMessageUID=BusinessMessageUID.class;
     }
 
     public BusinessMessage(String message) {
         this.propertyName = null;
         this.message = message;
+        this.businessMessageUID=BusinessMessageUID.class;        
     }
 
+    
+    public BusinessMessage(String propertyName, String message,Class<? extends BusinessMessageUID> businessMessageUID) {
+        this.propertyName = propertyName;
+        this.message = message;
+        this.businessMessageUID=businessMessageUID;
+    }
+
+    public BusinessMessage(String message,Class<? extends BusinessMessageUID> businessMessageUID) {
+        this.propertyName = null;
+        this.message = message;
+        this.businessMessageUID=businessMessageUID;        
+    }    
 
     @Override
     public String toString() {
@@ -49,6 +64,16 @@ public class BusinessMessage {
     public String getMessage() {
         return message;
     }
+    
+    public String getUID() {
+        String uid=businessMessageUID.getCanonicalName();
+        
+        if (uid==null) {
+            uid=businessMessageUID.getName();
+        }
+        
+        return uid;
+    }    
 
 
 }
