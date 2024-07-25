@@ -15,6 +15,7 @@
  */
 package es.logongas.ix3.core.hibernate;
 
+import java.util.Locale;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -29,6 +30,9 @@ public class HibernateUtil {
         Configuration configuration = new Configuration();
         configuration.configure();
 
+        
+        Locale.setDefault(new Locale("es","ES"));
+        
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         sessionFactory = configuration.buildSessionFactory(serviceRegistry);
 
