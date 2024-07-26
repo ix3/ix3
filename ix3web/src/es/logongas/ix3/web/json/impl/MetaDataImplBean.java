@@ -304,12 +304,17 @@ public class MetaDataImplBean implements MetaData {
         public String getPattern() {
             return null;
         }
-
+        
+        @Override
+        public String getPatternMessage() {
+            return null;
+        }
+        
         @Override
         public Format getFormat() {
             return null;
         }
-
+        
         @Override
         public ValuesList getValuesList() {
             //En un Bean nunca hay ValueList así que siempre será null.

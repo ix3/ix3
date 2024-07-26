@@ -59,6 +59,12 @@ public interface Constraints {
     String getPattern();
     
     /**
+     * Si existe el Patter, aquí está el mensaje a mostrar al usuario
+     * @return Una expresion regular
+     */
+    String getPatternMessage(); 
+    
+    /**
      * Para valores de tipo String, indica un formato especifico que debe cumplir el campo.Por defecto vale null si no se indica ningún valor.
      * @return El formato especifico
      */

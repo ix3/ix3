@@ -38,6 +38,7 @@ public class Property {
     private Integer minLength;
     private Integer maxLength;
     private String pattern;
+    private String patternMessage;
     private Format format; //Para los Strings si es una URL o un EMAIL, etc.
     private List<Object> values=new ArrayList<Object>();
     
@@ -196,6 +197,20 @@ public class Property {
      */
     public void setPattern(String pattern) {
         this.pattern = pattern;
+    }
+
+    /**
+     * @return the patternMessage
+     */
+    public String getPatternMessage() {
+        return patternMessage;
+    }
+
+    /**
+     * @param patternMessage the patternMessage to set
+     */
+    public void setPatternMessage(String patternMessage) {
+        this.patternMessage = patternMessage;
     }
 
     /**

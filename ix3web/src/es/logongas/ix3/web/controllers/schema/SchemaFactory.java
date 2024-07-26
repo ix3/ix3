@@ -141,6 +141,7 @@ public class SchemaFactory {
         }
 
         property.setPattern(metaData.getConstraints().getPattern());
+        property.setPatternMessage(metaData.getConstraints().getPatternMessage());
         if (metaData.getConstraints().getFormat() != null) {
             property.setFormat(Format.valueOf(metaData.getConstraints().getFormat().name())); //Transformamos de es.logongas.ix3.dao.metadata a es.logongas.ix3.web.controllers.schema.Format
         } else {

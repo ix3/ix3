@@ -379,6 +379,11 @@ public class MetaDataImplHibernate implements MetaData {
         Pattern patternAnnotation = ReflectionUtil.getAnnotation(clazz, getPropertyName(), Pattern.class);
         if (patternAnnotation != null) {
             constraints.pattern = patternAnnotation.regexp();
+            if ("{javax.validation.constraints.Pattern.message}".equals(patternAnnotation.message())) {
+                constraints.patternMessage=null;
+            } else {
+                constraints.patternMessage=patternAnnotation.message();
+            }
         } else {
             constraints.pattern = null;
         }
@@ -411,6 +416,7 @@ public class MetaDataImplHibernate implements MetaData {
         public int minLength;
         public int maxLength;
         public String pattern;
+        public String patternMessage;
         public Format format;
         public ValuesList valuesList;
 
@@ -443,6 +449,11 @@ public class MetaDataImplHibernate implements MetaData {
         public String getPattern() {
             return this.pattern;
         }
+        
+        @Override
+        public String getPatternMessage() {
+            return this.patternMessage;
+        }        
 
         @Override
         public Format getFormat() {
