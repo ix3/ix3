@@ -15,6 +15,7 @@
  */
 package es.logongas.ix3.web.security.jwt.impl;
 
+import es.logongas.ix3.web.security.jwt.TokenExpiredException;
 import es.logongas.ix3.web.security.jwt.Jwe;
 import java.security.Key;
 import java.util.Date;
@@ -41,7 +42,7 @@ public class JweImplJose4j implements Jwe {
     }
 
     @Override
-    public String getPayloadFromJwsCompactSerialization(String encryptedJwsCompactSerialization, byte[] secretKey, int maxMinutesValid) {
+    public String getPayloadFromJwsCompactSerialization(String encryptedJwsCompactSerialization, byte[] secretKey, int maxMinutesValid) throws TokenExpiredException {
         String structuredPayload = decryptData(encryptedJwsCompactSerialization, secretKey);
 
         Date creationDate = JwUtil.getDateFromStructuredPayload(structuredPayload);
@@ -50,7 +51,7 @@ public class JweImplJose4j implements Jwe {
 
         if (now.after(maxDate)) {
             //Ha caducado el Token
-            throw new RuntimeException("El token no es válido:" + encryptedJwsCompactSerialization + " creationDate="+creationDate + " maxMinutesValid="+maxMinutesValid+ " maxDate="+maxDate+ " now="+now);
+            throw new TokenExpiredException("El token ha caducado:" + encryptedJwsCompactSerialization + " creationDate="+creationDate + " maxMinutesValid="+maxMinutesValid+ " maxDate="+maxDate+ " now="+now);
         }
 
         return JwUtil.getPayloadFromStructuredPayload(structuredPayload);

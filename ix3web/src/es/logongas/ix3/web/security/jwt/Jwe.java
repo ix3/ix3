@@ -34,6 +34,7 @@ public interface Jwe {
      * @param secretKey La clave
      * @param maxMinutesValid Los minutos que es válido el token
      * @return El contenido del Token
+     * @throws es.logongas.ix3.web.security.jwt.TokenExpiredException
      */
-    String getPayloadFromJwsCompactSerialization(String jwsCompactSerialization, byte[] secretKey,int maxMinutesValid);
+    String getPayloadFromJwsCompactSerialization(String jwsCompactSerialization, byte[] secretKey,int maxMinutesValid) throws TokenExpiredException;
 }
