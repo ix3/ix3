@@ -21,10 +21,8 @@ package es.logongas.ix3.web.security.jwt;
  */
 public class TokenExpiredException extends Exception {
 
-    String message;
-
     public TokenExpiredException(String message) {
-        this.message = message;
+        super(message);
     }
     
 }
