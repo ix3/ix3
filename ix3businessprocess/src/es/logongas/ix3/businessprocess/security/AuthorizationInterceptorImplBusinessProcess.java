@@ -37,9 +37,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Aspect
 public class AuthorizationInterceptorImplBusinessProcess implements AuthorizationInterceptor {
 
-    private static final String SECURE_RESOURCE_TYPE_NAME = "BusinessProcess";
-    private static final String PERMISSION_NAME_PRE_EXECUTE = "PreExecuteBusinessProcess";
-    private static final String PERMISSION_NAME_POST_EXECUTE = "PostExecuteBusinessProcess";
+    private static final String SECURE_RESOURCE_TYPE_NAME = SecureResourceTypeBusinessprocess.BusinessProcess.name();
+    private static final String PERMISSION_NAME_PRE_EXECUTE =PermissionTypeBusinessProcess.PreExecuteBusinessProcess.name();
+    private static final String PERMISSION_NAME_POST_EXECUTE = PermissionTypeBusinessProcess.PostExecuteBusinessProcess.name();
 
     @Autowired
     AuthorizationManager authorizationManager;
