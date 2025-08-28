@@ -63,6 +63,14 @@ public class Expands extends ArrayList<String> {
         return false;
     }
 
+    public static boolean isExpandProperty(String propertyName,List<String> expandedProperties) {
+        for (String expandProperty : expandedProperties) {
+            if ((expandProperty.trim()).startsWith(propertyName + ".") || (expandProperty.trim().equals(propertyName)) || (expandProperty.trim().equals("*"))) {
+                return true;
+            }
+        }
 
+        return false;
+    }
 
 }

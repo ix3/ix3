@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package es.logongas.ix3.web.json;
+package es.logongas.ix3.web.json.beanmapper;
 
 /**
  *
@@ -33,7 +33,7 @@ public class BeanTestA {
     public int getA(int i) {
         return 0;
     };    
-
+     
     /**
      * @return the prop2
      */
@@ -48,4 +48,37 @@ public class BeanTestA {
         this.prop2 = prop2;
     }
     
+    
+    public int getProp3() {
+        return 0;
+    };
+    public void setProp3(int i) {
+
+    }; 
+    
+    public int getProp33() {
+        return 0;
+    };
+    public void setProp33(int i) {
+
+    };     
+    
+    public int getProp4() {
+        return 0;
+    };
+    public void setProp4(int i) {
+
+    };  
+    
+    
+    public BeanTestB getProp5() {
+        return prop1;
+    }
+
+    /**
+     * @param prop1 the prop1 to set
+     */
+    public void setProp5(BeanTestB prop1) {
+        this.prop1 = prop1;
+    }    
 }

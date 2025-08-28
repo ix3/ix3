@@ -54,7 +54,7 @@ public class EndPointTest {
         EndPoint result = EndPoint.createEndPointCrud("/pepe", Object.class);
         assertEquals("/pepe/Object/**", result.getPath());
         assertEquals(null, result.getMethod());
-        assertEquals(Object.class, result.getBeanMapper().getEntityClass());
+        assertEquals(null, result.getBeanMapper());
     }
 
     @Test

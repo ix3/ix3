@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package es.logongas.ix3.web.json;
+package es.logongas.ix3.web.json.beanmapper;
 
 /**
  *

@@ -16,8 +16,6 @@
 package es.logongas.ix3.web.json.beanmapper;
 
 import es.logongas.ix3.util.ReflectionUtil;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -32,12 +30,9 @@ public final class BeanMapper {
 
     private final Class entityClass;
 
-    private final List<String> inDeleteProperties;
-    private final List<String> outDeleteProperties;
-
-    private final Expands inExpands;
-    private final Expands outExpands;
-
+    private final PropertyNameList deletePropertyNameList;
+    private final PropertyNameList expandPropertyNameList;
+    
     public BeanMapper(Class entityClass) {
         this(entityClass, null, null);
     }
@@ -55,71 +50,40 @@ public final class BeanMapper {
 
         this.entityClass = entityClass;
 
-        this.inDeleteProperties = new ArrayList<String>();
-        this.outDeleteProperties = new ArrayList<String>();
-        populateInOutLists(deleteProperties, deletePropertiesPattern, inDeleteProperties, outDeleteProperties);
-
-        this.inExpands = new Expands();
-        this.outExpands = new Expands();
-        populateInOutLists(expandProperties, expandPropertiesPattern, inExpands, outExpands);
+        if ((deleteProperties != null) && (deleteProperties.trim().isEmpty() == false)) {
+            if (deletePropertiesPattern.matcher(deleteProperties).matches() == false) {
+                throw new RuntimeException("El parámetro properties no tiene el formato adecuado:" + deleteProperties + " , " + deletePropertiesPattern.pattern());
+            }
+        }
+        this.deletePropertyNameList=new PropertyNameList(deleteProperties, null);        
+        
+        
+        if ((expandProperties != null) && (expandProperties.trim().isEmpty() == false)) {
+            if (expandPropertiesPattern.matcher(expandProperties).matches() == false) {
+                throw new RuntimeException("El parámetro properties no tiene el formato adecuado:" + expandProperties + " , " + expandPropertiesPattern.pattern());
+            }
+        }        
+        this.expandPropertyNameList=new PropertyNameList(expandProperties, null);
 
         this.validate();
     }
 
-    private void populateInOutLists(String properties, Pattern pattern, List<String> in, List<String> out) {
-        if ((properties != null) && (properties.trim().isEmpty() == false)) {
-            if (pattern.matcher(properties).matches() == false) {
-                throw new RuntimeException("El parámetro properties no tiene el formato adecuado:" + properties + " , " + pattern.pattern());
-            }
 
-            String[] arrProperties = properties.replace(" ", "").split(",");
-            for (String rawProperty : arrProperties) {
-                String propertyName = rawProperty.replace(">", "").replace("<", "");
-                if ((rawProperty.startsWith("<") == true) && (rawProperty.endsWith(">") == true)) {
-                    in.add(propertyName);
-                    out.add(propertyName);
-                } else if ((rawProperty.startsWith("<") == true) && (rawProperty.endsWith(">") == false)) {
-                    out.add(propertyName);
-                } else if ((rawProperty.startsWith("<") == false) && (rawProperty.endsWith(">") == true)) {
-                    in.add(propertyName);
-                } else if ((rawProperty.startsWith("<") == false) && (rawProperty.endsWith(">") == false)) {
-                    in.add(propertyName);
-                    out.add(propertyName);
-                } else {
-                    throw new RuntimeException("Error de logica:" + rawProperty.startsWith("<") + " , " + rawProperty.endsWith(">"));
-                }
-            }
-
-        }
-
-    }
 
     public boolean isExpandInProperty(String propertyNameExpand) {
-        return inExpands.isExpandProperty(propertyNameExpand);
+        return Expands.isExpandProperty(propertyNameExpand, this.expandPropertyNameList.getPropertyNamesFiltered(Boolean.TRUE, null));
     }
 
     public boolean isExpandOutProperty(String propertyNameExpand) {
-        return outExpands.isExpandProperty(propertyNameExpand);
+        return Expands.isExpandProperty(propertyNameExpand, this.expandPropertyNameList.getPropertyNamesFiltered(null,Boolean.TRUE));
     }
 
     public boolean isDeleteInProperty(String propertyNameDelete) {
-        for (String propertyName : inDeleteProperties) {
-            if (propertyNameDelete.startsWith(propertyName)) {
-                return true;
-            }
-        }
-
-        return false;
+        return this.deletePropertyNameList.getPropertyDirection(propertyNameDelete).isInToServer();
     }
 
     public boolean isDeleteOutProperty(String propertyNameDelete) {
-        for (String propertyName : outDeleteProperties) {
-            if (propertyNameDelete.startsWith(propertyName)) {
-                return true;
-            }
-        }
-
-        return false;
+        return this.deletePropertyNameList.getPropertyDirection(propertyNameDelete).isOutFromServer();
     }
 
     /**
@@ -135,23 +99,23 @@ public final class BeanMapper {
             sb.append("No existe una clase para el ObjectMapper\n");
         } else {
 
-            for (String propertyName : this.inDeleteProperties) {
+            for (String propertyName : this.deletePropertyNameList.getPropertyNamesFiltered(Boolean.TRUE,null)) {
                 if (ReflectionUtil.existsWritePropertyInClass(entityClass, propertyName) == false) {
                     sb.append("No existe la propiedad set de '" + propertyName + " en la clase " + entityClass.getName() + "\n");
                 }
             }
-            for (String propertyName : this.outDeleteProperties) {
+            for (String propertyName : this.deletePropertyNameList.getPropertyNamesFiltered(null,Boolean.TRUE)) {
                 if (ReflectionUtil.existsReadPropertyInClass(entityClass, propertyName) == false) {
                     sb.append("No existe la propiedad get de '" + propertyName + " en la clase " + entityClass.getName() + "\n");
                 }
             }
 
-            for (String propertyName : this.inExpands) {
+            for (String propertyName : this.expandPropertyNameList.getPropertyNamesFiltered(Boolean.TRUE, null)) {
                 if (("*".equals(propertyName) == false) && (ReflectionUtil.existsReadPropertyInClass(entityClass, propertyName) == false)) {
                     sb.append("No existe la propiedad set de '" + propertyName + " en la clase " + entityClass.getName() + "\n");
                 }
             }
-            for (String propertyName : this.outExpands) {
+            for (String propertyName : this.expandPropertyNameList.getPropertyNamesFiltered(null,Boolean.TRUE)) {
                 if (("*".equals(propertyName) == false) && (ReflectionUtil.existsReadPropertyInClass(entityClass, propertyName) == false)) {
                     sb.append("No existe la propiedad get de '" + propertyName + " en la clase " + entityClass.getName() + "\n");
                 }

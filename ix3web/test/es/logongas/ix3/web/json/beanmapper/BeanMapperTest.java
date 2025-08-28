@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.logongas.ix3.web.json;
+package es.logongas.ix3.web.json.beanmapper;
 
 import es.logongas.ix3.web.json.beanmapper.BeanMapper;
-import es.logongas.ix3.core.BusinessMessage;
-import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -104,6 +102,21 @@ public class BeanMapperTest {
         assertEquals(false, beanMapper.isDeleteOutProperty(propertyNameAllow));
     }    
     
+    @Test
+    public void testIsDeleteProperty7() {
+        System.out.println("isDeleteProperty7");
+        BeanMapper beanMapper = new BeanMapper(BeanTestA.class, "prop2,prop3", null);
+        assertEquals(true, beanMapper.isDeleteInProperty("prop3"));
+        assertEquals(true, beanMapper.isDeleteOutProperty("prop3"));        
+    }
+    
+    @Test
+    public void testIsDeleteProperty8() {
+        System.out.println("isDeleteProperty8");
+        BeanMapper beanMapper = new BeanMapper(BeanTestA.class, "prop2,prop3", null);
+        assertEquals(false, beanMapper.isDeleteInProperty("prop33"));
+        assertEquals(false, beanMapper.isDeleteOutProperty("prop33"));        
+    }    
     
 
     public void testIsExpandProperty1() {
