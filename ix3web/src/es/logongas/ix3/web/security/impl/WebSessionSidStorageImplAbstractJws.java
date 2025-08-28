@@ -86,9 +86,17 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
             }
         }
 
-        String payload = jws.getUnverifiedPayloadFromJwsCompactSerialization(jwsCompactCookie);
+        
+        Serializable sid=getSidFromJws(jwsCompactCookie,this.maxAgeJwsMinutes);
+        
+        return sid;  
+    }
 
+    public Serializable getSidFromJws(String jwsCompactCookie,int maxAgeJwsMinutes) {
         Serializable sid;
+        
+        String payload = jws.getUnverifiedPayloadFromJwsCompactSerialization(jwsCompactCookie);
+        
         try {
             sid = unserialize(payload);
         } catch (Exception ex) {
@@ -109,9 +117,9 @@ public abstract class WebSessionSidStorageImplAbstractJws implements WebSessionS
             return null;
         }
 
-        return sid;
+        return sid;  
     }
-
+    
     /**
      * Obtiene un dato "secreto" del usuario para poder encriptar el Web token
      * @param sid El identificador de seguridad del usuario
