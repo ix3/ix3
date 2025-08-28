@@ -142,7 +142,7 @@ public class ReflectionUtil {
         return findUniqueMethodByName(methods, methodName);
     }    
     
-    
+
     
     public static boolean isFieldParametrizedList(Field field,Class listClass) {
         Type type=field.getGenericType();
@@ -212,7 +212,41 @@ public class ReflectionUtil {
 
         return method;
 
-    }    
+    }   
+    
+    
+    
+    
+    static public Method findUniqueMethodByNameBestNoSyntheticNoBridge(Method[] methods, String methodName) {
+        Method method = null;
+        for (int i = 0; i < methods.length; i++) {
+            if (methods[i].getName().equals(methodName)) {
+
+                if (method == null) {
+                    method = methods[i];
+                } else {
+                    if ((isSyntheticOrBridge(method)==true) && (isSyntheticOrBridge(methods[i])==true)) {
+                        throw new RuntimeException("Existen dos o mas metodos llamados '" + methodName);
+                    } else if ((isSyntheticOrBridge(method)==true) && (isSyntheticOrBridge(methods[i])==false)) {
+                        method=methods[i];
+                    } else if ((isSyntheticOrBridge(method)==false) && (isSyntheticOrBridge(methods[i])==true)) {
+                        //Se queda el que está
+                    } else if ((isSyntheticOrBridge(method)==false) && (isSyntheticOrBridge(methods[i])==false)) {
+                        throw new RuntimeException("Existen dos o mas metodos llamados '" + methodName);
+                    } else {
+                        throw new RuntimeException("Error de lógica en" + methodName+ " " + isSyntheticOrBridge(method) + " "+ isSyntheticOrBridge(methods[i]) );
+                    }
+                }
+            }
+        }
+
+        return method;
+
+    }      
+    
+    static private boolean isSyntheticOrBridge(Method method) {
+        return method.isSynthetic() || method.isBridge();
+    }
 
     /**
      * Obtiene el valor de la propiedad de un Bean
